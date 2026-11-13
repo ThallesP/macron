@@ -33,9 +33,7 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 25
     env:
-      OUT: ${{ github.workspace }}/out
       GH_TOKEN: ${{ github.token }}
-      WINEPREFIX: ${{ runner.temp }}/prefix
       WINEDEBUG: -all
       WINEDLLOVERRIDES: mscoree,mshtml=
     steps:
@@ -43,7 +41,11 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: d3dtest
-      - run: mkdir -p "$OUT"
+      - name: Set up paths
+        run: |
+          echo "OUT=$GITHUB_WORKSPACE/out" >> "$GITHUB_ENV"
+          echo "WINEPREFIX=$RUNNER_TEMP/prefix" >> "$GITHUB_ENV"
+          mkdir -p "$GITHUB_WORKSPACE/out"
 
       - name: Machine
         continue-on-error: true
