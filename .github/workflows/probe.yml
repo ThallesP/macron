@@ -124,27 +124,44 @@ jobs:
 
       - name: DirectX 11 with DXMT (Direct3D to Metal)
         continue-on-error: true
+        env:
+          DXMT_LOG_LEVEL: info
         run: |
           {
             gh release download -R 3Shain/dxmt -p 'dxmt-*-builtin.tar.gz' -D "$RUNNER_TEMP/dl"
             mkdir -p "$RUNNER_TEMP/dxmt"
             tar -xzf "$RUNNER_TEMP"/dl/dxmt-*.tar.gz -C "$RUNNER_TEMP/dxmt"
-            find "$RUNNER_TEMP/dxmt" -type f | sed "s|$RUNNER_TEMP/||"
             for arch in x86_64-windows x86_64-unix i386-windows; do
               src=$(find "$RUNNER_TEMP/dxmt" -type d -name "$arch" | head -1)
               if [ -n "$src" ] && [ -d "$WINEROOT/lib/wine/$arch" ]; then
-                cp -fv "$src"/* "$WINEROOT/lib/wine/$arch/"
+                cp -f "$src"/* "$WINEROOT/lib/wine/$arch/"
               fi
             done
+            # The prefix was created before DXMT was added, so refresh it and
+            # make sure the new winemetal.dll is visible inside it.
             perl -e 'alarm shift; exec @ARGV' 60 "$WINEROOT/bin/wineserver" -k || true
-            WINEDEBUG=+loaddll,err+all perl -e 'alarm shift; exec @ARGV' 180 "$WINEROOT/bin/wine" d3dtest.exe 2>&1 \
-              | tr -d '\r' \
-              | grep -E 'RESULT|pixel|adapter|feature level|d3d11|dxgi|d3d10core|winemetal|err:' \
+            perl -e 'alarm shift; exec @ARGV' 300 "$WINEROOT/bin/wine" wineboot -u
+            perl -e 'alarm shift; exec @ARGV' 120 "$WINEROOT/bin/wineserver" -w || true
+            SYS32="$WINEPREFIX/drive_c/windows/system32"
+            if [ ! -e "$SYS32/winemetal.dll" ]; then
+              echo "winemetal.dll not placed by wineboot, copying it in"
+              cp -f "$(find "$RUNNER_TEMP/dxmt" -type d -name x86_64-windows | head -1)"/winemetal.dll "$SYS32/"
+            fi
+            ls -la "$SYS32/winemetal.dll" "$SYS32/d3d11.dll" "$SYS32/dxgi.dll"
+            export DXMT_LOG_PATH="$OUT"
+            WINEDEBUG=+loaddll,err+all perl -e 'alarm shift; exec @ARGV' 180 "$WINEROOT/bin/wine" d3dtest.exe > "$OUT/dxmt-run.txt" 2>&1 || true
+            tr -d '\r' < "$OUT/dxmt-run.txt" \
+              | grep -E 'RESULT|pixel|adapter|feature level|d3d11|dxgi|d3d10core|winemetal|err:|warn:|info:' \
+              | cut -c1-300 | head -80 \
               | sed 's/^RESULT d3d11/RESULT dxmt d3d11/' \
-              || echo "RESULT dxmt d3d11: FAILED (no output from the probe)"
+              || true
+            grep -q 'RESULT d3d11' "$OUT/dxmt-run.txt" || echo "RESULT dxmt d3d11: FAILED (the probe never got as far as creating a device)"
+            ls "$OUT"
           } 2>&1 | tee -a "$OUT/log.txt"
 
       - name: Steam client starts
+        # Already confirmed once; only re-run on demand to save runner minutes.
+        if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[steam]')
         continue-on-error: true
         run: |
           {
