@@ -79,6 +79,8 @@ jobs:
           # has passwordless sudo. It stays in the foreground (-D) because a
           # daemonized sshd leaves the job's desktop session, and then SSH
           # sessions cannot open windows or take screenshots.
+          # Every connection arrives from the tunnel on 127.0.0.1, so sshd's
+          # per-source penalties would lock everyone out together.
           ssh-keygen -q -t ed25519 -N '' -C "$SBX_ID" -f "$dir/host_key"
           printf '%s\n' "$SBX_SSH_PUBLIC_KEY" > "$dir/authorized_keys"
           cat > "$dir/sshd_config" <<EOF
@@ -93,6 +95,8 @@ jobs:
           PasswordAuthentication no
           KbdInteractiveAuthentication no
           UsePAM no
+          PerSourcePenalties no
+          MaxStartups 100:30:200
           ClientAliveInterval 30
           Subsystem sftp /usr/libexec/sftp-server
           SetEnv PATH="$PATH"
