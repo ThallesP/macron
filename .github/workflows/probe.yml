@@ -1,0 +1,180 @@
+# One-off probe: can a GitHub-hosted Mac runner do what Macron's tests need?
+# Every step keeps going on failure and prints a "RESULT ..." line; the last
+# step collects them into the run summary.
+name: Runner probe
+
+on:
+  push:
+    branches: [ci-probe]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-d3dtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile the DirectX 11 probe for Windows
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gcc-mingw-w64-x86-64
+          x86_64-w64-mingw32-gcc -O2 -Wall ci/probe/d3dtest.c -o d3dtest.exe \
+            -ld3d11 -ld3dcompiler_47 -ldxgi -ldxguid -luuid
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d3dtest
+          path: d3dtest.exe
+
+  probe:
+    needs: build-d3dtest
+    runs-on: macos-26
+    timeout-minutes: 25
+    env:
+      OUT: ${{ github.workspace }}/out
+      GH_TOKEN: ${{ github.token }}
+      WINEPREFIX: ${{ runner.temp }}/prefix
+      WINEDEBUG: -all
+      WINEDLLOVERRIDES: mscoree,mshtml=
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: d3dtest
+      - run: mkdir -p "$OUT"
+
+      - name: Machine
+        continue-on-error: true
+        run: |
+          {
+            sw_vers
+            system_profiler SPDisplaysDataType
+            echo "RESULT machine: $(sysctl -n machdep.cpu.brand_string), $(sysctl -n hw.ncpu) cores, $(( $(sysctl -n hw.memsize) / 1073741824 )) GB RAM, $(df -h / | awk 'END{print $4}') free disk, macOS $(sw_vers -productVersion), virtual machine=$(sysctl -n kern.hv_vmm_present)"
+          } 2>&1 | tee -a "$OUT/log.txt"
+
+      - name: Rosetta
+        continue-on-error: true
+        run: |
+          {
+            if arch -x86_64 /usr/bin/true 2>/dev/null; then
+              echo "RESULT rosetta: OK (preinstalled)"
+            elif softwareupdate --install-rosetta --agree-to-license && arch -x86_64 /usr/bin/true; then
+              echo "RESULT rosetta: OK (installed on demand)"
+            else
+              echo "RESULT rosetta: FAILED"
+            fi
+          } 2>&1 | tee -a "$OUT/log.txt"
+
+      - name: Desktop session
+        continue-on-error: true
+        run: |
+          {
+            echo "console user: $(stat -f%Su /dev/console), job user: $(id -un)"
+            if screencapture -x "$OUT/desktop.png" && [ -s "$OUT/desktop.png" ]; then
+              echo "RESULT desktop: OK (screenshot $(sips -g pixelWidth -g pixelHeight "$OUT/desktop.png" | awk '/pixel/{printf "%s ", $2}'))"
+            else
+              echo "RESULT desktop: FAILED (no screenshot)"
+            fi
+          } 2>&1 | tee -a "$OUT/log.txt"
+
+      - name: Metal
+        continue-on-error: true
+        run: |
+          {
+            if swiftc -O ci/probe/metal.swift -o "$RUNNER_TEMP/metal-probe"; then
+              "$RUNNER_TEMP/metal-probe" || true
+            else
+              echo "RESULT metal: FAILED (probe did not compile)"
+            fi
+          } 2>&1 | tee -a "$OUT/log.txt"
+
+      - name: Wine
+        continue-on-error: true
+        run: |
+          {
+            gh release download -R Gcenx/macOS_Wine_builds -p 'wine-devel-*-osx64.tar.xz' -D "$RUNNER_TEMP/dl"
+            tar -xf "$RUNNER_TEMP"/dl/wine-devel-*.tar.xz -C "$RUNNER_TEMP"
+            APP=$(ls -d "$RUNNER_TEMP"/Wine*.app | head -1)
+            WINEROOT="$APP/Contents/Resources/wine"
+            echo "WINEROOT=$WINEROOT" >> "$GITHUB_ENV"
+            ls "$WINEROOT/bin" "$WINEROOT/lib/wine"
+            START=$(date +%s)
+            perl -e 'alarm shift; exec @ARGV' 420 "$WINEROOT/bin/wine" wineboot -u
+            perl -e 'alarm shift; exec @ARGV' 120 "$WINEROOT/bin/wineserver" -w || true
+            VER=$("$WINEROOT/bin/wine" cmd /c ver | tr -d '\r' | grep -i windows || true)
+            if [ -n "$VER" ]; then
+              echo "RESULT wine: OK ($("$WINEROOT/bin/wine" --version), reports '$VER', first boot took $(( $(date +%s) - START ))s)"
+            else
+              echo "RESULT wine: FAILED (no output from a Windows command)"
+            fi
+          } 2>&1 | tee -a "$OUT/log.txt"
+
+      - name: DirectX 11 with Wine's built-in translation
+        continue-on-error: true
+        run: |
+          {
+            perl -e 'alarm shift; exec @ARGV' 180 "$WINEROOT/bin/wine" d3dtest.exe \
+              | tr -d '\r' | sed 's/^RESULT d3d11/RESULT built-in d3d11/' \
+              || echo "RESULT built-in d3d11: FAILED (probe exited with an error or timed out)"
+          } 2>&1 | tee -a "$OUT/log.txt"
+
+      - name: DirectX 11 with DXMT (Direct3D to Metal)
+        continue-on-error: true
+        run: |
+          {
+            gh release download -R 3Shain/dxmt -p 'dxmt-*-builtin.tar.gz' -D "$RUNNER_TEMP/dl"
+            mkdir -p "$RUNNER_TEMP/dxmt"
+            tar -xzf "$RUNNER_TEMP"/dl/dxmt-*.tar.gz -C "$RUNNER_TEMP/dxmt"
+            find "$RUNNER_TEMP/dxmt" -type f | sed "s|$RUNNER_TEMP/||"
+            for arch in x86_64-windows x86_64-unix i386-windows; do
+              src=$(find "$RUNNER_TEMP/dxmt" -type d -name "$arch" | head -1)
+              if [ -n "$src" ] && [ -d "$WINEROOT/lib/wine/$arch" ]; then
+                cp -fv "$src"/* "$WINEROOT/lib/wine/$arch/"
+              fi
+            done
+            perl -e 'alarm shift; exec @ARGV' 60 "$WINEROOT/bin/wineserver" -k || true
+            WINEDEBUG=+loaddll,err+all perl -e 'alarm shift; exec @ARGV' 180 "$WINEROOT/bin/wine" d3dtest.exe 2>&1 \
+              | tr -d '\r' \
+              | grep -E 'RESULT|pixel|adapter|feature level|d3d11|dxgi|d3d10core|winemetal|err:' \
+              | sed 's/^RESULT d3d11/RESULT dxmt d3d11/' \
+              || echo "RESULT dxmt d3d11: FAILED (no output from the probe)"
+          } 2>&1 | tee -a "$OUT/log.txt"
+
+      - name: Steam client starts
+        continue-on-error: true
+        run: |
+          {
+            curl -fsSL -o "$RUNNER_TEMP/steam.dmg" https://cdn.cloudflare.steamstatic.com/client/installer/steam.dmg
+            yes | PAGER=cat hdiutil attach "$RUNNER_TEMP/steam.dmg" -nobrowse -mountpoint /Volumes/SteamProbe >/dev/null
+            cp -R /Volumes/SteamProbe/Steam.app /Applications/
+            hdiutil detach /Volumes/SteamProbe -quiet || true
+            open -a /Applications/Steam.app
+            for t in 30 90 150; do
+              sleep $(( t == 30 ? 30 : 60 ))
+              screencapture -x "$OUT/steam-${t}s.png" || true
+              echo "after ${t}s: $(pgrep -fl -i steam | wc -l | tr -d ' ') Steam processes, data folder $(du -sh "$HOME/Library/Application Support/Steam" 2>/dev/null | cut -f1)"
+            done
+            pgrep -fl -i steam | cut -c1-160 | head -12 || true
+            ls "$HOME/Library/Application Support/Steam" | head -30 || true
+            if pgrep -f -i 'steam_osx|Steam Helper|steamwebhelper' >/dev/null; then
+              echo "RESULT steam: OK (client still running after 150s, data folder $(du -sh "$HOME/Library/Application Support/Steam" | cut -f1))"
+            else
+              echo "RESULT steam: FAILED (client not running after 150s)"
+            fi
+            pkill -i -f steam || true
+          } 2>&1 | tee -a "$OUT/log.txt"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "free disk at the end: $(df -h / | awk 'END{print $4}')" | tee -a "$OUT/log.txt"
+          grep '^RESULT' "$OUT/log.txt" | tee "$OUT/results.txt"
+          { echo '```'; cat "$OUT/results.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: probe-output
+          path: out/
