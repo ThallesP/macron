@@ -1,0 +1,172 @@
+# One macOS sandbox per run, driven by tools/sandbox (the `sbx` CLI).
+#
+# Manual trigger only: starting a run needs write access to the repository.
+# Never add a pull_request, push or schedule trigger here.
+#
+# Everything in this file's inputs, logs and artifacts is public. The tunnel
+# address is published encrypted to a key only the creating CLI holds, and the
+# tunnel's own log is never printed while the tunnel is up.
+name: Sandbox
+run-name: ${{ inputs.id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      id:
+        description: Sandbox ID
+        required: true
+        type: string
+      ssh_public_key:
+        description: Public SSH key allowed to log in
+        required: true
+        type: string
+      seal_public_key:
+        description: Public RSA key (base64 of the PEM) the tunnel address is encrypted to
+        required: true
+        type: string
+      ttl_seconds:
+        description: Seconds until the sandbox stops itself
+        required: true
+        type: string
+      transport:
+        description: Tunnel used for SSH
+        required: true
+        type: choice
+        options:
+          - cloudflare-quick
+
+permissions: {}
+
+jobs:
+  sandbox:
+    name: ${{ inputs.id }}
+    runs-on: macos-26
+    # Hard limit. The auto-stop time can be extended up to 330 minutes; this
+    # stops the job even if the auto-stop loop is broken.
+    timeout-minutes: 350
+    steps:
+      - name: Start SSH and the tunnel
+        env:
+          SBX_ID: ${{ inputs.id }}
+          SBX_SSH_PUBLIC_KEY: ${{ inputs.ssh_public_key }}
+          SBX_SEAL_PUBLIC_KEY: ${{ inputs.seal_public_key }}
+          SBX_TTL_SECONDS: ${{ inputs.ttl_seconds }}
+          SBX_TRANSPORT: ${{ inputs.transport }}
+          CLOUDFLARED_VERSION: 2026.11.0
+          CLOUDFLARED_SHA256: 8c2f90277ef06a6080bb40b964d33f09f1188102f8798f2e344174b6cf41accf
+        run: |
+          set -euo pipefail
+          umask 077
+
+          fail() { echo "::error::$1"; exit 1; }
+          [[ "$SBX_ID" =~ ^sbx_[a-z0-9]{8}$ ]] || fail "invalid sandbox id"
+          [[ "$SBX_SSH_PUBLIC_KEY" =~ ^ssh-ed25519\ [A-Za-z0-9+/=]+$ ]] || fail "invalid SSH public key"
+          [[ "$SBX_SEAL_PUBLIC_KEY" =~ ^[A-Za-z0-9+/=]+$ ]] || fail "invalid seal public key"
+          [[ "$SBX_TTL_SECONDS" =~ ^[1-9][0-9]{0,4}$ ]] || fail "invalid ttl"
+          [[ "$SBX_TRANSPORT" == cloudflare-quick ]] || fail "unknown transport"
+
+          dir="$HOME/.sbx"
+          mkdir -p "$dir/public"
+
+          now=$(date +%s)
+          hard_stop_at=$(( now + 330 * 60 ))
+          auto_stop_at=$(( now + SBX_TTL_SECONDS ))
+          (( auto_stop_at > hard_stop_at )) && auto_stop_at=$hard_stop_at
+          echo "$auto_stop_at" > "$dir/auto-stop-at"
+          echo "SBX_HARD_STOP_AT=$hard_stop_at" >> "$GITHUB_ENV"
+
+          # A private sshd owned by the runner user, started from this job so
+          # that SSH sessions share the job's desktop session. Key-only: the
+          # runner user has passwordless sudo.
+          ssh-keygen -q -t ed25519 -N '' -C "$SBX_ID" -f "$dir/host_key"
+          printf '%s\n' "$SBX_SSH_PUBLIC_KEY" > "$dir/authorized_keys"
+          cat > "$dir/sshd_config" <<EOF
+          Port 2222
+          ListenAddress 127.0.0.1
+          HostKey $dir/host_key
+          PidFile $dir/sshd.pid
+          AuthorizedKeysFile $dir/authorized_keys
+          AllowUsers $USER
+          AuthenticationMethods publickey
+          PubkeyAuthentication yes
+          PasswordAuthentication no
+          KbdInteractiveAuthentication no
+          UsePAM no
+          ClientAliveInterval 30
+          Subsystem sftp /usr/libexec/sftp-server
+          SetEnv PATH="$PATH"
+          EOF
+          /usr/sbin/sshd -t -f "$dir/sshd_config"
+          env -i HOME="$HOME" USER="$USER" PATH="$PATH" \
+            /usr/sbin/sshd -f "$dir/sshd_config" -E "$dir/sshd.log"
+
+          curl -fsSL --retry 3 -o "$dir/cloudflared.tgz" \
+            "https://github.com/cloudflare/cloudflared/releases/download/$CLOUDFLARED_VERSION/cloudflared-darwin-arm64.tgz"
+          echo "$CLOUDFLARED_SHA256  $dir/cloudflared.tgz" | shasum -a 256 -c - >/dev/null
+          tar -xzf "$dir/cloudflared.tgz" -C "$dir"
+
+          # The log holds the tunnel address, so it stays in a file.
+          host=""
+          for attempt in 1 2 3; do
+            env -i HOME="$HOME" nohup "$dir/cloudflared" tunnel --no-autoupdate \
+              --url tcp://127.0.0.1:2222 > "$dir/cloudflared.log" 2>&1 &
+            for _ in $(seq 1 60); do
+              host=$(grep -Eo 'https://[a-z0-9-]+\.trycloudflare\.com' "$dir/cloudflared.log" | head -1 | sed 's#^https://##' || true)
+              if [ -n "$host" ] && grep -q 'Registered tunnel connection' "$dir/cloudflared.log"; then
+                break 2
+              fi
+              sleep 0.5
+            done
+            echo "tunnel attempt $attempt did not come up"
+            pkill -f "$dir/cloudflared" || true
+            host=""
+            sleep 5
+          done
+          [ -n "$host" ] || fail "the tunnel did not come up"
+
+          printf '%s' "$SBX_SEAL_PUBLIC_KEY" | openssl base64 -d -A > "$dir/seal.pem"
+          sealed_endpoint=$(printf '%s' "$host" | openssl pkeyutl -encrypt -pubin -inkey "$dir/seal.pem" \
+            -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256 \
+            | openssl base64 -A)
+          [ -n "$sealed_endpoint" ] || fail "could not seal the tunnel address"
+
+          printf '{"id":"%s","transport":"%s","user":"%s","hostKey":"%s","sealedEndpoint":"%s","autoStopAt":%s,"hardStopAt":%s}\n' \
+            "$SBX_ID" "$SBX_TRANSPORT" "$USER" "$(cut -d' ' -f1,2 "$dir/host_key.pub")" \
+            "$sealed_endpoint" "$auto_stop_at" "$hard_stop_at" > "$dir/public/sandbox.json"
+          chmod 644 "$dir/public/sandbox.json"
+          echo "SBX_PUBLIC_DIR=$dir/public" >> "$GITHUB_ENV"
+          echo "Sandbox $SBX_ID is up."
+
+      - name: Publish the host key and the sealed tunnel address
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ inputs.id }}
+          path: ${{ env.SBX_PUBLIC_DIR }}/sandbox.json
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Run until the auto-stop time
+        run: |
+          set -uo pipefail
+          dir="$HOME/.sbx"
+          while true; do
+            auto_stop_at=$(cat "$dir/auto-stop-at" 2>/dev/null || echo 0)
+            [[ "$auto_stop_at" =~ ^[0-9]{1,12}$ ]] || auto_stop_at=0
+            (( auto_stop_at > SBX_HARD_STOP_AT )) && auto_stop_at=$SBX_HARD_STOP_AT
+            (( $(date +%s) >= auto_stop_at )) && break
+            kill -0 "$(cat "$dir/sshd.pid")" 2>/dev/null || { echo "::error::sshd is gone"; exit 1; }
+            pgrep -f "$dir/cloudflared" >/dev/null || { echo "::error::the tunnel is gone"; exit 1; }
+            sleep 5
+          done
+          echo "Auto-stop time reached."
+
+      - name: Diagnostics
+        if: failure()
+        run: |
+          dir="$HOME/.sbx"
+          pkill -f "$dir/cloudflared" || true
+          openssl version || true
+          echo "--- sshd"
+          cat "$dir/sshd.log" || true
+          echo "--- cloudflared"
+          sed -E 's/[a-z0-9-]+\.trycloudflare\.com/<tunnel address>/g' "$dir/cloudflared.log" | tail -40 || true
