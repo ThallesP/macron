@@ -1,0 +1,287 @@
+From 74090bfacf5c7d637127381b023bdc06213bd09c Mon Sep 17 00:00:00 2001
+From: Macron <macron@users.noreply.github.com>
+Date: Sat, 14 Nov 2026 05:07:13 +0000
+Subject: [PATCH] winemac.drv: Export the macdrv_functions table that DXMT
+ looks for.
+
+DXMT (github.com/3Shain/dxmt) presents Direct3D 10/11 frames into a
+Metal view in the window's client area. Its winemetal.so finds the Mac
+driver with dlsym(RTLD_DEFAULT, "macdrv_functions"), a table in the
+layout CrossOver uses, and reads hwnd, cocoa_window, cocoa_view and
+client_cocoa_view from the start of the struct get_win_data returns.
+Upstream winemac.so is built with hidden visibility, so DXMT finds
+nothing and logs "Failed to create metal view, it seems like your Wine
+has no exported symbols needed by DXMT", and Wine 11's struct
+macdrv_win_data starts with hwnd, cocoa_window, client_view, rects, so
+exporting get_win_data alone would hand DXMT the wrong fields.
+
+- dxmt.c exports macdrv_functions with default visibility. Its
+  get_win_data and release_win_data wrap Wine's: they lock the window
+  data as Wine does and return struct macdrv_dxmt_win_data, which has
+  DXMT's layout and lives inside struct macdrv_win_data. Its
+  client_cocoa_view is a view covering the client area, created on
+  first use, kept in place by WindowPosChanged and disposed with the
+  Cocoa window. Windows without a Cocoa window of their own (child
+  windows) get an empty struct, so DXMT gets no Metal view instead of
+  crashing. macdrv_init_display_devices and on_main_thread are NULL;
+  DXMT does not use them.
+- macdrv_view_release_metal_view now clears the content view's cached
+  Metal view, so a second swap chain on the same window gets a new
+  Metal view instead of the released one.
+
+Only winemac.so changes; the PE side, the unix call table and every
+other module are untouched.
+---
+ dlls/winemac.drv/Makefile.in    |   1 +
+ dlls/winemac.drv/cocoa_window.m |   9 +++
+ dlls/winemac.drv/dxmt.c         | 132 ++++++++++++++++++++++++++++++++
+ dlls/winemac.drv/macdrv.h       |  12 +++
+ dlls/winemac.drv/window.c       |   3 +
+ 5 files changed, 157 insertions(+)
+ create mode 100644 dlls/winemac.drv/dxmt.c
+
+diff --git a/dlls/winemac.drv/Makefile.in b/dlls/winemac.drv/Makefile.in
+index 1eb2b9c..811974e 100644
+--- a/dlls/winemac.drv/Makefile.in
++++ b/dlls/winemac.drv/Makefile.in
+@@ -28,6 +28,7 @@ SOURCES = \
+ 	cocoa_window.m \
+ 	display.c \
+ 	dllmain.c \
++	dxmt.c \
+ 	event.c \
+ 	gdi.c \
+ 	image.c \
+diff --git a/dlls/winemac.drv/cocoa_window.m b/dlls/winemac.drv/cocoa_window.m
+index 1ec3729..0e339ef 100644
+--- a/dlls/winemac.drv/cocoa_window.m
++++ b/dlls/winemac.drv/cocoa_window.m
+@@ -255,6 +255,7 @@ - (void) wine_getBackingSize:(int*)outBackingSize;
+     - (void) wine_setBackingSize:(const int*)newBackingSize;
+ 
+     - (WineMetalView*) newMetalViewWithDevice:(id<MTLDevice>)device;
++    - (void) forgetMetalView:(WineMetalView*)view;
+     - (void) addCALayerHostViewWithContextId:(CAContextID)contextId;
+     - (void) removeCALayerHostView:(CAContextID)contextId;
+ 
+@@ -571,6 +572,11 @@ - (WineMetalView*) newMetalViewWithDevice:(id<MTLDevice>)device
+         return _metalView;
+     }
+ 
++    - (void) forgetMetalView:(WineMetalView*)view
++    {
++        if (_metalView == view) _metalView = nil;
++    }
++
+     - (void) addCALayerHostViewWithContextId:(CAContextID)contextId
+     {
+         if (!_caLayerHosts)
+@@ -3632,6 +3638,9 @@ void macdrv_release_metal_device(id<MTLDevice> device)
+ void macdrv_view_release_metal_view(WineMetalView *view)
+ {
+     OnMainThread(^{
++        NSView *superview = [view superview];
++        if ([superview isKindOfClass:[WineContentView class]])
++            [(WineContentView*)superview forgetMetalView:view];
+         [view removeFromSuperview];
+         [view release];
+     });
+diff --git a/dlls/winemac.drv/dxmt.c b/dlls/winemac.drv/dxmt.c
+new file mode 100644
+index 0000000..b514e20
+--- /dev/null
++++ b/dlls/winemac.drv/dxmt.c
+@@ -0,0 +1,132 @@
++/*
++ * MACDRV entry points for DXMT
++ *
++ * DXMT's winemetal.so presents Direct3D frames into a Metal view that it
++ * creates in the window's client area.  It finds the functions it needs
++ * with dlsym(RTLD_DEFAULT, "macdrv_functions"), in the layout CrossOver
++ * uses, and reads the window's views from the start of CrossOver's
++ * struct macdrv_win_data.  Upstream Wine keeps all of winemac.so hidden
++ * and its struct macdrv_win_data has a different layout, so this file
++ * exports that table with get_win_data and release_win_data returning
++ * a struct macdrv_dxmt_win_data instead.
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
++ */
++
++#if 0
++#pragma makedep unix
++#endif
++
++#include "config.h"
++#include "macdrv.h"
++
++WINE_DEFAULT_DEBUG_CHANNEL(macdrv);
++
++/* returned for windows without a Cocoa window of their own; DXMT then gets no Metal view */
++static struct macdrv_dxmt_win_data no_dxmt_win_data;
++
++static CGRect dxmt_view_frame(const struct macdrv_win_data *data)
++{
++    RECT rect = data->rects.client;
++
++    rect.left -= data->rects.visible.left;
++    rect.right -= data->rects.visible.left;
++    rect.top -= data->rects.visible.top;
++    rect.bottom -= data->rects.visible.top;
++    return cgrect_from_rect(rect);
++}
++
++void macdrv_dxmt_update_view(struct macdrv_win_data *data)
++{
++    if (!data->dxmt.client_cocoa_view) return;
++    macdrv_set_view_frame(data->dxmt.client_cocoa_view, dxmt_view_frame(data));
++}
++
++void macdrv_dxmt_destroy_view(struct macdrv_win_data *data)
++{
++    if (!data->dxmt.client_cocoa_view) return;
++    macdrv_dispose_view(data->dxmt.client_cocoa_view);
++    data->dxmt.client_cocoa_view = NULL;
++}
++
++static struct macdrv_dxmt_win_data *dxmt_get_win_data(HWND hwnd)
++{
++    struct macdrv_win_data *data;
++
++    if (!(data = get_win_data(hwnd)))
++    {
++        WARN("no window data for %p\n", hwnd);
++        return &no_dxmt_win_data;
++    }
++    if (!data->cocoa_window)
++    {
++        FIXME("window %p has no Cocoa window, child windows are not supported\n", hwnd);
++        release_win_data(data);
++        return &no_dxmt_win_data;
++    }
++
++    if (!data->dxmt.client_cocoa_view)
++    {
++        data->dxmt.client_cocoa_view = macdrv_create_view(dxmt_view_frame(data));
++        macdrv_set_view_superview(data->dxmt.client_cocoa_view, NULL, data->cocoa_window, NULL, NULL);
++        macdrv_set_view_hidden(data->dxmt.client_cocoa_view, FALSE);
++    }
++    data->dxmt.hwnd = hwnd;
++    data->dxmt.cocoa_window = data->cocoa_window;
++    data->dxmt.cocoa_view = NULL;
++
++    TRACE("win %p Cocoa win %p client view %p\n", hwnd, data->cocoa_window, data->dxmt.client_cocoa_view);
++    return &data->dxmt;
++}
++
++static void dxmt_release_win_data(struct macdrv_dxmt_win_data *dxmt)
++{
++    if (!dxmt || dxmt == &no_dxmt_win_data) return;
++    release_win_data(CONTAINING_RECORD(dxmt, struct macdrv_win_data, dxmt));
++}
++
++static WineWindow *dxmt_get_cocoa_window(HWND hwnd, BOOL require_on_screen)
++{
++    return macdrv_get_cocoa_window(hwnd, require_on_screen);
++}
++
++/* the layout of CrossOver's struct macdrv_functions_t, as copied in DXMT's winemetal_unix.c */
++struct macdrv_functions_t
++{
++    void (*macdrv_init_display_devices)(BOOL);
++    struct macdrv_dxmt_win_data *(*get_win_data)(HWND hwnd);
++    void (*release_win_data)(struct macdrv_dxmt_win_data *data);
++    WineWindow *(*macdrv_get_cocoa_window)(HWND hwnd, BOOL require_on_screen);
++    MTLDevice_id (*macdrv_create_metal_device)(void);
++    void (*macdrv_release_metal_device)(MTLDevice_id d);
++    WineMetalView *(*macdrv_view_create_metal_view)(WineContentView *v, MTLDevice_id d);
++    CAMetalLayer *(*macdrv_view_get_metal_layer)(WineMetalView *v);
++    void (*macdrv_view_release_metal_view)(WineMetalView *v);
++    void (*on_main_thread)(void *block);
++};
++
++DECLSPEC_EXPORT const struct macdrv_functions_t macdrv_functions =
++{
++    NULL,
++    dxmt_get_win_data,
++    dxmt_release_win_data,
++    dxmt_get_cocoa_window,
++    macdrv_create_metal_device,
++    macdrv_release_metal_device,
++    macdrv_view_create_metal_view,
++    macdrv_view_get_metal_layer,
++    macdrv_view_release_metal_view,
++    NULL,
++};
+diff --git a/dlls/winemac.drv/macdrv.h b/dlls/winemac.drv/macdrv.h
+index 89c498f..a284079 100644
+--- a/dlls/winemac.drv/macdrv.h
++++ b/dlls/winemac.drv/macdrv.h
+@@ -227,6 +227,15 @@ extern BOOL macdrv_SystemParametersInfo(UINT action, UINT int_param, void *ptr_p
+ extern void macdrv_ime_set_text(HWND hwnd, CFStringRef text, bool complete,
+                                 unsigned int cursor_begin, unsigned int cursor_end, void *update);
+ 
++/* the start of CrossOver's struct macdrv_win_data, which DXMT's winemetal.so reads */
++struct macdrv_dxmt_win_data
++{
++    HWND                hwnd;
++    WineWindow         *cocoa_window;
++    WineContentView    *cocoa_view;
++    WineContentView    *client_cocoa_view;      /* view covering the client area, created on first use */
++};
++
+ /* macdrv private window data */
+ struct macdrv_win_data
+ {
+@@ -242,6 +251,7 @@ extern void macdrv_ime_set_text(HWND hwnd, CFStringRef text, bool complete,
+     unsigned int        per_pixel_alpha : 1;    /* is window using per-pixel alpha? */
+     unsigned int        minimized : 1;          /* is window minimized? */
+     unsigned int        fullscreen : 1;         /* is the window visible rect fullscreen? (unrelated to native AppKit/Cocoa fullscreen) */
++    struct macdrv_dxmt_win_data dxmt;
+ };
+ 
+ struct macdrv_client_surface
+@@ -256,6 +266,8 @@ extern void macdrv_ime_set_text(HWND hwnd, CFStringRef text, bool complete,
+ 
+ extern struct macdrv_win_data *get_win_data(HWND hwnd);
+ extern void release_win_data(struct macdrv_win_data *data);
++extern void macdrv_dxmt_update_view(struct macdrv_win_data *data);
++extern void macdrv_dxmt_destroy_view(struct macdrv_win_data *data);
+ extern void init_win_context(void);
+ extern WineWindow *macdrv_get_cocoa_window(HWND hwnd, bool require_on_screen);
+ extern RGNDATA *get_region_data(HRGN hrgn, HDC hdc_lptodp);
+diff --git a/dlls/winemac.drv/window.c b/dlls/winemac.drv/window.c
+index 552971f..b62450d 100644
+--- a/dlls/winemac.drv/window.c
++++ b/dlls/winemac.drv/window.c
+@@ -507,6 +507,7 @@ static void destroy_cocoa_window(struct macdrv_win_data *data)
+ 
+     TRACE("win %p Cocoa win %p\n", data->hwnd, data->cocoa_window);
+ 
++    macdrv_dxmt_destroy_view(data);
+     macdrv_destroy_cocoa_window(data->cocoa_window);
+     data->cocoa_window = 0;
+     data->on_screen = FALSE;
+@@ -1688,6 +1689,8 @@ void macdrv_WindowPosChanged(HWND hwnd, HWND insert_after, HWND owner_hint, UINT
+         data->fullscreen = fullscreen;
+     }
+ 
++    macdrv_dxmt_update_view(data);
++
+ done:
+     release_win_data(data);
+ }
+-- 
+2.53.0
+
