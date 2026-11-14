@@ -9,7 +9,7 @@ A scenario (`scenarios/<name>/scenario.json`) is one Windows program, how to get
 3. `macron runtime install`, then `macron launch --game <profile> --cwd <cwd> -- <exe> <args>`. The scenario's `args` and `files` (written before the first start, into the game's folder or its Windows environment) are test setup (a fixed window size, answers to a first-start dialog), passed like Steam launch options; the profile holds what any player of the game needs. The game goes through the launcher, its profile in `fixes/games/` and its own Windows environment, the same way Steam will start it.
 4. Wait until the scenario's "reached" condition holds: a window whose title matches `window.title` is on screen and, if set, the game has printed `reached.output`. Then wait `reached.settleSeconds`. Fail if the game exits first or `reached.timeoutSeconds` passes.
 5. Capture the window with `screencapture -l`, drop the macOS title bar, and keep the `window.width` x `window.height` picture (scaled on Retina screens). A window of another width fails.
-6. Read the text in the picture with macOS's Vision framework. Every string in `compare.text` must be there (case and spacing ignored).
+6. Read the text in the picture with macOS's Vision framework, once as captured and once scaled up 2x (Vision misread Xonotic's stylised "Credits" as "Eredits" at 1x in one CI run). Every string in `compare.text` must be in one of the two readings (case and spacing ignored).
 7. Compare the picture with the reference and run the negative controls (below). Save everything to the evidence folder: `frame.png`, `window.png`, `screen.png`, `desktop-before.png`, `game.log`, `runtime-install.log`, `windows.json`, `report.json`, `summary.md`.
 
 ## The measure

@@ -46,21 +46,34 @@ func windows() {
     printJSON(found)
 }
 
+func recognise(_ image: CGImage) -> [TextLine] {
+    let request = VNRecognizeTextRequest()
+    request.recognitionLevel = .accurate
+    request.usesLanguageCorrection = false
+    try! VNImageRequestHandler(cgImage: image).perform([request])
+    return (request.results ?? []).compactMap { observation -> TextLine? in
+        guard let best = observation.topCandidates(1).first else { return nil }
+        return TextLine(text: best.string, confidence: best.confidence)
+    }
+}
+
+func scaled(_ image: CGImage, by factor: Int) -> CGImage {
+    let width = image.width * factor
+    let height = image.height * factor
+    let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+    context.interpolationQuality = .high
+    context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+    return context.makeImage()!
+}
+
 func ocr(_ path: String) {
     guard let image = NSImage(contentsOfFile: path),
           let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
         FileHandle.standardError.write("cannot read \(path)\n".data(using: .utf8)!)
         exit(1)
     }
-    let request = VNRecognizeTextRequest()
-    request.recognitionLevel = .accurate
-    request.usesLanguageCorrection = false
-    try! VNImageRequestHandler(cgImage: cgImage).perform([request])
-    let lines = (request.results ?? []).compactMap { observation -> TextLine? in
-        guard let best = observation.topCandidates(1).first else { return nil }
-        return TextLine(text: best.string, confidence: best.confidence)
-    }
-    printJSON(lines)
+    printJSON(recognise(cgImage) + recognise(scaled(cgImage, by: 2)))
 }
 
 let args = CommandLine.arguments
