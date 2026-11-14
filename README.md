@@ -29,6 +29,8 @@ macron kill --game d3d11-probe               # stop everything in that game's Wi
 macron waitforexitandrun <exe> [args]        # what Steam calls; the profile comes from SteamAppId
 ```
 
+`MACRON_BACKEND=dxmt|dxvk|wined3d` overrides the profile's graphics backend for one launch, like Proton's `PROTON_USE_WINED3D`; it is how backends are compared on a game without changing its profile. Macron starts Wine with `WINEDEBUG=-all` unless `WINEDEBUG` is already set, so `WINEDEBUG=fps` prints wined3d's frame rate into the launch log.
+
 `MACRON_OPENGL=llvmpipe` draws OpenGL in software with Mesa (downloaded on first use), for Macs without a hardware OpenGL renderer such as virtual machines and GitHub's runners. Like Proton's `PROTON_USE_WINED3D`, it is a user switch, not part of any game's profile.
 
 Everything lives in `~/Library/Application Support/Macron` (or `$MACRON_HOME`): `runtimes/<version>/` holds two Wine trees, plain and with DXMT (an APFS clone, so it costs almost no disk), `prefixes/<game>/` one private Windows environment per game (its user folders are not linked to the Mac's), `logs/<game>/` a log per launch. A profile (`fixes/games/<id>.json`) picks the graphics backend (`dxmt` for Direct3D 10/11 through Metal, `wined3d` for Wine's Direct3D-to-OpenGL), and can add environment variables, DLL overrides, registry values (applied again whenever they change), extra installs (`vcrun2022`, pinned in `fixes/installers.go`, run once per prefix), launch arguments and files to write before the first start (`{game}/…`, `{appdata}/…`, `{documents}/…`). Failures inside macron exit 125 with a stable error code; otherwise macron exits with the game's exit code.

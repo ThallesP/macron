@@ -94,6 +94,13 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 	if openGL != "" && openGL != "llvmpipe" {
 		return fail(output, failure.Errorf(failure.CodeInvalidInput, "MACRON_OPENGL=%q; the only choice is llvmpipe", openGL))
 	}
+	profile, err := withBackendFromEnv(in.Profile, os.Getenv("MACRON_BACKEND"))
+	if err != nil {
+		return fail(output, err)
+	}
+	if profile.Backend != in.Profile.Backend {
+		progress(fmt.Sprintf("backend %s instead of the profile's %s (MACRON_BACKEND)", profile.Backend, in.Profile.Backend))
+	}
 	installed, err := wineruntime.Install(ctx, layout, wineruntime.Pinned, progress)
 	if err != nil {
 		return fail(output, err)
@@ -102,7 +109,7 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 		Runtime:        installed,
 		Installers:     fixes.Installers,
 		DownloadsDir:   layout.DownloadsDir(),
-		Profile:        in.Profile,
+		Profile:        profile,
 		Prefix:         prefix,
 		Exe:            in.Exe,
 		Cwd:            in.Cwd,
@@ -116,6 +123,18 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 		return fail(output, err)
 	}
 	return exitCode
+}
+
+func withBackendFromEnv(profile fixes.Profile, value string) (fixes.Profile, error) {
+	if value == "" {
+		return profile, nil
+	}
+	backend := fixes.Backend(value)
+	if !backend.IsKnown() {
+		return fixes.Profile{}, failure.Errorf(failure.CodeInvalidInput, "MACRON_BACKEND=%q; the choices are dxmt, dxvk and wined3d", value)
+	}
+	profile.Backend = backend
+	return profile, nil
 }
 
 func progressTo(w io.Writer) func(string) {

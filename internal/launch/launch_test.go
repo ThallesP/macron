@@ -120,8 +120,12 @@ func TestRunPassesTheGamesExitCodeAndProfile(t *testing.T) {
 			t.Errorf("game environment lacks %s:\n%s", want, env)
 		}
 	}
-	if cwd := strings.TrimSpace(g.read(t, "game-cwd.txt")); cwd != filepath.Dir(g.exe) {
-		t.Errorf("game started in %s", cwd)
+	gameDir, err := filepath.EvalSymlinks(filepath.Dir(g.exe))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cwd := strings.TrimSpace(g.read(t, "game-cwd.txt")); cwd != gameDir {
+		t.Errorf("game started in %s, want %s", cwd, gameDir)
 	}
 	if settings := g.read(t, "prefix/drive_c/users/player/AppData/Roaming/Some Game/settings.ini"); settings != "width=800" {
 		t.Errorf("settings.ini = %q", settings)
@@ -194,7 +198,7 @@ func TestDXVKBackendPutsItsDLLsInThePrefix(t *testing.T) {
 	if got := g.read(t, "prefix/drive_c/windows/syswow64/d3d11.dll"); got != "dxvk 32" {
 		t.Errorf("syswow64/d3d11.dll = %q", got)
 	}
-	if env := g.read(t, "game-env.txt"); !strings.Contains(env, "WINEDLLOVERRIDES=d3d10core=n;d3d11=n;dxgi=n;mscoree=;mshtml=") {
+	if env := g.read(t, "game-env.txt"); !strings.Contains(env, "WINEDLLOVERRIDES=d3d10core=n;d3d11=n;d3d9=n;dxgi=n;mscoree=;mshtml=") {
 		t.Errorf("DXVK overrides missing:\n%s", env)
 	}
 }
@@ -320,4 +324,28 @@ func TestSoftwareOpenGLPutsMesaInThePrefix(t *testing.T) {
 	if !strings.Contains(env, "opengl32=n,b") {
 		t.Errorf("opengl32 is not overridden:\n%s", env)
 	}
+}
+
+func TestTheUsersWineDebugChannelsWin(t *testing.T) {
+	env := Environment(fixes.Default("x"), "/prefix", []string{"WINEDEBUG=fps", "WINEPREFIX=/elsewhere"})
+
+	if got := lastValue(env, "WINEDEBUG"); got != "fps" {
+		t.Errorf("WINEDEBUG=%q, want the user's fps", got)
+	}
+	if got := lastValue(env, "WINEPREFIX"); got != "/prefix" {
+		t.Errorf("WINEPREFIX=%q, want macron's prefix", got)
+	}
+	if got := lastValue(Environment(fixes.Default("x"), "/prefix", nil), "WINEDEBUG"); got != "-all" {
+		t.Errorf("WINEDEBUG=%q without the user's, want -all", got)
+	}
+}
+
+func lastValue(env []string, name string) string {
+	value := ""
+	for _, entry := range env {
+		if after, ok := strings.CutPrefix(entry, name+"="); ok {
+			value = after
+		}
+	}
+	return value
 }

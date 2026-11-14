@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"context"
 	"testing"
+
+	"github.com/ThallesP/macron/fixes"
+	"github.com/ThallesP/macron/internal/failure"
 )
 
 func TestUsageErrorsExitTwo(t *testing.T) {
@@ -42,5 +45,20 @@ func TestLaunchUnknownGameFails(t *testing.T) {
 
 	if code != exitFailed || !bytes.Contains(stderr.Bytes(), []byte("UNKNOWN_GAME")) {
 		t.Fatalf("exited %d: %s", code, stderr.String())
+	}
+}
+
+func TestMacronBackendOverridesTheProfile(t *testing.T) {
+	profile := fixes.Default("steam-1")
+
+	got, err := withBackendFromEnv(profile, "wined3d")
+	if err != nil || got.Backend != fixes.BackendWineD3D {
+		t.Errorf("got %v, %v", got.Backend, err)
+	}
+	if got, _ := withBackendFromEnv(profile, ""); got.Backend != fixes.BackendDXMT {
+		t.Errorf("empty MACRON_BACKEND changed the backend to %s", got.Backend)
+	}
+	if _, err := withBackendFromEnv(profile, "metal"); failure.CodeOf(err) != failure.CodeInvalidInput {
+		t.Errorf("unknown backend: %v", err)
 	}
 }

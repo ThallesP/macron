@@ -41,7 +41,7 @@ var backendTrees = map[fixes.Backend]wineruntime.Tree{
 
 var backendDLLOverrides = map[fixes.Backend]map[string]string{
 	fixes.BackendDXMT:    {},
-	fixes.BackendDXVK:    {"d3d11": "n", "d3d10core": "n", "dxgi": "n"},
+	fixes.BackendDXVK:    {"d3d9": "n", "d3d11": "n", "d3d10core": "n", "dxgi": "n"},
 	fixes.BackendWineD3D: {},
 }
 
@@ -105,9 +105,8 @@ func Run(ctx context.Context, in Input) (int, error) {
 }
 
 func Environment(profile fixes.Profile, prefix string, base []string) []string {
-	env := slices.Concat(base, []string{
+	env := slices.Concat([]string{"WINEDEBUG=-all"}, base, []string{
 		"WINEPREFIX=" + prefix,
-		"WINEDEBUG=-all",
 		"WINEDLLOVERRIDES=" + dllOverrides(profile, nil),
 	})
 	for _, name := range slices.Sorted(maps.Keys(profile.Env)) {
