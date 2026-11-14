@@ -43,6 +43,21 @@ Checked by hand on Thalles's MacBook Air (M3, macOS 26.5, Steam build 1794536281
 - **Tools on a Mac without mingw:** `zig cc -target x86_64-windows-gnu` builds the probe. `go test ./internal/launch` fails on macOS in `TestRunPassesTheGamesExitCodeAndProfile` because the temp folder is a symlink (`/var` and `/private/var`); it passes on Linux.
 - **Steam's logs folder is recreated at login**, so a watcher that tails `logs/bootstrap_log.txt` across a restart loses the file.
 
+## Gate 2 findings, dev machine, 2026-11-14
+
+From the client packages on Valve's public update CDN (no account; `client-update.akamai.steamstatic.com/steam_client_osx`, build 1794536281). Its `steamclient.dylib` hashes to `55a9341f...`, the row already in `KnownBuilds`.
+
+- **"Invalid platform" is `Steam_AppUpdateError_29`** (`steamui_english-json.js`). `steamclient.dylib` raises it during install or update when it decides the running OS cannot take the app's depot. That decision is the gate.
+- **Steam Play is in the Mac client but switched off.** `steamclient.dylib` carries the whole compat-tool system: `CCompatManager`, `CRegisterCompatToolJob`, `CSpecifyAppCompatToolJob`, `CCacheOffSteamPlayStateJob`, `RemoteStorage_AppPlatformOverride*`, and the `compatibilitytools.d` scan. `steamui.dylib` has the UI side: `Settings.SpecifyGlobalCompatTool`, `Apps.SpecifyCompatTool`, `Apps.ClearProton`, `SetProtonEnvironment`. That matches NotProton's README ("present and inert").
+- **Why registration alone fails.** Steam reads Macron's `config.vdf` mapping (the MacBook log shows `Mapping AppID 0 to tool "macron"`), but a separate per-platform "Steam Play available" decision inside the running client still says no, so Install stays greyed and a forced install returns error 29. No config value or command-line flag turns that decision on.
+- **The plan for the switch.**
+  - Load a small dylib of ours into the running Steam client. It makes the "Steam Play available on this platform" decision return yes, and does nothing else.
+  - The least invasive way to load it is `DYLD_INSERT_LIBRARIES`, set in `LSEnvironment` of Steam.app's `Info.plist`. Steam's executables stay unchanged, and uninstalling restores the backed-up plist byte for byte. NotProton loads its dylib the same way (read only, for orientation; the code is GPL and is not copied).
+  - Pin the dylib to builds in `KnownBuilds`. On an unknown build it changes nothing and logs why, as the hook already does.
+  - Mac-native games keep their Mac depot, because the switch only fires for apps whose platform list lacks macOS.
+  - Still unchecked: whether the inner `steam_osx` (`Steam.AppBundle/.../steam_osx`, which `Steam.app` starts) accepts `DYLD_INSERT_LIBRARIES`. It depends on the signature flags and entitlements of both binaries, and has to be checked on a Mac, which is the next step.
+- **The `steam_osx` package changed.** `steam_osx.zip` on the CDN today hashes to `c15565c6...`, not the `99cc0889...` in `KnownBuilds`. The hook identifies a build by the inner `steam_osx`, so either the CDN package differs from what a running client unpacks, or the identity file needs another look. To check on a Mac.
+
 ## What is known
 
 From building gate 1, 2026-11-14:
@@ -85,7 +100,7 @@ Existing projects worth reading (see the licence rule in GOAL.md): NotProton (`N
 ## Next
 
 1. Gate 1: reproduce the Direct3D 9 slowness without the MacBook (a free 32-bit Clickteam Fusion or other Direct3D 9 game, or a 32-bit Direct3D 9 program of ours, on a sandbox), measure which layer costs the time, then confirm on the MacBook with Ultimate Custom Night. First things to compare: wined3d on OpenGL against wined3d's Vulkan renderer and DXVK's d3d9 on a real GPU, 32-bit against 64-bit, with and without msync, windowed against full screen, Retina mode on and off.
-2. Gate 2: find out how the Mac client decides "Invalid platform" and what switches Steam Play on.
+2. Gate 2: the decision behind "Invalid platform" is found (see "Gate 2 findings"). Next, on an `sbx` sandbox: check whether the inner `steam_osx` accepts `DYLD_INSERT_LIBRARIES` set through `Info.plist`'s `LSEnvironment`; write Macron's own switch dylib; check that Steam still reaches its login window with the switch loaded and refuses unknown builds. Then on the MacBook with his logged-in Steam: press Install and Play.
 3. Gate 3 as soon as gate 2 works once.
 4. Left from phase 1: the scenario for the probe still uses DXVK; with the patched `winemac.so` pinned it can run through DXMT. The hardware OpenGL path (Xonotic without `MACRON_OPENGL`) is still unchecked on a real Mac.
 
