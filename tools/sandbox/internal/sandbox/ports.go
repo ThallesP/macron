@@ -52,7 +52,7 @@ type Backend interface {
 	AwaitAnnouncement(ctx context.Context, machine Machine) (Announcement, error)
 	Find(ctx context.Context, id string) (Machine, bool, error)
 	List(ctx context.Context) ([]Machine, error)
-	Stop(ctx context.Context, id string) (Machine, error)
+	Stop(ctx context.Context, machine Machine) (Machine, error)
 }
 
 type Route struct {

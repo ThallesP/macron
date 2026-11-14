@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"slices"
 
 	"github.com/ThallesP/macron/tools/sandbox/internal/sandbox"
@@ -35,7 +36,7 @@ type Proxy func(ctx context.Context, host string, in io.Reader, out io.Writer) e
 type CLI struct {
 	App             *sandbox.App
 	Proxies         map[string]Proxy
-	Stdin           io.Reader
+	Stdin           *os.File
 	Stdout          io.Writer
 	Stderr          io.Writer
 	StdinIsTerminal bool

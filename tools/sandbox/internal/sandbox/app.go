@@ -9,7 +9,7 @@ import (
 const (
 	DefaultTTL   = 30 * time.Minute
 	MinTTL       = 30 * time.Second
-	MaxTTL       = 6 * time.Hour
+	MaxTTL       = 330 * time.Minute
 	StartTimeout = 10 * time.Minute
 	StopTimeout  = 3 * time.Minute
 )

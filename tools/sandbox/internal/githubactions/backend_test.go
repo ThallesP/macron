@@ -15,19 +15,34 @@ import (
 )
 
 type fakeGitHub struct {
-	responses map[string]string
-	calls     []string
-	bodies    []any
+	responses  map[string]string
+	notFoundAt map[string]int
+	calls      []string
+	bodies     []any
 }
 
 func (f *fakeGitHub) api(_ context.Context, method, path string, body any) ([]byte, error) {
-	f.calls = append(f.calls, method+" "+path)
+	call := method + " " + path
+	f.calls = append(f.calls, call)
 	f.bodies = append(f.bodies, body)
-	response, isKnown := f.responses[method+" "+path]
+	if f.notFoundAt[call] > 0 {
+		f.notFoundAt[call]--
+		return nil, fmt.Errorf("GitHub %s: %w", call, ErrNotFound)
+	}
+	response, isKnown := f.responses[call]
 	if !isKnown {
-		return nil, fmt.Errorf("unexpected call %s %s", method, path)
+		return nil, fmt.Errorf("unexpected call %s", call)
 	}
 	return []byte(response), nil
+}
+
+func announcementArchive() string {
+	var archive bytes.Buffer
+	writer := zip.NewWriter(&archive)
+	file, _ := writer.Create("sandbox.json")
+	file.Write([]byte(`{"id":"sbx_abcd2345","transport":"cloudflare-quick","user":"runner","hostKey":"ssh-ed25519 AAAA","sealedEndpoint":"c2VhbGVk","autoStopAt":1800000000,"hardStopAt":1800019800}`))
+	writer.Close()
+	return archive.String()
 }
 
 const runsPath = "GET repos/o/r/actions/workflows/sandbox.yml/runs?event=workflow_dispatch&per_page=100"
@@ -142,29 +157,91 @@ func TestStartDispatchesOnlyPublicValues(t *testing.T) {
 	}
 }
 
-func TestStopLeavesAStoppedSandboxAlone(t *testing.T) {
-	github := &fakeGitHub{responses: map[string]string{
-		runsPath: `{"workflow_runs":[` + runJSON(1, "sbx_ended234", "completed", "cancelled") + `]}`,
-	}}
-	backend := &Backend{Repo: "o/r", Ref: "main", API: github.api}
+func TestAwaitAnnouncementWaitsForARunGitHubDoesNotShowYet(t *testing.T) {
+	artifactsPath := "GET repos/o/r/actions/runs/5/artifacts?name=sbx_abcd2345"
+	github := &fakeGitHub{
+		notFoundAt: map[string]int{artifactsPath: 2},
+		responses: map[string]string{
+			artifactsPath:                            `{"artifacts":[{"id":44}]}`,
+			"GET repos/o/r/actions/artifacts/44/zip": announcementArchive(),
+		},
+	}
+	backend := &Backend{Repo: "o/r", Ref: "main", PollInterval: time.Millisecond, API: github.api}
 
-	machine, err := backend.Stop(context.Background(), "sbx_ended234")
+	announcement, err := backend.AwaitAnnouncement(context.Background(), sandbox.Machine{ID: "sbx_abcd2345", Ref: "5"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if machine.State != sandbox.StateStopped || len(github.calls) != 1 {
+	if announcement.ID != "sbx_abcd2345" || len(github.calls) != 4 {
+		t.Errorf("got %+v after %v", announcement, github.calls)
+	}
+}
+
+func TestAwaitAnnouncementFailsWhenTheRunEndsFirst(t *testing.T) {
+	github := &fakeGitHub{responses: map[string]string{
+		"GET repos/o/r/actions/runs/5/artifacts?name=sbx_abcd2345": `{"artifacts":[]}`,
+		"GET repos/o/r/actions/runs/5":                             runJSON(5, "sbx_abcd2345", "completed", "failure"),
+	}}
+	backend := &Backend{Repo: "o/r", Ref: "main", PollInterval: time.Millisecond, API: github.api}
+
+	_, err := backend.AwaitAnnouncement(context.Background(), sandbox.Machine{ID: "sbx_abcd2345", Ref: "5"})
+
+	var expected *sandbox.Error
+	if !errors.As(err, &expected) || expected.Code != sandbox.CodeStartFailed {
+		t.Fatalf("got %v, want %s", err, sandbox.CodeStartFailed)
+	}
+}
+
+func TestStopCancelsTheRunAndWaitsForItToEnd(t *testing.T) {
+	github := &fakeGitHub{responses: map[string]string{
+		"POST repos/o/r/actions/runs/5/cancel": `{}`,
+		"GET repos/o/r/actions/runs/5":         runJSON(5, "sbx_ready234", "completed", "cancelled"),
+	}}
+	backend := &Backend{Repo: "o/r", Ref: "main", PollInterval: time.Millisecond, API: github.api}
+
+	machine, err := backend.Stop(context.Background(), sandbox.Machine{ID: "sbx_ready234", Ref: "5", State: sandbox.StateReady})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if machine.State != sandbox.StateStopped || len(github.calls) != 2 {
+		t.Errorf("got %+v after %v", machine, github.calls)
+	}
+}
+
+func TestStopKeepsCancellingARunGitHubDoesNotShowYet(t *testing.T) {
+	github := &fakeGitHub{
+		notFoundAt: map[string]int{"POST repos/o/r/actions/runs/5/cancel": 2, "GET repos/o/r/actions/runs/5": 2},
+		responses: map[string]string{
+			"POST repos/o/r/actions/runs/5/cancel": `{}`,
+			"GET repos/o/r/actions/runs/5":         runJSON(5, "sbx_ready234", "completed", "cancelled"),
+		},
+	}
+	backend := &Backend{Repo: "o/r", Ref: "main", PollInterval: time.Millisecond, API: github.api}
+
+	machine, err := backend.Stop(context.Background(), sandbox.Machine{ID: "sbx_ready234", Ref: "5", State: sandbox.StateStarting})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if machine.State != sandbox.StateStopped || len(github.calls) != 6 {
+		t.Errorf("got %+v after %v", machine, github.calls)
+	}
+}
+
+func TestStopLeavesAStoppedSandboxAlone(t *testing.T) {
+	github := &fakeGitHub{}
+	backend := &Backend{Repo: "o/r", Ref: "main", API: github.api}
+
+	machine, err := backend.Stop(context.Background(), sandbox.Machine{ID: "sbx_ended234", Ref: "1", State: sandbox.StateStopped})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if machine.State != sandbox.StateStopped || len(github.calls) != 0 {
 		t.Errorf("got %+v after %v", machine, github.calls)
 	}
 }
 
 func TestReadAnnouncement(t *testing.T) {
-	var archive bytes.Buffer
-	writer := zip.NewWriter(&archive)
-	file, _ := writer.Create("sandbox.json")
-	file.Write([]byte(`{"id":"sbx_abcd2345","transport":"cloudflare-quick","user":"runner","hostKey":"ssh-ed25519 AAAA","sealedEndpoint":"c2VhbGVk","autoStopAt":1800000000,"hardStopAt":1800019800}`))
-	writer.Close()
-
-	announcement, err := readAnnouncement(archive.Bytes())
+	announcement, err := readAnnouncement([]byte(announcementArchive()))
 	if err != nil {
 		t.Fatal(err)
 	}

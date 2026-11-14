@@ -1,6 +1,7 @@
 package sandbox
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strconv"
@@ -47,21 +48,22 @@ func (a *App) List(ctx context.Context, in ListInput) ([]Sandbox, error) {
 }
 
 func (a *App) Stop(ctx context.Context, id string) (Sandbox, error) {
-	if _, err := a.find(ctx, id); err != nil {
+	machine, err := a.find(ctx, id)
+	if err != nil {
 		return Sandbox{}, err
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, StopTimeout)
 	defer cancel()
 
-	machine, err := a.Backend.Stop(ctx, id)
+	stopped, err := a.Backend.Stop(ctx, machine)
 	if err != nil {
 		return Sandbox{}, err
 	}
 	if err := a.Store.Remove(id); err != nil {
 		return Sandbox{}, err
 	}
-	return a.describe(machine)
+	return a.describe(stopped)
 }
 
 type ExtendInput struct {
@@ -82,14 +84,15 @@ func (a *App) Extend(ctx context.Context, in ExtendInput) (Sandbox, error) {
 		`stop_at=$(( $(date +%%s) + %d )) && echo "$stop_at" > ~/.sbx/auto-stop-at.new && mv ~/.sbx/auto-stop-at.new ~/.sbx/auto-stop-at && echo "$stop_at"`,
 		int(in.TTL.Seconds()),
 	)
-	output, err := a.batchCommand(ctx, in.ID, remote).Output()
+	var output bytes.Buffer
+	exitCode, err := a.run(ctx, remoteCommand{ID: in.ID, Line: remote, Stdout: &output})
 	if err != nil {
-		if err := a.stoppedError(ctx, in.ID); err != nil {
-			return Sandbox{}, err
-		}
-		return Sandbox{}, Errorf(CodeExtendFailed, "could not reach %s to move its auto-stop time", in.ID)
+		return Sandbox{}, err
 	}
-	stopAtUnix, err := strconv.ParseInt(strings.TrimSpace(string(output)), 10, 64)
+	if exitCode != 0 {
+		return Sandbox{}, Errorf(CodeExtendFailed, "%s could not move its auto-stop time", in.ID)
+	}
+	stopAtUnix, err := strconv.ParseInt(strings.TrimSpace(output.String()), 10, 64)
 	if err != nil {
 		return Sandbox{}, Errorf(CodeExtendFailed, "%s answered with an unreadable auto-stop time", in.ID)
 	}

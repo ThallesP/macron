@@ -23,45 +23,51 @@ func (a *App) New(ctx context.Context, in NewInput) (Sandbox, error) {
 	if err := a.Store.Create(id); err != nil {
 		return Sandbox{}, err
 	}
-
-	sandbox, err := a.start(ctx, id, in)
+	seal, err := newSealKey()
 	if err != nil {
-		a.abandon(id)
+		return Sandbox{}, err
+	}
+
+	machine, err := a.launch(ctx, id, seal, in.TTL)
+	if err != nil {
+		a.Store.Remove(id)
+		return Sandbox{}, err
+	}
+	record := Record{ID: id, Transport: a.Transport.Name()}
+	in.OnStarted(describe(machine, a.Backend.Name(), record, true))
+
+	sandbox, err := a.awaitReady(ctx, machine, seal, record)
+	if err != nil {
+		a.abandon(machine)
 		return Sandbox{}, err
 	}
 	return sandbox, nil
 }
 
-func (a *App) start(ctx context.Context, id string, in NewInput) (Sandbox, error) {
+func (a *App) launch(ctx context.Context, id string, seal sealKey, ttl time.Duration) (Machine, error) {
 	sshPublicKey, err := a.generateKey(ctx, id)
 	if err != nil {
-		return Sandbox{}, err
-	}
-	seal, err := newSealKey()
-	if err != nil {
-		return Sandbox{}, err
+		return Machine{}, err
 	}
 	sealPublicKey, err := seal.Public()
 	if err != nil {
-		return Sandbox{}, err
+		return Machine{}, err
 	}
 
-	machine, err := a.Backend.Start(ctx, StartInput{
+	return a.Backend.Start(ctx, StartInput{
 		ID:            id,
 		SSHPublicKey:  sshPublicKey,
 		SealPublicKey: sealPublicKey,
-		TTL:           in.TTL,
+		TTL:           ttl,
 		Transport:     a.Transport.Name(),
 	})
-	if err != nil {
-		return Sandbox{}, err
-	}
+}
 
-	record := Record{ID: id, Transport: a.Transport.Name()}
+func (a *App) awaitReady(ctx context.Context, machine Machine, seal sealKey, record Record) (Sandbox, error) {
+	id := machine.ID
 	if err := a.Store.Save(record); err != nil {
 		return Sandbox{}, err
 	}
-	in.OnStarted(describe(machine, a.Backend.Name(), record, true))
 
 	ctx, cancel := context.WithTimeout(ctx, StartTimeout)
 	defer cancel()
@@ -110,10 +116,10 @@ func startError(id string, err error) error {
 	return err
 }
 
-func (a *App) abandon(id string) {
+func (a *App) abandon(machine Machine) {
 	ctx, cancel := context.WithTimeout(context.Background(), StopTimeout)
 	defer cancel()
 
-	a.Backend.Stop(ctx, id)
-	a.Store.Remove(id)
+	a.Backend.Stop(ctx, machine)
+	a.Store.Remove(machine.ID)
 }

@@ -5,15 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os/exec"
 	"strings"
 
 	"github.com/ThallesP/macron/tools/sandbox/internal/sandbox"
 )
 
+var ErrNotFound = errors.New("not found")
+
 func GH(ctx context.Context, method, path string, body any) ([]byte, error) {
-	args := []string{"api", "--method", method, path}
-	command := exec.CommandContext(ctx, "gh", args...)
+	command := exec.CommandContext(ctx, "gh", "api", "--method", method, "-H", "X-GitHub-Api-Version: 2026-03-10", path)
 	if body != nil {
 		payload, err := json.Marshal(body)
 		if err != nil {
@@ -31,6 +33,9 @@ func GH(ctx context.Context, method, path string, body any) ([]byte, error) {
 	}
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
+	}
+	if strings.Contains(stderr.String(), "(HTTP 404)") {
+		return nil, fmt.Errorf("GitHub %s %s: %w", method, path, ErrNotFound)
 	}
 	if err != nil {
 		return nil, sandbox.Errorf(sandbox.CodeGitHubFailed, "GitHub %s %s: %s", method, path, strings.TrimSpace(stderr.String()))

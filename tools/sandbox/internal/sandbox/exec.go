@@ -2,17 +2,14 @@ package sandbox
 
 import (
 	"context"
-	"errors"
 	"io"
-	"os/exec"
+	"os"
 )
-
-const sshFailureExitCode = 255
 
 type ExecInput struct {
 	ID      string
 	Command []string
-	Stdin   io.Reader
+	Stdin   *os.File
 	Stdout  io.Writer
 	Stderr  io.Writer
 }
@@ -25,27 +22,20 @@ func (a *App) Exec(ctx context.Context, in ExecInput) (int, error) {
 		return 0, err
 	}
 
-	command := a.batchCommand(ctx, in.ID, RemoteCommand(in.Command))
-	command.Stdin = in.Stdin
-	command.Stdout = in.Stdout
-	command.Stderr = in.Stderr
-
-	err := command.Run()
-	if err == nil {
-		return 0, nil
-	}
-
-	var exit *exec.ExitError
-	if !errors.As(err, &exit) || exit.ExitCode() < 0 {
-		return 0, err
-	}
-	if exit.ExitCode() != sshFailureExitCode {
-		return exit.ExitCode(), nil
+	exitCode, err := a.run(ctx, remoteCommand{
+		ID:     in.ID,
+		Line:   RemoteCommand(in.Command),
+		Stdin:  in.Stdin,
+		Stdout: in.Stdout,
+		Stderr: in.Stderr,
+	})
+	if err != nil || exitCode != sshFailureExitCode {
+		return exitCode, err
 	}
 	if err := a.stoppedError(ctx, in.ID); err != nil {
 		return 0, err
 	}
-	return sshFailureExitCode, nil
+	return exitCode, nil
 }
 
 func (a *App) ShellCommand(ctx context.Context, id string, command []string, withTerminal bool) ([]string, error) {

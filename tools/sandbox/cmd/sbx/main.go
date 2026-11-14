@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"github.com/ThallesP/macron/tools/sandbox/internal/cli"
 	"github.com/ThallesP/macron/tools/sandbox/internal/cloudflare"
@@ -36,9 +37,10 @@ func main() {
 	program := cli.CLI{
 		App: &sandbox.App{
 			Backend: &githubactions.Backend{
-				Repo: envOr("SBX_REPO", "ThallesP/macron"),
-				Ref:  envOr("SBX_REF", "main"),
-				API:  githubactions.GH,
+				Repo:         envOr("SBX_REPO", "ThallesP/macron"),
+				Ref:          envOr("SBX_REF", "main"),
+				PollInterval: 2 * time.Second,
+				API:          githubactions.GH,
 			},
 			Transport: cloudflare.QuickTunnel{Executable: executable},
 			Store:     sandbox.Store{Dir: filepath.Join(stateHome, "sbx")},

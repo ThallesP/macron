@@ -1,8 +1,8 @@
 package sandbox
 
 import (
-	"bytes"
 	"context"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -28,20 +28,38 @@ func (a *App) Copy(ctx context.Context, in CopyInput) error {
 		return err
 	}
 
-	args := []string{"-F", a.Store.SSHConfigPath(id), "-o", "BatchMode=yes", "-q"}
+	args := []string{"-F", a.Store.SSHConfigPath(id), "-o", "BatchMode=yes", "-o", "LogLevel=VERBOSE"}
 	if in.Recursive {
 		args = append(args, "-r")
 	}
 	args = append(args, "--", in.Source, in.Destination)
 
-	var failure bytes.Buffer
-	command := exec.CommandContext(ctx, "scp", args...)
-	command.Stderr = &failure
-	if command.Run() == nil {
+	result, err := a.overSSH(ctx, id, func(ctx context.Context, log *os.File) *exec.Cmd {
+		command := exec.CommandContext(ctx, "scp", args...)
+		command.Stderr = log
+		return command
+	})
+	if err != nil {
+		return err
+	}
+	if result.ExitCode == 0 {
 		return nil
 	}
 	if err := a.stoppedError(ctx, id); err != nil {
 		return err
 	}
-	return Errorf(CodeCopyFailed, "copy failed: %s", strings.TrimSpace(failure.String()))
+	return Errorf(CodeCopyFailed, "copy failed: %s", scpComplaint(result.Complaints))
+}
+
+func scpComplaint(output string) string {
+	complaint := ""
+	for line := range strings.Lines(output) {
+		if strings.HasPrefix(line, "scp: ") || strings.Contains(line, "Host key verification failed") {
+			complaint += line
+		}
+	}
+	if complaint == "" {
+		return lastLine(output)
+	}
+	return strings.TrimSpace(complaint)
 }

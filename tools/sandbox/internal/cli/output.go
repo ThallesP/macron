@@ -16,10 +16,13 @@ func clock(at *time.Time) string {
 }
 
 func keyPlace(s sandbox.Sandbox) string {
+	if !s.State.IsActive() {
+		return "-"
+	}
 	if s.HasKey {
 		return "this machine"
 	}
-	return "elsewhere"
+	return "another machine"
 }
 
 func (c CLI) printTable(sandboxes []sandbox.Sandbox) {

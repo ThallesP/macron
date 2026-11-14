@@ -108,7 +108,7 @@ jobs:
             nc -z 127.0.0.1 2222 2>/dev/null && break
             sleep 0.25
           done
-          nc -z 127.0.0.1 2222 || fail "sshd did not start"
+          nc -z 127.0.0.1 2222 2>/dev/null || fail "sshd did not start"
 
           curl -fsSL --retry 3 -o "$dir/cloudflared.tgz" \
             "https://github.com/cloudflare/cloudflared/releases/download/$CLOUDFLARED_VERSION/cloudflared-darwin-arm64.tgz"

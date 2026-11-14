@@ -7,6 +7,8 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -122,6 +124,33 @@ func TestNewIDIsAnID(t *testing.T) {
 	for range 200 {
 		if id := newID(); !IsID(id) {
 			t.Fatalf("%q is not a sandbox ID", id)
+		}
+	}
+}
+
+func TestReadSSHLog(t *testing.T) {
+	cases := []struct {
+		name        string
+		log         string
+		hasLoggedIn bool
+		complaints  string
+	}{
+		{"a clean run", "Authenticated to host (via proxy) using \"publickey\".\nTransferred: sent 1, received 2 bytes, in 0.1 seconds\nBytes per second: sent 1, received 2\n", true, ""},
+		{"a stall before login", "Connection to UNKNOWN port 65535 timed out\n", false, "Connection to UNKNOWN port 65535 timed out\n"},
+		{"a drop after login", "Authenticated to host (via proxy) using \"publickey\".\nTimeout, server host not responding.\n", true, "Timeout, server host not responding.\n"},
+		{"a remote line that only looks like a login", "scp: Authenticated to nothing\n", false, "scp: Authenticated to nothing\n"},
+	}
+	for _, c := range cases {
+		path := filepath.Join(t.TempDir(), "ssh.log")
+		if err := os.WriteFile(path, []byte(c.log), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		result, err := readSSHLog(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result.HasLoggedIn != c.hasLoggedIn || result.Complaints != c.complaints {
+			t.Errorf("%s: got %+v", c.name, result)
 		}
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -17,14 +18,14 @@ const (
 	workflowFile     = "sandbox.yml"
 	announcementFile = "sandbox.json"
 	readyStepName    = "Run until the auto-stop time"
-	maxTTL           = 330 * time.Minute
 	macJobLimit      = 5
 )
 
 type Backend struct {
-	Repo string
-	Ref  string
-	API  func(ctx context.Context, method, path string, body any) ([]byte, error)
+	Repo         string
+	Ref          string
+	PollInterval time.Duration
+	API          func(ctx context.Context, method, path string, body any) ([]byte, error)
 }
 
 type run struct {
@@ -71,10 +72,6 @@ func (*Backend) Name() string {
 }
 
 func (b *Backend) Start(ctx context.Context, in sandbox.StartInput) (sandbox.Machine, error) {
-	if in.TTL > maxTTL {
-		return sandbox.Machine{}, sandbox.Errorf(sandbox.CodeInvalidInput, "a GitHub Actions sandbox can run for %s at most", maxTTL)
-	}
-
 	runs, err := b.runs(ctx)
 	if err != nil {
 		return sandbox.Machine{}, err
@@ -122,33 +119,45 @@ func (b *Backend) Start(ctx context.Context, in sandbox.StartInput) (sandbox.Mac
 
 func (b *Backend) AwaitAnnouncement(ctx context.Context, machine sandbox.Machine) (sandbox.Announcement, error) {
 	for {
-		var listed struct {
-			Artifacts []struct {
-				ID int64 `json:"id"`
-			} `json:"artifacts"`
-		}
-		err := b.call(ctx, "GET", fmt.Sprintf("repos/%s/actions/runs/%s/artifacts?name=%s", b.Repo, machine.Ref, machine.ID), nil, &listed)
-		if err != nil {
+		announcement, isAnnounced, err := b.pollAnnouncement(ctx, machine)
+		if err != nil && !errors.Is(err, ErrNotFound) {
 			return sandbox.Announcement{}, err
 		}
-		if len(listed.Artifacts) > 0 {
-			return b.announcement(ctx, listed.Artifacts[0].ID)
-		}
-
-		var current run
-		if err := b.call(ctx, "GET", fmt.Sprintf("repos/%s/actions/runs/%s", b.Repo, machine.Ref), nil, &current); err != nil {
-			return sandbox.Announcement{}, err
-		}
-		if current.isCompleted() {
-			return sandbox.Announcement{}, sandbox.Errorf(sandbox.CodeStartFailed, "%s ended before it was ready (%s); see %s", machine.ID, current.Conclusion, current.HTMLURL)
+		if isAnnounced {
+			return announcement, nil
 		}
 
 		select {
 		case <-ctx.Done():
 			return sandbox.Announcement{}, ctx.Err()
-		case <-time.After(3 * time.Second):
+		case <-time.After(b.PollInterval):
 		}
 	}
+}
+
+func (b *Backend) pollAnnouncement(ctx context.Context, machine sandbox.Machine) (sandbox.Announcement, bool, error) {
+	var listed struct {
+		Artifacts []struct {
+			ID int64 `json:"id"`
+		} `json:"artifacts"`
+	}
+	err := b.call(ctx, "GET", fmt.Sprintf("repos/%s/actions/runs/%s/artifacts?name=%s", b.Repo, machine.Ref, machine.ID), nil, &listed)
+	if err != nil {
+		return sandbox.Announcement{}, false, err
+	}
+	if len(listed.Artifacts) > 0 {
+		announcement, err := b.announcement(ctx, listed.Artifacts[0].ID)
+		return announcement, err == nil, err
+	}
+
+	var current run
+	if err := b.call(ctx, "GET", fmt.Sprintf("repos/%s/actions/runs/%s", b.Repo, machine.Ref), nil, &current); err != nil {
+		return sandbox.Announcement{}, false, err
+	}
+	if current.isCompleted() {
+		return sandbox.Announcement{}, false, sandbox.Errorf(sandbox.CodeStartFailed, "%s ended before it was ready (%s); see %s", machine.ID, current.Conclusion, current.HTMLURL)
+	}
+	return sandbox.Announcement{}, false, nil
 }
 
 func (b *Backend) announcement(ctx context.Context, artifactID int64) (sandbox.Announcement, error) {
@@ -227,36 +236,36 @@ func (b *Backend) List(ctx context.Context) ([]sandbox.Machine, error) {
 	return machines, nil
 }
 
-func (b *Backend) Stop(ctx context.Context, id string) (sandbox.Machine, error) {
-	machine, exists, err := b.Find(ctx, id)
-	if err != nil {
-		return sandbox.Machine{}, err
-	}
-	if !exists {
-		return sandbox.Machine{}, sandbox.Errorf(sandbox.CodeNotFound, "no sandbox %s", id)
-	}
+func (b *Backend) Stop(ctx context.Context, machine sandbox.Machine) (sandbox.Machine, error) {
 	if !machine.State.IsActive() {
 		return machine, nil
 	}
 
 	runPath := fmt.Sprintf("repos/%s/actions/runs/%s", b.Repo, machine.Ref)
-	if err := b.call(ctx, "POST", runPath+"/cancel", nil, nil); err != nil {
-		return sandbox.Machine{}, err
-	}
-
+	isCancelRequested := false
 	for {
+		var cancelErr error
+		if !isCancelRequested {
+			cancelErr = b.call(ctx, "POST", runPath+"/cancel", nil, nil)
+			isCancelRequested = cancelErr == nil
+		}
+
 		var current run
-		if err := b.call(ctx, "GET", runPath, nil, &current); err != nil {
+		err := b.call(ctx, "GET", runPath, nil, &current)
+		if err == nil && current.isCompleted() {
+			return current.machine(false), nil
+		}
+		if err != nil && !errors.Is(err, ErrNotFound) {
 			return sandbox.Machine{}, err
 		}
-		if current.isCompleted() {
-			return current.machine(false), nil
+		if cancelErr != nil && !errors.Is(cancelErr, ErrNotFound) {
+			return sandbox.Machine{}, cancelErr
 		}
 
 		select {
 		case <-ctx.Done():
-			return sandbox.Machine{}, fmt.Errorf("%s was told to stop but is still running; see %s", id, current.HTMLURL)
-		case <-time.After(2 * time.Second):
+			return sandbox.Machine{}, fmt.Errorf("%s was told to stop but has not ended; see %s", machine.ID, machine.URL)
+		case <-time.After(b.PollInterval):
 		}
 	}
 }
@@ -292,7 +301,8 @@ func (b *Backend) machine(ctx context.Context, r run) (sandbox.Machine, error) {
 			} `json:"steps"`
 		} `json:"jobs"`
 	}
-	if err := b.call(ctx, "GET", fmt.Sprintf("repos/%s/actions/runs/%d/jobs", b.Repo, r.ID), nil, &listed); err != nil {
+	err := b.call(ctx, "GET", fmt.Sprintf("repos/%s/actions/runs/%d/jobs", b.Repo, r.ID), nil, &listed)
+	if err != nil && !errors.Is(err, ErrNotFound) {
 		return sandbox.Machine{}, err
 	}
 
