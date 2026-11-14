@@ -33,8 +33,13 @@
   "cwd": "",
   "window": { "title": "^OpenTTD", "width": 800, "height": 600 },
   "reached": { "output": "", "settleSeconds": 20, "timeoutSeconds": 900 },
-  "compare": { "text": ["New Game", "Load Game", "Game Options", "Scenario Editor", "Quit"], "ignore": [] },
-  "reference": { "image": "reference.png", "source": "windows-latest, GDI, https://github.com/ThallesP/macron/actions/runs/43561567772 (two captures 5 s apart: SSIM 0.949, the title game moves behind the menu)" },
+  "compare": { "text": ["New Game", "Load Game", "Game Options", "Scenario Editor", "Quit"], "ignore": [
+    { "x": 0, "y": 0, "width": 0.4, "height": 1 },
+    { "x": 0.6, "y": 0, "width": 0.4, "height": 1 },
+    { "x": 0.4, "y": 0, "width": 0.2, "height": 0.18 },
+    { "x": 0.4, "y": 0.82, "width": 0.2, "height": 0.18 }
+  ] },
+  "reference": { "image": "reference.png", "source": "windows-latest, GDI, https://github.com/ThallesP/macron/actions/runs/43561567772 ; run 43562346925 shows the title game behind the menu moving to another place within 30 s on Windows itself (SSIM 0.209 unmasked), so everything outside the menu panel is ignored; masked, Windows 30 s later scores 0.944" },
   "otherGame": "d3d11-probe",
   "windowsExtra": [],
   "ci": false

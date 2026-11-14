@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"image"
 	"io"
 	"os"
 	"os/signal"
@@ -27,8 +28,8 @@ checked against a screenshot of the same program on Windows.
                      on a Mac: install, launch, wait, capture, compare
   macron-check reference <scenario-dir> --out <dir>
                      on Windows: capture the reference from the original program
-  macron-check compare <reference.png> <frame.png>
-                     score two pictures with the scenario check's measure
+  macron-check compare --scenario <dir> <frame.png> [desktop.png]
+                     score a picture against a scenario's reference and controls (no OCR)
 
 A failed check exits 1, wrong usage 2, a broken setup 125.
 `
@@ -190,24 +191,50 @@ func referenceCommand(ctx context.Context, args []string, stdout, stderr io.Writ
 }
 
 func compareCommand(ctx context.Context, args []string, stdout, stderr io.Writer) int {
-	if len(args) != 2 {
-		fmt.Fprint(stderr, "usage: macron-check compare <reference.png> <frame.png>\n")
+	var scenarioDir string
+	flags, ok := parse("compare", args, stderr, func(f *flag.FlagSet) {
+		f.StringVar(&scenarioDir, "scenario", "", "score against this scenario's reference, ignore regions and negative controls")
+	})
+	if !ok || scenarioDir == "" || flags.NArg() == 0 {
+		fmt.Fprint(stderr, "usage: macron-check compare --scenario <dir> <frame.png> [desktop.png]\n")
 		return exitUsage
 	}
-	reference, err := check.ReadPNG(args[0])
+	s, err := scenario.Load(scenarioDir)
 	if err != nil {
 		fmt.Fprintf(stderr, "macron-check: %s\n", err)
 		return exitBroken
 	}
-	frame, err := check.ReadPNG(args[1])
-	if err != nil {
-		fmt.Fprintf(stderr, "macron-check: %s\n", err)
-		return exitBroken
+	images := []image.Image{}
+	for _, path := range append([]string{s.ReferencePath()}, flags.Args()...) {
+		img, err := check.ReadPNG(path)
+		if err != nil {
+			fmt.Fprintf(stderr, "macron-check: %s\n", err)
+			return exitBroken
+		}
+		images = append(images, img)
 	}
-	score := imagecheck.Compare(reference, frame, nil)
-	fmt.Fprintf(stdout, "SSIM %.3f (needs >= %.2f), colour distance %.3f (needs <= %.2f): passes=%t\n",
-		score.SSIM, imagecheck.MinSSIM, score.ColorDistance, imagecheck.MaxColorDistance, score.Passes())
-	if !score.Passes() {
+	controls := imagecheck.BrokenRenders(images[0])
+	if len(images) > 2 {
+		controls = append(controls, imagecheck.Control{Name: "the desktop without the game", Image: images[2]})
+	}
+	if s.OtherGame != "" {
+		other, err := scenario.Load(filepath.Join(filepath.Dir(s.Dir), s.OtherGame))
+		if err != nil {
+			fmt.Fprintf(stderr, "macron-check: %s\n", err)
+			return exitBroken
+		}
+		otherImage, err := check.ReadPNG(other.ReferencePath())
+		if err != nil {
+			fmt.Fprintf(stderr, "macron-check: %s\n", err)
+			return exitBroken
+		}
+		controls = append(controls, imagecheck.Control{Name: "another game's menu", Image: otherImage})
+	}
+
+	verdict := check.Evaluate(check.EvaluateInput{Reference: images[0], Frame: images[1], Ignore: s.Compare.Ignore, Controls: controls})
+	report := check.Report{Scenario: s.Name, Where: "compare", Passed: verdict.Passed, Stage: "done", Verdict: &verdict, TimingsSecs: map[string]float64{}}
+	fmt.Fprint(stdout, report.Summary())
+	if !verdict.Passed {
 		return exitCheckFailed
 	}
 	return 0
