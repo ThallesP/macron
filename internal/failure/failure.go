@@ -17,6 +17,12 @@ const (
 	CodeBadProfile       Code = "BAD_PROFILE"
 	CodePrefixFailed     Code = "PREFIX_FAILED"
 	CodeLaunchFailed     Code = "LAUNCH_FAILED"
+	CodeSteamNotFound    Code = "STEAM_NOT_FOUND"
+	CodeUnknownBuild     Code = "UNKNOWN_STEAM_BUILD"
+	CodeSteamRunning     Code = "STEAM_RUNNING"
+	CodeHookNotEnabled   Code = "STEAM_HOOK_NOT_ENABLED"
+	CodeInvalidVDF       Code = "INVALID_VDF"
+	CodeFileFailed       Code = "FILE_FAILED"
 )
 
 type Error struct {
