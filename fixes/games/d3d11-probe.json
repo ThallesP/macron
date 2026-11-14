@@ -1,0 +1,12 @@
+{
+  "id": "d3d11-probe",
+  "name": "Macron Direct3D 11 probe",
+  "steamAppIds": [],
+  "backend": "dxmt",
+  "args": [],
+  "env": {},
+  "dllOverrides": {},
+  "files": [],
+  "installs": [],
+  "notes": "A small Direct3D 11 program from scenarios/d3d11-probe that draws a fixed picture into a 640x480 window."
+}
