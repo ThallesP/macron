@@ -8,11 +8,13 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 
 | Gate | State |
 |---|---|
-| 1. Fast (Ultimate Custom Night at its own frame rate, cause measured, a frame-rate check in CI) | not started; suspects listed under "From the MacBook" |
-| 2. Steam's own Install and Play buttons on the MacBook | not started; registration alone is proven not enough |
-| 3. A DMG release Thalles can install | not started |
+| 1. Fast (Ultimate Custom Night at its own frame rate on a sandbox, cause measured, a frame-rate check in CI) | in progress; baseline on a real M3 is about 5 fps, see "From the MacBook" |
+| 2. Steam's own Install and Play buttons, in a sandbox with the test account | in progress; registration alone is proven not enough |
+| 3. A DMG release Thalles can install, tested from the release on a fresh sandbox | not started |
 | 4. The Steam bridge (`SteamAPI_Init`, achievements, cloud) | not started |
-| 5. Overwatch to its main menu through Play on the MacBook | not started; waits for gate 3 and for disk space |
+| 5. Overwatch as far as a sandbox takes it (sign-in screen) | not started; waits for gate 3 |
+
+**2026-11-14, later: the MacBook is off limits.** Thalles withdrew it because the test sessions got in his way, and allowed a new Steam account for testing instead. GOAL.md was changed to match: every gate is now checked on the sandboxes. No session may run on the MacBook again.
 
 Phase 1 (loop day 1) for reference: gates 1 to 4 are green in CI on main ([Scenarios run 43569307839](https://github.com/ThallesP/macron/actions/runs/43569307839)): the Direct3D 11 probe and three games from three engines (OpenTTD, Xonotic at 1.24 GB, SuperTuxKart) reach their main menus through `macron` on GitHub's macOS runner and match the original games captured on Windows runners. Its gate 5 (the Steam registration) is green in CI; what it could not check is now answered below.
 
@@ -42,6 +44,9 @@ Checked by hand on Thalles's MacBook Air (M3, macOS 26.5, Steam build 1794536281
 - **The hook's build check and Steam's variants.** A Steam started from the notarised `/Applications/Steam.app` selects the package variant `macos-signed` and names its manifest `steam_client_signed_osx.manifest` (also `steam_client_signed-2_osx.manifest`), not `steam_client_osx.manifest`; the hook now globs for it. Its `steamclient.dylib` and `steam_osx` hashes at build 1794536281 are the same as the runner's. A stale client (his was from January) first installs an already-downloaded package, restarts, and only then fetches the current build, so the build can change between two starts.
 - **Tools on a Mac without mingw:** `zig cc -target x86_64-windows-gnu` builds the probe. `go test ./internal/launch` fails on macOS in `TestRunPassesTheGamesExitCodeAndProfile` because the temp folder is a symlink (`/var` and `/private/var`); it passes on Linux.
 - **Steam's logs folder is recreated at login**, so a watcher that tails `logs/bootstrap_log.txt` across a restart loses the file.
+
+- **Baseline frame rate, measured by the loop's own session on the M3 before the MacBook was withdrawn:** with `WINEDEBUG=fps` and the wined3d OpenGL path, Ultimate Custom Night's title screen presented at about **5 frames a second** (`trace:fps:wined3d_cs_exec_present ... @ approx 5.1fps`, `wglSwapBuffers @ approx 5.1fps`, steady over the run after a first second near 15), while the game's process used about 185% CPU. So the slowness is in or under wined3d's OpenGL presentation on a real GPU too, not only an impression. That session was interrupted before it measured any other backend.
+- **What disturbed Thalles**, so nothing like it is planned again anywhere a person works: a full-screen game over his desktop, `osascript` keystrokes sent through System Events, and the CPU load. The session was interrupted, its game killed, and the MacBook cleaned by hand (`~/macron-test`, `~/Library/Application Support/Macron`, the depot under Steam's client folder; Steam quit; `config.vdf` differed from the backup only in Steam's own server list).
 
 ## Gate 2 findings, dev machine, 2026-11-14
 
@@ -99,14 +104,15 @@ Existing projects worth reading (see the licence rule in GOAL.md): NotProton (`N
 
 ## Next
 
-1. Gate 1: reproduce the Direct3D 9 slowness without the MacBook (a free 32-bit Clickteam Fusion or other Direct3D 9 game, or a 32-bit Direct3D 9 program of ours, on a sandbox), measure which layer costs the time, then confirm on the MacBook with Ultimate Custom Night. First things to compare: wined3d on OpenGL against wined3d's Vulkan renderer and DXVK's d3d9 on a real GPU, 32-bit against 64-bit, with and without msync, windowed against full screen, Retina mode on and off.
+0. The Steam test account (GOAL.md, "The Steam test account"): gates 2, 4 and 5 and the real game in gate 1 wait on it.
+1. Gate 1: on a sandbox, measure which layer costs the time, first with a 32-bit Direct3D 9 program of ours or a free game on the same engine, then with Ultimate Custom Night itself once the test account can download it. The MacBook's 5 fps was on wined3d's OpenGL renderer, which the sandbox's GPU cannot run at all, so compare the paths it can run and profile the CPU side. First things to compare: wined3d on OpenGL against wined3d's Vulkan renderer and DXVK's d3d9 on a real GPU, 32-bit against 64-bit, with and without msync, windowed against full screen, Retina mode on and off.
 2. Gate 2: the decision behind "Invalid platform" is found (see "Gate 2 findings"). Next, on an `sbx` sandbox: check whether the inner `steam_osx` accepts `DYLD_INSERT_LIBRARIES` set through `Info.plist`'s `LSEnvironment`; write Macron's own switch dylib; check that Steam still reaches its login window with the switch loaded and refuses unknown builds. Then on the MacBook with his logged-in Steam: press Install and Play.
 3. Gate 3 as soon as gate 2 works once.
 4. Left from phase 1: the scenario for the probe still uses DXVK; with the patched `winemac.so` pinned it can run through DXMT. The hardware OpenGL path (Xonotic without `MACRON_OPENGL`) is still unchecked on a real Mac.
 
 ## Needs Thalles
 
-- **About 100 GB of free disk on the MacBook for Overwatch** (83 GB download; 24 GB was free on 2026-11-14). He said he would see about freeing space.
+- **Trying the release on his own Mac.** The sandboxes have a virtual GPU, so the frame rate on a real Apple GPU, and Overwatch past its sign-in screen (it needs his Blizzard account and about 100 GB of disk), are his to try once a release exists.
 - **A licence for Macron.** Until one is picked, no code is copied from GPL projects. Phase 2 writes its own Steam Play switch and ports the Steam bridge from Valve's Proton source.
 - **An Apple Developer ID** (99 USD a year) if the installer should open without a Gatekeeper warning. Without it the DMG is unsigned and the release notes say how to open it.
 - **Fork pull requests.** The repo only asks approval for first-time contributors. "Require approval for all external contributors" in the Actions settings stops a fork from using the Mac runner slots.
