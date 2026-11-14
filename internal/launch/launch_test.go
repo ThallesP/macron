@@ -3,6 +3,10 @@ package launch
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -218,5 +222,30 @@ func TestMissingExe(t *testing.T) {
 
 	if failure.CodeOf(err) != failure.CodeLaunchFailed {
 		t.Fatalf("got %v", err)
+	}
+}
+
+func TestExtraInstallsRunOncePerPrefix(t *testing.T) {
+	g := newGame(t)
+	installer := []byte("an installer")
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.Write(installer) }))
+	t.Cleanup(server.Close)
+	hash := sha256.Sum256(installer)
+	installers := map[string]fixes.Installer{"thing": {Steps: []fixes.InstallStep{{
+		Archive: wineruntime.Archive{Name: "setup.exe", URL: server.URL + "/setup.exe", SHA256: hex.EncodeToString(hash[:])},
+		Args:    []string{"/quiet"},
+	}}, GoodExitCodes: []int{0, 3}}}
+	profile := fixes.Default("x")
+	profile.Installs = []string{"thing"}
+	in := Input{Runtime: fakeRuntime(t), Installers: installers, DownloadsDir: filepath.Join(g.root, "downloads"), Profile: profile, Prefix: g.prefix, Exe: g.exe, Output: &bytes.Buffer{}, Progress: func(string) {}}
+
+	for range 2 {
+		if _, err := Run(context.Background(), in); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if runs := strings.Count(g.read(t, "wine-calls.txt"), "setup.exe /quiet"); runs != 1 {
+		t.Errorf("the installer ran %d times:\n%s", runs, g.read(t, "wine-calls.txt"))
 	}
 }

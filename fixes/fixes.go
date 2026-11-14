@@ -111,8 +111,10 @@ func (p Profile) validate() error {
 			return failure.Errorf(failure.CodeBadProfile, "profile %s: file %q leaves its folder", p.ID, file.Path)
 		}
 	}
-	if len(p.Installs) > 0 {
-		return failure.Errorf(failure.CodeBadProfile, "profile %s: extra installs are not supported yet (%s)", p.ID, strings.Join(p.Installs, ", "))
+	for _, name := range p.Installs {
+		if _, ok := Installers[name]; !ok {
+			return failure.Errorf(failure.CodeBadProfile, "profile %s: unknown extra install %q", p.ID, name)
+		}
 	}
 	return nil
 }

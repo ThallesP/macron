@@ -19,13 +19,13 @@ func TestEveryCommittedProfileLoads(t *testing.T) {
 
 func TestParseRejectsBadProfiles(t *testing.T) {
 	cases := map[string]string{
-		"unknown backend":   `{"id": "a", "backend": "vulkan"}`,
-		"unknown field":     `{"id": "a", "backend": "dxmt", "backnd": "dxmt"}`,
-		"bad id":            `{"id": "My Game", "backend": "dxmt"}`,
-		"file outside":      `{"id": "a", "backend": "dxmt", "files": [{"path": "/etc/hosts", "content": ""}]}`,
-		"file escapes":      `{"id": "a", "backend": "dxmt", "files": [{"path": "{game}/../../x", "content": ""}]}`,
-		"bad DLL override":  `{"id": "a", "backend": "dxmt", "dllOverrides": {"d3d9": "sometimes"}}`,
-		"unsupported extra": `{"id": "a", "backend": "dxmt", "installs": ["vcrun2019"]}`,
+		"unknown backend":  `{"id": "a", "backend": "vulkan"}`,
+		"unknown field":    `{"id": "a", "backend": "dxmt", "backnd": "dxmt"}`,
+		"bad id":           `{"id": "My Game", "backend": "dxmt"}`,
+		"file outside":     `{"id": "a", "backend": "dxmt", "files": [{"path": "/etc/hosts", "content": ""}]}`,
+		"file escapes":     `{"id": "a", "backend": "dxmt", "files": [{"path": "{game}/../../x", "content": ""}]}`,
+		"bad DLL override": `{"id": "a", "backend": "dxmt", "dllOverrides": {"d3d9": "sometimes"}}`,
+		"unknown install":  `{"id": "a", "backend": "dxmt", "installs": ["vcrun1999"]}`,
 	}
 	for name, content := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -44,6 +44,7 @@ func TestParseAcceptsAFullProfile(t *testing.T) {
 		"name": "Some Game",
 		"steamAppIds": [10],
 		"backend": "wined3d",
+		"installs": ["vcrun2022"],
 		"args": ["-windowed"],
 		"env": {"DXMT_LOG_LEVEL": "info"},
 		"dllOverrides": {"d3d9": "n,b"},

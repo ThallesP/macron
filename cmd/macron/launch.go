@@ -93,14 +93,16 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 		return fail(output, err)
 	}
 	exitCode, err := launch.Run(ctx, launch.Input{
-		Runtime:     installed,
-		Profile:     in.Profile,
-		Prefix:      prefix,
-		Exe:         in.Exe,
-		Args:        in.Args,
-		Output:      output,
-		Progress:    progress,
-		WaitForWine: in.WaitForWine,
+		Runtime:      installed,
+		Installers:   fixes.Installers,
+		DownloadsDir: layout.DownloadsDir(),
+		Profile:      in.Profile,
+		Prefix:       prefix,
+		Exe:          in.Exe,
+		Args:         in.Args,
+		Output:       output,
+		Progress:     progress,
+		WaitForWine:  in.WaitForWine,
 	})
 	if err != nil {
 		return fail(output, err)

@@ -19,14 +19,16 @@ import (
 )
 
 type Input struct {
-	Runtime     wineruntime.Installed
-	Profile     fixes.Profile
-	Prefix      string
-	Exe         string
-	Args        []string
-	Output      io.Writer
-	Progress    func(string)
-	WaitForWine bool
+	Runtime      wineruntime.Installed
+	Installers   map[string]fixes.Installer
+	DownloadsDir string
+	Profile      fixes.Profile
+	Prefix       string
+	Exe          string
+	Args         []string
+	Output       io.Writer
+	Progress     func(string)
+	WaitForWine  bool
 }
 
 var backendTrees = map[fixes.Backend]wineruntime.Tree{
@@ -55,6 +57,9 @@ func Run(ctx context.Context, in Input) (int, error) {
 	env := Environment(in.Profile, in.Prefix, os.Environ())
 
 	if err := EnsurePrefix(ctx, PrefixInput{Runtime: in.Runtime, Backend: in.Profile.Backend, Prefix: in.Prefix, Env: env, Output: in.Output, Progress: in.Progress}); err != nil {
+		return 0, err
+	}
+	if err := EnsureInstalls(ctx, in, env); err != nil {
 		return 0, err
 	}
 	if err := WriteFiles(in.Profile.Files, Places(in.Prefix, filepath.Dir(exe))); err != nil {
