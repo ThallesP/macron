@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/ThallesP/macron/fixes"
@@ -91,12 +92,16 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 	progress(fmt.Sprintf("game %s, log %s", in.Profile.ID, logFile.Name()))
 
 	openGL := os.Getenv("MACRON_OPENGL")
-	if openGL != "" && openGL != "llvmpipe" {
-		return fail(output, failure.Errorf(failure.CodeInvalidInput, "MACRON_OPENGL=%q; the only choice is llvmpipe", openGL))
+	if openGL != "" && openGL != "llvmpipe" && openGL != "apple-software" {
+		return fail(output, failure.Errorf(failure.CodeInvalidInput, "MACRON_OPENGL=%q; the choices are llvmpipe and apple-software", openGL))
 	}
 	profile, err := withBackendFromEnv(in.Profile, os.Getenv("MACRON_BACKEND"))
 	if err != nil {
 		return fail(output, err)
+	}
+	if openGL == "apple-software" {
+		profile = withAppleSoftwareRenderer(profile)
+		progress("OpenGL may use Apple's software renderer when there is no hardware one (MACRON_OPENGL=apple-software)")
 	}
 	if profile.Backend != in.Profile.Backend {
 		progress(fmt.Sprintf("backend %s instead of the profile's %s (MACRON_BACKEND)", profile.Backend, in.Profile.Backend))
@@ -135,6 +140,16 @@ func withBackendFromEnv(profile fixes.Profile, value string) (fixes.Profile, err
 	}
 	profile.Backend = backend
 	return profile, nil
+}
+
+func withAppleSoftwareRenderer(profile fixes.Profile) fixes.Profile {
+	profile.Registry = append(slices.Clone(profile.Registry), fixes.RegistryValue{
+		Key:   `HKEY_CURRENT_USER\Software\Wine\Mac Driver`,
+		Name:  "AllowSoftwareRendering",
+		Type:  "sz",
+		Value: "y",
+	})
+	return profile
 }
 
 func progressTo(w io.Writer) func(string) {

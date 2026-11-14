@@ -62,3 +62,18 @@ func TestMacronBackendOverridesTheProfile(t *testing.T) {
 		t.Errorf("unknown backend: %v", err)
 	}
 }
+
+func TestAppleSoftwareRendererAddsTheMacDriverSetting(t *testing.T) {
+	profile := fixes.Default("steam-1")
+	profile.Registry = []fixes.RegistryValue{{Key: `HKEY_CURRENT_USER\Software\Game`, Name: "Mode", Type: "sz", Value: "a"}}
+
+	got := withAppleSoftwareRenderer(profile)
+
+	if len(profile.Registry) != 1 {
+		t.Fatalf("the profile's own registry list changed: %v", profile.Registry)
+	}
+	want := fixes.RegistryValue{Key: `HKEY_CURRENT_USER\Software\Wine\Mac Driver`, Name: "AllowSoftwareRendering", Type: "sz", Value: "y"}
+	if len(got.Registry) != 2 || got.Registry[1] != want {
+		t.Errorf("registry = %v", got.Registry)
+	}
+}
