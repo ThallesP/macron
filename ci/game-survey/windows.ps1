@@ -96,7 +96,8 @@ Log "extracted in $([int]((Get-Date) - $t0).TotalSeconds)s"
 
 $exe = Join-Path $root $spec.exe
 if (-not (Test-Path $exe)) {
-  Get-ChildItem -Recurse -Depth 3 $root -Filter *.exe | ForEach-Object { Log "found exe: $($_.FullName)" }
+  Get-ChildItem -Recurse -Depth 3 $root -Include *.exe,*.cfg,*.ini | ForEach-Object { Log "found exe: $($_.FullName)" }
+  Get-ChildItem -Recurse -Depth 2 ([Environment]::GetFolderPath('MyDocuments')) | ForEach-Object { Log "documents: $($_.FullName)" }
   throw "exe not found: $exe"
 }
 $cwd = if ($spec.cwd) { Join-Path $root $spec.cwd } else { Split-Path $exe }

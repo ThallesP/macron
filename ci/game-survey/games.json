@@ -366,6 +366,29 @@
       "logs": [
         "{game}/System/UnrealTournament.log"
       ]
+    },
+    "ror": {
+      "downloads": [
+        {
+          "url": "https://github.com/RigsOfRods/rigs-of-rods/releases/download/2026.01/rigs-of-rods-2026.01.exe",
+          "sha256": "5a66fbfe2a2bcf4e689c5d3ea23587a58feb3d8e151b23c16c1a997bd56a930c",
+          "extract": "inno-silent",
+          "into": "."
+        }
+      ],
+      "exe": "RoR.exe",
+      "args": [],
+      "opengl": false,
+      "backend": "dxvk",
+      "shots": [
+        30,
+        60,
+        120
+      ],
+      "logs": [
+        "{documents}/My Games/Rigs of Rods/logs/RoR.log",
+        "{documents}/Rigs of Rods 2026.01/logs/RoR.log"
+      ]
     }
   }
 }
