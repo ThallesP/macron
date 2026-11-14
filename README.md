@@ -48,6 +48,7 @@ Every game tried. "Where" is where it was checked: the sandbox/CI runner (virtua
 
 | Game | Engine | Graphics API | Backend | How far | Where | Notes |
 |---|---|---|---|---|---|---|
+| OpenTTD 15.3 (11 MB + OpenGFX/OpenSFX) | OpenTTD (own) | GDI (2D) | wined3d (plain Wine) | menu, matches Windows (menu panel SSIM 0.942, menu text found) | runner, CI | needs FontSubstitutes in its profile: Wine stubs `GetFontResourceInfoW`, so its own font was replaced by Wine's default |
 | Direct3D 11 probe (ours, not a game) | none | Direct3D 11 | DXVK | draws its picture, matches Windows (SSIM 0.996) | runner | DXMT: device works, presenting needs a Wine that exports winemac functions |
 
 ## Licences

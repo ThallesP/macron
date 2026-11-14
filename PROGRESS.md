@@ -4,14 +4,14 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 
 ## State
 
-2026-11-14 (loop day 1): gate 1 is green. The Direct3D 11 probe goes through `macron` (DXVK backend) on a GitHub macOS runner and matches its Windows reference (SSIM 0.996); every negative control is rejected. Three agents work on branches: `steam-hook` (gate 5), `game-survey` (candidates for gates 2 and 4), `wine-dxmt` (a Wine that lets DXMT present).
+2026-11-14 (loop day 1): gates 1 and 2 are green. OpenTTD 15.3 reaches its main menu through `macron` on a GitHub macOS runner and matches the original on Windows (menu panel SSIM 0.942, all menu text found). Before that, gate 1: The Direct3D 11 probe goes through `macron` (DXVK backend) on a GitHub macOS runner and matches its Windows reference (SSIM 0.996); every negative control is rejected. Three agents work on branches: `steam-hook` (gate 5), `game-survey` (candidates for gates 2 and 4), `wine-dxmt` (a Wine that lets DXMT present).
 
 | Gate | State |
 |---|---|
 | 1. The loop runs | **green**. `macron-check sandbox d3d11-probe` passed from the dev machine (sandbox sbx_3qexmqkk, exit 0); Scenarios workflow green on main ([run 43559902376](https://github.com/ThallesP/macron/actions/runs/43559902376)) |
-| 2. A real game at its menu | game survey running |
+| 2. A real game at its menu | **green**. OpenTTD 15.3 (GDI): `macron-check sandbox openttd` passed (sbx_tb2l7cc7) and the Scenarios workflow is green on main with it ([run 43563385587](https://github.com/ThallesP/macron/actions/runs/43563385587)) |
 | 3. Through Macron, not scripts | `macron` launcher: pinned runtime, per-game prefixes, fixes database (backend, env, DLL overrides, registry, extra installs, args, files), Steam verbs; the probe passes through it. Needs real games through it to count |
-| 4. Three games | not started |
+| 4. Three games | 1 of 3 (OpenTTD); none of 1 GB yet. Survey on `game-survey` |
 | 5. Steam's Play button | agent working on branch `steam-hook` |
 
 ## Layout
@@ -30,6 +30,11 @@ From building gate 1, 2026-11-14:
 - **Windows runner references work:** `windows-latest` renders Direct3D 11 with the Microsoft Basic Render Driver; `BitBlt` from the screen captures the window, two captures 5 s apart were identical.
 - **sbx sandboxes can screenshot and list window titles over SSH** (`screencapture -l`, `CGWindowListCopyWindowInfo` titles are readable).
 - Wine's windows belong to a process named `wine`; the macOS title bar is 32 points on macOS 26.
+- **OpenTTD's title screen moves by itself.** Its camera walks through map places on a timer, so the background depends on uptime; on Windows alone the original scores SSIM 0.209 against itself 30 s later. The scenario compares only the menu panel (region from the reference layout, evidence in reference run 43562346925; see the commit "openttd: compare the menu panel").
+- **Wine 11.21 stubs `GetFontResourceInfoW`.** Games that load a private font file and ask GDI for its face name (OpenTTD) get Wine's default sans-serif instead. OpenTTD's profile maps the file names with `FontSubstitutes`; the real fix is implementing the function in Wine (a candidate for a published Wine patch next to the DXMT one).
+- **OpenTTD draws its own mouse pointer**, so both sides park the pointer in the top-left corner before starting a game.
+- **The runner's GPU has no hardware OpenGL**, only the Apple Software Renderer, which winemac ignores unless `HKCU\Software\Wine\Mac Driver\AllowSoftwareRendering` is `y` (from the game survey).
+- **DXMT can present with a patched winemac.so** (branch `wine-dxmt`, `runtime/wine/` on main): it adds CrossOver's `macdrv_functions` table with a client-area view per window. The probe drew 60 frames through DXMT in a sandbox. Its release is being published by the Wine build workflow.
 
 
 From the probe on a GitHub `macos-26` runner (`.github/workflows/probe.yml` and `ci/probe/` on `ci-probe`), 2026-11-13:
@@ -53,10 +58,9 @@ Existing projects worth reading (see the licence rule in GOAL.md): NotProton (`N
 
 ## Next
 
-1. Gate 2: pick the first real game from the survey, write its profile and scenario, capture its Windows reference, get it green.
-2. Merge `wine-dxmt` when it presents, and offer DXMT as the backend for Direct3D 11 games.
-3. Gate 4: two more games from other engines, one of them 1 GB or larger.
-4. Gate 5: review and merge `steam-hook`.
+1. Gate 4: two more games from other engines, one of them 1 GB or larger (survey on `game-survey`).
+2. Pin the published winemac.so overlay in the runtime and offer DXMT for Direct3D 11 games.
+3. Gate 5: review and merge `steam-hook`.
 
 ## Needs Thalles
 
