@@ -19,19 +19,22 @@ type FrameRateResult struct {
 }
 
 type FrameRateVerdict struct {
-	Passed            bool             `json:"passed"`
-	Failures          []string         `json:"failures"`
-	MinFPS            float64          `json:"minFps"`
-	MinFPSSource      string           `json:"minFpsSource"`
-	Measured          *FrameRateResult `json:"measured"`
-	ThrottleMs        int              `json:"throttleMs"`
-	Throttled         *FrameRateResult `json:"throttled"`
-	ThrottledRejected bool             `json:"throttledRejected"`
+	Passed             bool             `json:"passed"`
+	Failures           []string         `json:"failures"`
+	MinFPS             float64          `json:"minFps"`
+	MinFPSSource       string           `json:"minFpsSource"`
+	MinShareOfBaseline float64          `json:"minShareOfBaseline,omitempty"`
+	Baseline           *FrameRateResult `json:"baseline,omitempty"`
+	Measured           *FrameRateResult `json:"measured"`
+	ThrottleMs         int              `json:"throttleMs"`
+	Throttled          *FrameRateResult `json:"throttled"`
+	ThrottledRejected  bool             `json:"throttledRejected"`
 }
 
 type FrameRateInput struct {
 	Threshold       scenario.FrameRate
 	MeasuredOutput  string
+	BaselineOutput  string
 	ThrottleMs      int
 	ThrottledOutput string
 }
@@ -85,20 +88,46 @@ func parseFrameRateFields(fields string) (FrameRateResult, error) {
 	return FrameRateResult{FPS: numbers[0], P50Ms: numbers[1], P95Ms: numbers[2], P99Ms: numbers[3], Frames: frames}, nil
 }
 
-func ThrottleMsFor(threshold scenario.FrameRate) int {
-	if !threshold.HasThreshold() {
+func MinFPSFor(threshold scenario.FrameRate, baseline *FrameRateResult) float64 {
+	if baseline == nil {
+		return threshold.MinFPS
+	}
+	return max(threshold.MinFPS, threshold.MinShareOfBaseline*baseline.FPS)
+}
+
+func ThrottleMsFor(minFPS float64) int {
+	if minFPS <= 0 {
 		return 100
 	}
-	return int(math.Ceil(2000 / threshold.MinFPS))
+	return int(math.Ceil(2000 / minFPS))
+}
+
+func parseBaseline(output string) (*FrameRateResult, error) {
+	baseline, err := ParseFrameRate(output)
+	if err != nil {
+		return nil, err
+	}
+	if baseline.Frames == 0 {
+		return nil, fmt.Errorf("it drew no frames")
+	}
+	return &baseline, nil
 }
 
 func EvaluateFrameRate(in FrameRateInput) FrameRateVerdict {
 	verdict := FrameRateVerdict{
-		MinFPS:       in.Threshold.MinFPS,
-		MinFPSSource: in.Threshold.MinFPSSource,
-		ThrottleMs:   in.ThrottleMs,
-		Failures:     []string{},
+		MinFPSSource:       in.Threshold.MinFPSSource,
+		MinShareOfBaseline: in.Threshold.MinShareOfBaseline,
+		ThrottleMs:         in.ThrottleMs,
+		Failures:           []string{},
 	}
+	if in.Threshold.MinShareOfBaseline > 0 {
+		baseline, err := parseBaseline(in.BaselineOutput)
+		if err != nil {
+			verdict.Failures = append(verdict.Failures, fmt.Sprintf("no frame rate from the baseline (%s): %s", in.Threshold.BaselineExe, err))
+		}
+		verdict.Baseline = baseline
+	}
+	verdict.MinFPS = MinFPSFor(in.Threshold, verdict.Baseline)
 	measured, err := ParseFrameRate(in.MeasuredOutput)
 	if err != nil {
 		verdict.Failures = append(verdict.Failures, fmt.Sprintf("no frame rate from the probe: %s", err))
@@ -112,7 +141,7 @@ func EvaluateFrameRate(in FrameRateInput) FrameRateVerdict {
 	}
 	if err == nil {
 		verdict.Throttled = &throttled
-		verdict.ThrottledRejected = !meetsThreshold(throttled, in.Threshold)
+		verdict.ThrottledRejected = !meetsThreshold(throttled, verdict.MinFPS)
 	}
 
 	if !in.Threshold.HasThreshold() {
@@ -120,20 +149,20 @@ func EvaluateFrameRate(in FrameRateInput) FrameRateVerdict {
 		verdict.Passed = false
 		return verdict
 	}
-	if verdict.Measured != nil && !meetsThreshold(measured, in.Threshold) {
-		verdict.Failures = append(verdict.Failures, fmt.Sprintf("the probe ran at %.1f frames/s, the threshold is %.1f", measured.FPS, in.Threshold.MinFPS))
+	if verdict.Measured != nil && !meetsThreshold(measured, verdict.MinFPS) {
+		verdict.Failures = append(verdict.Failures, fmt.Sprintf("the probe ran at %.1f frames/s, the threshold is %.1f", measured.FPS, verdict.MinFPS))
 	}
 	if verdict.Throttled != nil && !verdict.ThrottledRejected {
 		verdict.Failures = append(verdict.Failures, fmt.Sprintf(
 			"negative control: the probe throttled by %d ms a frame ran at %.1f frames/s and passed the threshold of %.1f, so the measure cannot tell a slow run",
-			in.ThrottleMs, throttled.FPS, in.Threshold.MinFPS))
+			in.ThrottleMs, throttled.FPS, verdict.MinFPS))
 	}
 	verdict.Passed = len(verdict.Failures) == 0
 	return verdict
 }
 
-func meetsThreshold(result FrameRateResult, threshold scenario.FrameRate) bool {
-	return result.Frames > 0 && result.FPS >= threshold.MinFPS
+func meetsThreshold(result FrameRateResult, minFPS float64) bool {
+	return result.Frames > 0 && minFPS > 0 && result.FPS >= minFPS
 }
 
 func (v FrameRateVerdict) Summary() string {
@@ -150,6 +179,13 @@ func (v FrameRateVerdict) Summary() string {
 	}{
 		{"probe", v.Measured, threshold},
 		{fmt.Sprintf("throttled by %d ms (control)", v.ThrottleMs), v.Throttled, "rejected"},
+	}
+	if v.MinShareOfBaseline > 0 {
+		rows = append(rows, struct {
+			name   string
+			result *FrameRateResult
+			needs  string
+		}{"baseline", v.Baseline, fmt.Sprintf("probe >= %.2f of it", v.MinShareOfBaseline)})
 	}
 	for _, row := range rows {
 		if row.result == nil {

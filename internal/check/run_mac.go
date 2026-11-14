@@ -175,7 +175,10 @@ func (r *macRun) macron(ctx context.Context, logName string, args ...string) err
 
 func (r *macRun) measureFrameRate(ctx context.Context, game Game, measuredOutput string) {
 	r.stopGame()
-	throttleMs := ThrottleMsFor(*r.Scenario.FrameRate)
+	frameRate := *r.Scenario.FrameRate
+	baselineOutput := r.runBaseline(ctx, game, frameRate)
+	baseline, _ := parseBaseline(baselineOutput)
+	throttleMs := ThrottleMsFor(MinFPSFor(frameRate, baseline))
 	r.stage(fmt.Sprintf("running the probe throttled by %d ms a frame (negative control)", throttleMs))
 	args := append(slices.Clone(r.Scenario.Args), ThrottleArg, strconv.Itoa(throttleMs))
 	timings := maps.Clone(r.report.TimingsSecs)
@@ -187,12 +190,31 @@ func (r *macRun) measureFrameRate(ctx context.Context, game Game, measuredOutput
 		r.report.Notes = append(r.report.Notes, fmt.Sprintf("the throttled run failed: %s", err))
 	}
 	verdict := EvaluateFrameRate(FrameRateInput{
-		Threshold:       *r.Scenario.FrameRate,
+		Threshold:       frameRate,
 		MeasuredOutput:  measuredOutput,
+		BaselineOutput:  baselineOutput,
 		ThrottleMs:      throttleMs,
 		ThrottledOutput: throttled.String(),
 	})
 	r.report.FrameRate = &verdict
+}
+
+func (r *macRun) runBaseline(ctx context.Context, game Game, frameRate scenario.FrameRate) string {
+	if frameRate.BaselineExe == "" {
+		return ""
+	}
+	r.stage(fmt.Sprintf("running the baseline %s", frameRate.BaselineExe))
+	baseline := Game{Exe: filepath.Join(filepath.Dir(game.Exe), frameRate.BaselineExe), Cwd: game.Cwd}
+	timings := maps.Clone(r.report.TimingsSecs)
+	since := time.Now()
+	_, output, err := r.launchAndWait(ctx, baseline, r.Scenario.Args, "game-baseline.log")
+	r.report.TimingsSecs = timings
+	r.mark("baselineRun", since)
+	r.stopGame()
+	if err != nil {
+		r.report.Notes = append(r.report.Notes, fmt.Sprintf("the baseline run failed: %s", err))
+	}
+	return output.String()
 }
 
 func (r *macRun) launchAndWait(ctx context.Context, g Game, args []string, logName string) (MacWindow, *lockedBuffer, error) {

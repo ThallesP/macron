@@ -37,12 +37,14 @@ type Reference struct {
 }
 
 type FrameRate struct {
-	MinFPS       float64 `json:"minFps"`
-	MinFPSSource string  `json:"minFpsSource"`
+	MinFPS             float64 `json:"minFps"`
+	MinFPSSource       string  `json:"minFpsSource"`
+	BaselineExe        string  `json:"baselineExe,omitempty"`
+	MinShareOfBaseline float64 `json:"minShareOfBaseline,omitempty"`
 }
 
 func (f FrameRate) HasThreshold() bool {
-	return f.MinFPS > 0
+	return f.MinFPS > 0 || f.MinShareOfBaseline > 0
 }
 
 type Download struct {
@@ -147,8 +149,17 @@ func (s Scenario) validate() error {
 	if s.FrameRate != nil && (s.FrameRate.MinFPS < 0 || s.FrameRate.MinFPSSource == "") {
 		return invalid("frameRate needs a minFps of 0 or more and a minFpsSource saying where it came from, or that it is not set yet")
 	}
+	if s.FrameRate != nil && (s.FrameRate.MinShareOfBaseline < 0 || s.FrameRate.MinShareOfBaseline > 1) {
+		return invalid("frameRate.minShareOfBaseline is a share of the baseline's frame rate, from 0 to 1")
+	}
+	if s.FrameRate != nil && (s.FrameRate.BaselineExe == "") != (s.FrameRate.MinShareOfBaseline == 0) {
+		return invalid("frameRate.baselineExe and frameRate.minShareOfBaseline go together")
+	}
+	if s.FrameRate != nil && s.FrameRate.BaselineExe != "" && (strings.ContainsAny(s.FrameRate.BaselineExe, `/\`) || !strings.HasSuffix(s.FrameRate.BaselineExe, ".exe")) {
+		return invalid("frameRate.baselineExe is an .exe next to the scenario's exe, not a path")
+	}
 	if s.FrameRate != nil && s.CI && !s.FrameRate.HasThreshold() {
-		return invalid("a frame-rate scenario runs in CI only with a threshold (frameRate.minFps above 0)")
+		return invalid("a frame-rate scenario runs in CI only with a threshold (frameRate.minFps or minShareOfBaseline above 0)")
 	}
 	if s.FrameRate != nil && s.Reached.Output != FrameRateLine {
 		return invalid("a frame-rate scenario is reached when the probe prints %q", FrameRateLine)

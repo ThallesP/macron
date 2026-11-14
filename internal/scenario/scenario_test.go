@@ -105,6 +105,10 @@ func TestLoadRejectsBadFrameRateScenarios(t *testing.T) {
 		"no threshold source":   {`"minFpsSource": "MacBook and Windows runner"`, `"minFpsSource": ""`},
 		"reached by other text": {`"output": "RESULT fps"`, `"output": "RESULT present: OK"`},
 		"unknown frameRate key": {`"minFps": 30`, `"minFps": 30, "maxFrameMs": 20`},
+		"share above one":       {`"minFps": 30`, `"minFps": 30, "baselineExe": "probe64.exe", "minShareOfBaseline": 1.5`},
+		"share without exe":     {`"minFps": 30`, `"minFps": 30, "minShareOfBaseline": 0.8`},
+		"exe without share":     {`"minFps": 30`, `"minFps": 30, "baselineExe": "probe64.exe"`},
+		"baseline is a path":    {`"minFps": 30`, `"minFps": 30, "baselineExe": "../probe64.exe", "minShareOfBaseline": 0.8`},
 	}
 	base := strings.Replace(valid, `"reached": {"output": "", "settleSeconds": 5, "timeoutSeconds": 600},`, frameRateBlock, 1)
 	for name, change := range cases {

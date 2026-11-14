@@ -95,13 +95,13 @@ func TestEvaluateFrameRateFails(t *testing.T) {
 
 func TestThrottleKeepsTheControlBelowHalfTheThreshold(t *testing.T) {
 	for _, minFPS := range []float64{1, 24, 30, 50, 59.9, 60, 144, 1000} {
-		throttleMs := ThrottleMsFor(scenario.FrameRate{MinFPS: minFPS, MinFPSSource: "a test"})
+		throttleMs := ThrottleMsFor(minFPS)
 
 		if fastestFPS := 1000 / float64(throttleMs); fastestFPS > minFPS/2 {
 			t.Errorf("threshold %.1f: a %d ms sleep still allows %.1f frames/s", minFPS, throttleMs, fastestFPS)
 		}
 	}
-	if throttleMs := ThrottleMsFor(scenario.FrameRate{MinFPSSource: "not set"}); throttleMs <= 0 {
+	if throttleMs := ThrottleMsFor(0); throttleMs <= 0 {
 		t.Fatalf("no threshold gives a %d ms throttle", throttleMs)
 	}
 }
@@ -115,5 +115,56 @@ func TestFrameRateSummaryShowsBothRuns(t *testing.T) {
 		if !strings.Contains(summary, want) {
 			t.Errorf("the summary has no %q:\n%s", want, summary)
 		}
+	}
+}
+
+var shareOfBaseline = scenario.FrameRate{MinFPSSource: "a test", BaselineExe: "probe64.exe", MinShareOfBaseline: 0.8}
+
+func TestEvaluateFrameRateMeasuresAgainstTheBaseline(t *testing.T) {
+	verdict := EvaluateFrameRate(FrameRateInput{
+		Threshold:       shareOfBaseline,
+		MeasuredOutput:  throttledOutput("100"),
+		BaselineOutput:  throttledOutput("120"),
+		ThrottleMs:      21,
+		ThrottledOutput: throttledOutput("40"),
+	})
+
+	if !verdict.Passed || verdict.MinFPS != 96 || verdict.Baseline.FPS != 120 {
+		t.Fatalf("got %+v", verdict)
+	}
+	if summary := verdict.Summary(); !strings.Contains(summary, "| baseline | 120.0 |") {
+		t.Errorf("the summary has no baseline row:\n%s", summary)
+	}
+}
+
+func TestEvaluateFrameRateFailsAgainstTheBaseline(t *testing.T) {
+	cases := map[string]FrameRateInput{
+		"below the share":          {Threshold: shareOfBaseline, MeasuredOutput: throttledOutput("95"), BaselineOutput: throttledOutput("120"), ThrottledOutput: throttledOutput("40")},
+		"no baseline line":         {Threshold: shareOfBaseline, MeasuredOutput: throttledOutput("100"), BaselineOutput: "RESULT window: OK\n", ThrottledOutput: throttledOutput("40")},
+		"baseline drew nothing":    {Threshold: shareOfBaseline, MeasuredOutput: throttledOutput("100"), BaselineOutput: strings.Replace(probeOutput, "frames 1433", "frames 0", 1), ThrottledOutput: throttledOutput("40")},
+		"absolute floor still met": {Threshold: scenario.FrameRate{MinFPS: 110, MinFPSSource: "a test", BaselineExe: "probe64.exe", MinShareOfBaseline: 0.5}, MeasuredOutput: throttledOutput("100"), BaselineOutput: throttledOutput("120"), ThrottledOutput: throttledOutput("40")},
+	}
+	for name, in := range cases {
+		t.Run(name, func(t *testing.T) {
+			verdict := EvaluateFrameRate(in)
+
+			if verdict.Passed || len(verdict.Failures) == 0 {
+				t.Fatalf("passed: %+v", verdict)
+			}
+		})
+	}
+}
+
+func TestMinFPSIsTheHigherOfTheFloorAndTheShare(t *testing.T) {
+	baseline := &FrameRateResult{FPS: 50, Frames: 500}
+
+	if got := MinFPSFor(scenario.FrameRate{MinFPS: 30, MinShareOfBaseline: 0.8}, baseline); got != 40 {
+		t.Errorf("share wins: got %v", got)
+	}
+	if got := MinFPSFor(scenario.FrameRate{MinFPS: 45, MinShareOfBaseline: 0.8}, baseline); got != 45 {
+		t.Errorf("floor wins: got %v", got)
+	}
+	if got := MinFPSFor(scenario.FrameRate{MinFPS: 30, MinShareOfBaseline: 0.8}, nil); got != 30 {
+		t.Errorf("no baseline: got %v", got)
 	}
 }
