@@ -59,6 +59,7 @@ func (r Report) Summary() string {
 		}
 	}
 	if r.FrameRate != nil {
+		b.WriteString("\n")
 		b.WriteString(r.FrameRate.Summary())
 	}
 	if len(r.TimingsSecs) > 0 {

@@ -68,7 +68,7 @@ jobs:
       - name: Screenshot while the probe presents
         shell: pwsh
         run: |
-          $probe = Start-Process -PassThru -FilePath probe/probe32.exe -ArgumentList "mix", "--window", "960x540", "--seconds", "1", "--hold", "20" -RedirectStandardOutput out/screenshot-run.log
+          $probe = Start-Process -PassThru -NoNewWindow -FilePath probe/probe32.exe -ArgumentList "mix", "--window", "960x540", "--seconds", "1", "--hold", "20" -RedirectStandardOutput out/screenshot-run.log
           Start-Sleep -Seconds 10
           Add-Type -AssemblyName System.Windows.Forms, System.Drawing
           $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
