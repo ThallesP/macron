@@ -33,6 +33,7 @@ type ReferenceReport struct {
 	Window        string           `json:"window,omitempty"`
 	Size          string           `json:"size,omitempty"`
 	Stability     imagecheck.Score `json:"stabilityBetweenCaptures"`
+	StabilityLate imagecheck.Score `json:"stabilityAfter30Seconds"`
 	SecondsToMenu float64          `json:"secondsToMenu"`
 	Extras        []string         `json:"extras"`
 }
@@ -113,8 +114,17 @@ func captureReference(ctx context.Context, in ReferenceInput, report *ReferenceR
 	if err != nil {
 		return err
 	}
+	time.Sleep(25 * time.Second)
+	late, err := captureClientArea(window.Handle)
+	if err != nil {
+		return err
+	}
 	report.Size = fmt.Sprintf("%dx%d", first.Bounds().Dx(), first.Bounds().Dy())
 	report.Stability = imagecheck.Compare(first, second, in.Scenario.Compare.Ignore)
+	report.StabilityLate = imagecheck.Compare(first, late, in.Scenario.Compare.Ignore)
+	if err := WritePNG(filepath.Join(in.Out, "reference-30s-later.png"), late); err != nil {
+		return err
+	}
 	if err := WritePNG(filepath.Join(in.Out, "reference.png"), first); err != nil {
 		return err
 	}
