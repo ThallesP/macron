@@ -43,10 +43,10 @@ func ParseFrameRate(output string) (FrameRateResult, error) {
 	found := false
 	for _, line := range strings.Split(output, "\n") {
 		line = strings.TrimSpace(line)
-		if adapter, ok := strings.CutPrefix(line, "RESULT adapter "); ok {
+		if _, adapter, ok := strings.Cut(line, "RESULT adapter "); ok {
 			result.Adapter = adapter
 		}
-		fields, ok := strings.CutPrefix(line, scenario.FrameRateLine+" ")
+		_, fields, ok := strings.Cut(line, scenario.FrameRateLine+" ")
 		if !ok {
 			continue
 		}

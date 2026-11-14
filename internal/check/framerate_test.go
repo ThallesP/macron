@@ -34,6 +34,16 @@ func TestParseFrameRateReadsTheProbesResultLine(t *testing.T) {
 	}
 }
 
+func TestParseFrameRateFindsALineGluedToAnotherWritersPartialLine(t *testing.T) {
+	output := strings.Replace(probeOutput, "RESULT fps", "[mvk-warn] VK_ERROR_OUT_OF_POOL_MEMORY: VkDescriptorPool exhausRESULT fps", 1)
+
+	result, err := ParseFrameRate(output)
+
+	if err != nil || result.FPS != 143.25 || result.Frames != 1433 {
+		t.Fatalf("got %+v, %v", result, err)
+	}
+}
+
 func TestParseFrameRateRejectsMissingOrBrokenLines(t *testing.T) {
 	cases := map[string]string{
 		"no line":         strings.Replace(probeOutput, "RESULT fps", "RESULT nothing", 1),
@@ -44,6 +54,7 @@ func TestParseFrameRateRejectsMissingOrBrokenLines(t *testing.T) {
 		"negative":        strings.Replace(probeOutput, "143.25", "-1", 1),
 		"infinite":        strings.Replace(probeOutput, "143.25", "inf", 1),
 		"fraction frames": strings.Replace(probeOutput, "frames 1433", "frames 14.5", 1),
+		"split by stderr": strings.Replace(probeOutput, "p95_ms 8.120", "p95_[mvk-warn] VK_ERROR_OUT_OF_POOL_MEMORY\nms 8.120", 1),
 	}
 	for name, output := range cases {
 		t.Run(name, func(t *testing.T) {

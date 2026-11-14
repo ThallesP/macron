@@ -72,6 +72,8 @@ RESULT adapter <Direct3D 9 adapter description> (vendor 0x<id>, device 0x<id>)
 RESULT fps <frames/s> p50_ms <x> p95_ms <y> p99_ms <z> frames <n>
 ```
 
+Each line goes out in one `WriteFile`, because Wine, MoltenVK and the probe share the output: in one sandbox run MoltenVK printed 271,367 warnings and cut a line the C runtime wrote in pieces (`RESULT prese[mvk-warn] ...`). The check finds a `RESULT` line even when another writer's unfinished line precedes it; a line cut in two does not count.
+
 A frame time is the time between two returns of `Present`, from `QueryPerformanceCounter`; the frame rate is the frames counted divided by the measured time; the percentiles are nearest-rank over every measured frame. Then it keeps drawing for `--hold` seconds (so the picture can be captured without disturbing the measurement) and exits 0. A failure prints `RESULT <step>: FAILED (...)` and exits 1. `--throttle-ms N` sleeps N ms after every frame; `--no-present` draws without presenting. Both exist to prove the check can fail.
 
 ## The measure

@@ -9,6 +9,7 @@
 #define COBJMACROS
 #include <windows.h>
 #include <d3d9.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,6 +63,23 @@ static const char *mode_names[] = { "mix", "up", "vb", "tex" };
 static const DWORD palette[] = {
     0xffe8553a, 0xfff2b134, 0xff4fb477, 0xff3a86e8, 0xff9b5de5, 0xfff15bb5, 0xff00bbf9, 0xfffee440,
 };
+
+static void say(const char *format, ...)
+{
+    char line[1024];
+    DWORD written;
+    va_list args;
+    int length;
+
+    va_start(args, format);
+    length = vsnprintf(line, sizeof(line), format, args);
+    va_end(args);
+    if (length < 0)
+        return;
+    if (length >= (int)sizeof(line))
+        length = sizeof(line) - 1;
+    WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), line, length, &written, NULL);
+}
 
 static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -443,13 +461,13 @@ static IDirect3DDevice9 *create_device(IDirect3D9 *d3d, HWND hwnd, const char **
                                  &device);
     if (SUCCEEDED(hr))
         return device;
-    printf("hardware vertex processing failed (hr=0x%08lx), trying software\n", (unsigned long)hr);
+    say("hardware vertex processing failed (hr=0x%08lx), trying software\n", (unsigned long)hr);
     *processing = "software";
     hr = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &pp,
                                  &device);
     if (SUCCEEDED(hr))
         return device;
-    printf("RESULT d3d9 device: FAILED (CreateDevice hr=0x%08lx)\n", (unsigned long)hr);
+    say("RESULT d3d9 device: FAILED (CreateDevice hr=0x%08lx)\n", (unsigned long)hr);
     return NULL;
 }
 
@@ -479,38 +497,37 @@ int main(int argc, char **argv)
     HRESULT hr;
     int phase = 0;
 
-    setvbuf(stdout, NULL, _IONBF, 0);
     memset(&s, 0, sizeof(s));
     if (!parse_options(argc, argv, &s.options)) {
-        printf("usage: probe.exe [mix|up|vb|tex] [--sprites N] [--warmup S] [--seconds S] [--hold S] [--window WxH] "
+        say("usage: probe.exe [mix|up|vb|tex] [--sprites N] [--warmup S] [--seconds S] [--hold S] [--window WxH] "
                "[--throttle-ms N] [--no-present]\n");
         return 2;
     }
     hwnd = open_window(s.options.window_width, s.options.window_height);
     if (!hwnd) {
-        printf("RESULT window: FAILED (CreateWindow error %lu)\n", GetLastError());
+        say("RESULT window: FAILED (CreateWindow error %lu)\n", GetLastError());
         return 1;
     }
-    printf("RESULT window: OK\n");
+    say("RESULT window: OK\n");
 
     d3d = Direct3DCreate9(D3D_SDK_VERSION);
     if (!d3d) {
-        printf("RESULT d3d9 device: FAILED (Direct3DCreate9 returned NULL)\n");
+        say("RESULT d3d9 device: FAILED (Direct3DCreate9 returned NULL)\n");
         return 1;
     }
     if (SUCCEEDED(IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter)))
-        printf("RESULT adapter %s (vendor 0x%04lx, device 0x%04lx)\n", adapter.Description,
+        say("RESULT adapter %s (vendor 0x%04lx, device 0x%04lx)\n", adapter.Description,
                (unsigned long)adapter.VendorId, (unsigned long)adapter.DeviceId);
     s.device = create_device(d3d, hwnd, &processing);
     if (!s.device)
         return 1;
-    printf("RESULT d3d9 device: OK (%s vertex processing)\n", processing);
+    say("RESULT d3d9 device: OK (%s vertex processing)\n", processing);
     failed = create_resources(&s);
     if (failed) {
-        printf("RESULT d3d9 resources: FAILED (%s)\n", failed);
+        say("RESULT d3d9 resources: FAILED (%s)\n", failed);
         return 1;
     }
-    printf("RESULT config mode %s sprites %d bits %d back_buffer %dx%d window %dx%d warmup_s %.1f measure_s %.1f "
+    say("RESULT config mode %s sprites %d bits %d back_buffer %dx%d window %dx%d warmup_s %.1f measure_s %.1f "
            "throttle_ms %d present %s dynamic_panel %s\n",
            mode_names[s.options.mode], s.options.sprites, (int)(sizeof(void *) * 8), WIDTH, HEIGHT,
            s.options.window_width, s.options.window_height, s.options.warmup_seconds, s.options.measure_seconds,
@@ -526,7 +543,7 @@ int main(int argc, char **argv)
         if (SUCCEEDED(hr) && s.options.present)
             hr = IDirect3DDevice9_Present(s.device, NULL, NULL, NULL, NULL);
         if (FAILED(hr)) {
-            printf("RESULT present: FAILED (hr=0x%08lx after %lu frames)\n", (unsigned long)hr,
+            say("RESULT present: FAILED (hr=0x%08lx after %lu frames)\n", (unsigned long)hr,
                    (unsigned long)(warmup_frames + frames));
             return 1;
         }
@@ -537,12 +554,12 @@ int main(int argc, char **argv)
 
         if (phase == 0) {
             if (++warmup_frames == 60)
-                printf("RESULT present: OK (60 frames in %.0f ms)\n", elapsed_seconds * 1000.0);
+                say("RESULT present: OK (60 frames in %.0f ms)\n", elapsed_seconds * 1000.0);
             if (elapsed_seconds >= s.options.warmup_seconds && warmup_frames >= 60) {
                 phase = 1;
                 started = now;
                 previous = now;
-                printf("RESULT measuring\n");
+                say("RESULT measuring\n");
             }
             continue;
         }
@@ -551,7 +568,7 @@ int main(int argc, char **argv)
                 capacity = capacity ? capacity * 2 : 4096;
                 frame_ms = realloc(frame_ms, capacity * sizeof(float));
                 if (!frame_ms) {
-                    printf("RESULT measure: FAILED (out of memory)\n");
+                    say("RESULT measure: FAILED (out of memory)\n");
                     return 1;
                 }
             }
@@ -562,12 +579,12 @@ int main(int argc, char **argv)
             measured_seconds = elapsed_seconds;
             sorted = malloc(frames * sizeof(float));
             if (!sorted) {
-                printf("RESULT measure: FAILED (out of memory)\n");
+                say("RESULT measure: FAILED (out of memory)\n");
                 return 1;
             }
             memcpy(sorted, frame_ms, frames * sizeof(float));
             qsort(sorted, frames, sizeof(float), compare_floats);
-            printf("RESULT fps %.2f p50_ms %.3f p95_ms %.3f p99_ms %.3f frames %lu\n", (double)frames / measured_seconds,
+            say("RESULT fps %.2f p50_ms %.3f p95_ms %.3f p99_ms %.3f frames %lu\n", (double)frames / measured_seconds,
                    percentile(sorted, frames, 0.50), percentile(sorted, frames, 0.95),
                    percentile(sorted, frames, 0.99), (unsigned long)frames);
             free(sorted);
