@@ -85,7 +85,7 @@ func captureReference(ctx context.Context, in ReferenceInput, report *ReferenceR
 	}
 	defer log.Close()
 	output := &lockedBuffer{}
-	game := exec.Command(exe, in.Profile.Args...)
+	game := exec.Command(exe, slices.Concat(in.Scenario.Args, in.Profile.Args)...)
 	game.Dir = prepared.Cwd
 	game.Env = env
 	game.Stdout = io.MultiWriter(log, output)

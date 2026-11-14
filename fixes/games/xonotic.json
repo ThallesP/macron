@@ -3,7 +3,7 @@
   "name": "Xonotic 0.8.6",
   "steamAppIds": [],
   "backend": "wined3d",
-  "args": ["-nohome", "-condebug", "-window", "-width", "800", "-height", "600", "+vid_fullscreen", "0", "+vid_width", "800", "+vid_height", "600", "+_termsofservice_accepted", "9999"],
+  "args": [],
   "env": {},
   "dllOverrides": {},
   "files": [],
@@ -16,5 +16,5 @@
     }
   ],
   "installs": [],
-  "notes": "DarkPlaces engine, OpenGL through Wine's opengl32 and macOS OpenGL. The arguments keep it windowed at 800x600, keep its data in the game folder and accept the terms of service shown on first start. AllowSoftwareRendering lets winemac use the Apple Software Renderer on Macs without a hardware OpenGL renderer, such as GitHub's runners; it changes nothing where a GPU is present."
+  "notes": "DarkPlaces engine, OpenGL through Wine's opengl32 and macOS OpenGL. AllowSoftwareRendering lets winemac use the Apple Software Renderer on Macs without a hardware OpenGL renderer, such as GitHub's runners; it changes nothing where a GPU is present."
 }

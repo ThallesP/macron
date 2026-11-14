@@ -15,11 +15,48 @@
   "build": "",
   "exe": "Xonotic/xonotic.exe",
   "cwd": "",
-  "window": { "title": "^Xonotic", "width": 800, "height": 600 },
-  "reached": { "output": "", "settleSeconds": 30, "timeoutSeconds": 1500 },
-  "compare": { "text": [], "ignore": [] },
-  "reference": { "image": "reference.png", "source": "pending" },
+  "args": [
+    "-nohome",
+    "-condebug",
+    "-window",
+    "-width",
+    "800",
+    "-height",
+    "600",
+    "+vid_fullscreen",
+    "0",
+    "+vid_width",
+    "800",
+    "+vid_height",
+    "600",
+    "+_termsofservice_accepted",
+    "9999",
+    "+_cl_name",
+    "Macron",
+    "+cl_allow_uid2name",
+    "0"
+  ],
+  "window": {
+    "title": "^Xonotic",
+    "width": 800,
+    "height": 600
+  },
+  "reached": {
+    "output": "",
+    "settleSeconds": 30,
+    "timeoutSeconds": 1500
+  },
+  "compare": {
+    "text": [],
+    "ignore": []
+  },
+  "reference": {
+    "image": "reference.png",
+    "source": "pending"
+  },
   "otherGame": "openttd",
-  "windowsExtra": ["mesa-llvmpipe"],
+  "windowsExtra": [
+    "mesa-llvmpipe"
+  ],
   "ci": false
 }

@@ -49,6 +49,7 @@ type Scenario struct {
 	Build        string     `json:"build"`
 	Exe          string     `json:"exe"`
 	Cwd          string     `json:"cwd"`
+	Args         []string   `json:"args"`
 	Window       Window     `json:"window"`
 	Reached      Reached    `json:"reached"`
 	Compare      Compare    `json:"compare"`

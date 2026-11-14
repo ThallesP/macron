@@ -6,7 +6,7 @@ A scenario (`scenarios/<name>/scenario.json`) is one Windows program, how to get
 
 1. Download each of the program's `downloads` from its pinned URL, check its SHA-256 and unpack it `into` its folder (or build it, for programs that live in the repo).
 2. Move the mouse pointer to the screen's top-left corner (some games draw their own pointer and tooltips), then screenshot the desktop before anything starts. This is one of the negative controls.
-3. `macron runtime install`, then `macron launch --game <profile> --cwd <cwd> -- <exe>`. The game goes through the launcher, its profile in `fixes/games/` and its own Windows environment, the same way Steam will start it.
+3. `macron runtime install`, then `macron launch --game <profile> --cwd <cwd> -- <exe> <args>`. The scenario's `args` are test setup (a fixed window size, answers to a first-start dialog), passed like Steam launch options; the profile holds what any player of the game needs. The game goes through the launcher, its profile in `fixes/games/` and its own Windows environment, the same way Steam will start it.
 4. Wait until the scenario's "reached" condition holds: a window whose title matches `window.title` is on screen and, if set, the game has printed `reached.output`. Then wait `reached.settleSeconds`. Fail if the game exits first or `reached.timeoutSeconds` passes.
 5. Capture the window with `screencapture -l`, drop the macOS title bar, and keep the `window.width` x `window.height` picture (scaled on Retina screens). A window of another width fails.
 6. Read the text in the picture with macOS's Vision framework. Every string in `compare.text` must be there (case and spacing ignored).
