@@ -56,5 +56,5 @@
   },
   "otherGame": "openttd",
   "windowsExtra": [],
-  "ci": false
+  "ci": true
 }
