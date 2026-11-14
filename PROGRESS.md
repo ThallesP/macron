@@ -4,11 +4,11 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 
 ## State
 
-2026-11-14 (loop day 1): the launcher, runtime, fixes database and scenario checker exist and have unit tests; the first scenario (the Direct3D 11 probe) is being brought up on the runner. Two agents work in parallel on branches: `steam-hook` (gate 5) and `game-survey` (candidates for gates 2 and 4).
+2026-11-14 (loop day 1): gate 1 is green. The Direct3D 11 probe goes through `macron` (DXVK backend) on a GitHub macOS runner and matches its Windows reference (SSIM 0.996); every negative control is rejected. Three agents work on branches: `steam-hook` (gate 5), `game-survey` (candidates for gates 2 and 4), `wine-dxmt` (a Wine that lets DXMT present).
 
 | Gate | State |
 |---|---|
-| 1. The loop runs | built (`macron-check sandbox <scenario>`, `.github/workflows/scenarios.yml`); waiting for the probe's Windows reference and a first green run |
+| 1. The loop runs | **green**. `macron-check sandbox d3d11-probe` passed from the dev machine (sandbox sbx_3qexmqkk, exit 0); Scenarios workflow green on main ([run 43559902376](https://github.com/ThallesP/macron/actions/runs/43559902376)) |
 | 2. A real game at its menu | game survey running |
 | 3. Through Macron, not scripts | `macron` launcher: pinned runtime, per-game prefixes, fixes database, Steam verbs; extra installs not yet |
 | 4. Three games | not started |
@@ -21,6 +21,16 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 - `.github/workflows/`: `test.yml` (Go tests, Linux), `scenarios.yml` (scenarios on macos-26), `reference.yml` (references on windows-latest), `sandbox.yml` (sbx).
 
 ## What is known
+
+From building gate 1, 2026-11-14:
+
+- **DXMT 0.80 cannot present on upstream Wine.** It creates a device, but its swap chain looks up `macdrv_functions` (CrossOver's) or `get_win_data`/`macdrv_view_create_metal_view`/... with `dlsym`, and upstream winemac.so keeps them hidden: `err: Failed to create metal view, it seems like your Wine has no exported symbols needed by DXMT.` An agent is building Wine 11.21 with a small export patch (branch `wine-dxmt`).
+- **DXVK-macOS works on stock Wine 11.21** over the bundled MoltenVK 1.4.0, on the runner's paravirtual GPU (MoltenVK reports GPU family Apple 5 / Mac 2, MSL 3.1). It needs the build that ships its own `dxgi.dll` (`v1.10.3-20230507`); the `-repack` drops it for CrossOver's patched Wine dxgi, and upstream Wine's dxgi gives `D3D11CreateDevice: Failed to create a DXGI factory`.
+- **Timings on the runner:** runtime install 23-27 s from cache-less download, first `wineboot` plus start to the first window about 80 s, probe at 60 frames in 1.3 s.
+- **Windows runner references work:** `windows-latest` renders Direct3D 11 with the Microsoft Basic Render Driver; `BitBlt` from the screen captures the window, two captures 5 s apart were identical.
+- **sbx sandboxes can screenshot and list window titles over SSH** (`screencapture -l`, `CGWindowListCopyWindowInfo` titles are readable).
+- Wine's windows belong to a process named `wine`; the macOS title bar is 32 points on macOS 26.
+
 
 From the probe on a GitHub `macos-26` runner (`.github/workflows/probe.yml` and `ci/probe/` on `ci-probe`), 2026-11-13:
 
@@ -43,8 +53,10 @@ Existing projects worth reading (see the licence rule in GOAL.md): NotProton (`N
 
 ## Next
 
-1. Gate 1: the verify command and its CI workflow, with the Direct3D 11 probe as the first scenario.
-2. In parallel, survey candidate games for gate 2 and find out which ones the runner's virtual GPU can run.
+1. Gate 2: pick the first real game from the survey, write its profile and scenario, capture its Windows reference, get it green.
+2. Merge `wine-dxmt` when it presents, and offer DXMT as the backend for Direct3D 11 games.
+3. Gate 4: two more games from other engines, one of them 1 GB or larger.
+4. Gate 5: review and merge `steam-hook`.
 
 ## Needs Thalles
 
