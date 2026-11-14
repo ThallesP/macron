@@ -114,7 +114,7 @@ foreach ($m in $spec.moves) {
 foreach ($d in $spec.derive) {
   $text = Get-Content -Raw (Expand-Path $d.from)
   foreach ($r in $d.replace) { $text = $text.Replace($r[0], $r[1]) }
-  Set-Content -NoNewline (Expand-Path $d.to) $text
+  [IO.File]::WriteAllText((Expand-Path $d.to), $text)
   Log "derived $(Expand-Path $d.to)"
 }
 

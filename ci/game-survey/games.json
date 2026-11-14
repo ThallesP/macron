@@ -283,8 +283,7 @@
           "exe": "System/UCC.exe",
           "args": [
             "decompress",
-            "../Maps/CityIntro.unr.uz",
-            "-nohomedir"
+            "../Maps/CityIntro.unr.uz"
           ],
           "cwd": "System"
         },
@@ -292,8 +291,7 @@
           "exe": "System/UCC.exe",
           "args": [
             "decompress",
-            "../Maps/Entry.unr.uz",
-            "-nohomedir"
+            "../Maps/Entry.unr.uz"
           ],
           "cwd": "System"
         },
@@ -301,8 +299,7 @@
           "exe": "System/UCC.exe",
           "args": [
             "decompress",
-            "../Maps/UT-Logo-Map.unr.uz",
-            "-nohomedir"
+            "../Maps/UT-Logo-Map.unr.uz"
           ],
           "cwd": "System"
         }
