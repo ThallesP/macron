@@ -88,5 +88,5 @@
   "windowsExtra": [
     "mesa-llvmpipe"
   ],
-  "ci": false
+  "ci": true
 }
