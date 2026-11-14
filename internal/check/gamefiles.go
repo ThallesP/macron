@@ -72,6 +72,9 @@ func unpack(ctx context.Context, format, archive, into string) error {
 		return os.WriteFile(filepath.Join(into, filepath.Base(archive)), content, 0o755)
 	}
 	command := exec.CommandContext(ctx, "tar", "-xf", archive, "-C", into)
+	if runtime.GOOS == "windows" {
+		command = exec.CommandContext(ctx, filepath.Join(os.Getenv("SystemRoot"), "System32", "tar.exe"), "-xf", archive, "-C", into)
+	}
 	if format == "7z" && runtime.GOOS == "windows" {
 		command = exec.CommandContext(ctx, "7z", "x", "-y", "-o"+into, archive)
 	}
