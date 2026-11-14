@@ -57,7 +57,7 @@ run() {
   rm -rf "$out" && mkdir -p "$out"
   log() { echo "$(date +%H:%M:%S) $*" | tee -a "$out/result.txt"; }
 
-  export WINEPREFIX=$GS/prefix-$game
+  export WINEPREFIX=$GS/prefix-$(jq -r --arg g "$game" '.prefix // $g' <<<"$spec")
   export WINEDEBUG=${WINEDEBUG:-err+all,fixme-all}
   export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
   export DXMT_LOG_LEVEL=info
@@ -90,6 +90,8 @@ run() {
 
   local t0=$(date +%s) n i
   n=$(jq '.downloads | length' <<<"$spec")
+  # A variant that shares a prefix reuses what is already installed.
+  [ -f "$root/$(jq -r .exe <<<"$spec")" ] && [ "$(jq -r '.prefix // empty' <<<"$spec")" != "" ] && n=0
   for (( i = 0; i < n; i++ )); do
     local d url sha method into file
     d=$(jq ".downloads[$i]" <<<"$spec")

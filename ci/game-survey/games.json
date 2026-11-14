@@ -402,6 +402,91 @@
       ],
       "opengl": false,
       "backend": "dxvk"
+    },
+    "ut99-gl": {
+      "same_as": "ut99",
+      "derive": [
+        {
+          "from": "{game}/System/Default.ini",
+          "to": "{game}/System/UnrealTournament.ini",
+          "replace": [
+            [
+              "GameRenderDevice=OpenGLDrv.OpenGLRenderDevice",
+              "GameRenderDevice=OpenGLDrv.OpenGLRenderDevice"
+            ],
+            [
+              "StartupFullscreen=True",
+              "StartupFullscreen=False"
+            ],
+            [
+              "WindowedViewportX=1024",
+              "WindowedViewportX=800"
+            ],
+            [
+              "WindowedViewportY=768",
+              "WindowedViewportY=600"
+            ],
+            [
+              "FirstRun=0",
+              "FirstRun=469"
+            ],
+            [
+              "LocalMap=CityIntro.unr",
+              "LocalMap=UT-Logo-Map.unr"
+            ]
+          ]
+        }
+      ],
+      "opengl": true,
+      "backend": "opengl"
+    },
+    "ut99-d3d9": {
+      "same_as": "ut99",
+      "derive": [
+        {
+          "from": "{game}/System/Default.ini",
+          "to": "{game}/System/UnrealTournament.ini",
+          "replace": [
+            [
+              "GameRenderDevice=OpenGLDrv.OpenGLRenderDevice",
+              "GameRenderDevice=D3D9Drv.D3D9RenderDevice"
+            ],
+            [
+              "StartupFullscreen=True",
+              "StartupFullscreen=False"
+            ],
+            [
+              "WindowedViewportX=1024",
+              "WindowedViewportX=800"
+            ],
+            [
+              "WindowedViewportY=768",
+              "WindowedViewportY=600"
+            ],
+            [
+              "FirstRun=0",
+              "FirstRun=469"
+            ],
+            [
+              "LocalMap=CityIntro.unr",
+              "LocalMap=UT-Logo-Map.unr"
+            ]
+          ]
+        }
+      ],
+      "opengl": false,
+      "backend": "wined3d-vulkan",
+      "mac_env": {
+        "WINE_D3D_CONFIG": "renderer=vulkan"
+      }
+    },
+    "ror-vk": {
+      "same_as": "ror",
+      "prefix": "ror",
+      "backend": "wined3d-vulkan",
+      "mac_env": {
+        "WINE_D3D_CONFIG": "renderer=vulkan"
+      }
     }
   }
 }
