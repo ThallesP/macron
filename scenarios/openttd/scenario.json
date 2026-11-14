@@ -42,5 +42,5 @@
   "reference": { "image": "reference.png", "source": "windows-latest, GDI, https://github.com/ThallesP/macron/actions/runs/43561567772 ; run 43562346925 shows the title game behind the menu moving to another place within 30 s on Windows itself (SSIM 0.209 unmasked), so everything outside the menu panel is ignored; masked, Windows 30 s later scores 0.944" },
   "otherGame": "d3d11-probe",
   "windowsExtra": [],
-  "ci": false
+  "ci": true
 }
