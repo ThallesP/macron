@@ -61,7 +61,7 @@ type Scenario struct {
 var (
 	validName     = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
 	unpackFormats = []string{"zip", "tar", "7z"}
-	windowsExtras = []string{}
+	windowsExtras = []string{"mesa-llvmpipe"}
 )
 
 func Load(dir string) (Scenario, error) {

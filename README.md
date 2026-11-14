@@ -56,6 +56,8 @@ Every game tried. "Where" is where it was checked: the sandbox/CI runner (virtua
 |---|---|---|
 | Wine (Gcenx/macOS_Wine_builds 11.21) | LGPL 2.1+ | downloaded at install time, unmodified |
 | DXMT 0.80 (3Shain/dxmt) | LGPL 2.1+ | downloaded at install time, unmodified |
+| DXVK-macOS 1.10.3-20230507 (Gcenx/DXVK-macOS) | zlib | downloaded at install time, unmodified (the `dxvk` backend) |
+| Mesa 26.2.6 for Windows (pal1000/mesa-dist-win) | MIT | downloaded only on Windows runners, for OpenGL references |
 | Go standard library | BSD 3-Clause | built into macron and macron-check |
 
 Macron itself has no licence yet (see PROGRESS.md, "Needs Thalles").

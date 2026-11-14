@@ -34,6 +34,7 @@ type ReferenceReport struct {
 	Size          string           `json:"size,omitempty"`
 	Stability     imagecheck.Score `json:"stabilityBetweenCaptures"`
 	SecondsToMenu float64          `json:"secondsToMenu"`
+	Extras        []string         `json:"extras"`
 }
 
 type windowsWindow struct {
@@ -61,6 +62,16 @@ func captureReference(ctx context.Context, in ReferenceInput, report *ReferenceR
 	if err := launch.WriteFiles(in.Profile.Files, windowsPlaces(filepath.Dir(exe))); err != nil {
 		return err
 	}
+	env := os.Environ()
+	if slices.Contains(in.Scenario.WindowsExtra, "mesa-llvmpipe") {
+		in.Progress("adding Mesa's software OpenGL next to the game")
+		copied, err := addMesaLLVMPipe(ctx, in.CacheDir, WorkDir(in.Scenario), exe)
+		if err != nil {
+			return err
+		}
+		report.Extras = append(report.Extras, fmt.Sprintf("Mesa llvmpipe (%s): %v", mesaLLVMPipe.Name, copied))
+		env = append(env, "GALLIUM_DRIVER=llvmpipe")
+	}
 
 	in.Progress("starting the game on Windows")
 	log, err := os.Create(filepath.Join(in.Out, "game.log"))
@@ -71,6 +82,7 @@ func captureReference(ctx context.Context, in ReferenceInput, report *ReferenceR
 	output := &lockedBuffer{}
 	game := exec.Command(exe, in.Profile.Args...)
 	game.Dir = filepath.Dir(exe)
+	game.Env = env
 	game.Stdout = io.MultiWriter(log, output)
 	game.Stderr = game.Stdout
 	started := time.Now()
