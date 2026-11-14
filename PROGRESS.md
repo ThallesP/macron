@@ -4,14 +4,14 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 
 ## State
 
-2026-11-14 (loop day 1): gates 1 and 2 are green. OpenTTD 15.3 reaches its main menu through `macron` on a GitHub macOS runner and matches the original on Windows (menu panel SSIM 0.942, all menu text found). Before that, gate 1: The Direct3D 11 probe goes through `macron` (DXVK backend) on a GitHub macOS runner and matches its Windows reference (SSIM 0.996); every negative control is rejected. Three agents work on branches: `steam-hook` (gate 5), `game-survey` (candidates for gates 2 and 4), `wine-dxmt` (a Wine that lets DXMT present).
+2026-11-14 (loop day 1): gates 1 to 4 are green in CI on main ([Scenarios run 43569307839](https://github.com/ThallesP/macron/actions/runs/43569307839)): the Direct3D 11 probe and three games from three engines (OpenTTD, Xonotic at 1.24 GB, SuperTuxKart) reach their main menus through `macron` on GitHub's macOS runner and match the original games captured on Windows runners. Gate 5 (Steam hook) is with an agent on `steam-hook`.
 
 | Gate | State |
 |---|---|
 | 1. The loop runs | **green**. `macron-check sandbox d3d11-probe` passed from the dev machine (sandbox sbx_3qexmqkk, exit 0); Scenarios workflow green on main ([run 43559902376](https://github.com/ThallesP/macron/actions/runs/43559902376)) |
 | 2. A real game at its menu | **green**. OpenTTD 15.3 (GDI): `macron-check sandbox openttd` passed (sbx_tb2l7cc7) and the Scenarios workflow is green on main with it ([run 43563385587](https://github.com/ThallesP/macron/actions/runs/43563385587)) |
-| 3. Through Macron, not scripts | `macron` launcher: pinned runtime, per-game prefixes, fixes database (backend, env, DLL overrides, registry, extra installs, args, files), Steam verbs; the probe passes through it. Needs real games through it to count |
-| 4. Three games | 1 of 3 (OpenTTD); none of 1 GB yet. Survey on `game-survey` |
+| 3. Through Macron, not scripts | **green**. Every scenario launches through `macron launch` with its profile from `fixes/games/`: pinned runtime, per-game prefix, backend (dxmt, dxvk, wined3d), env, DLL overrides, registry, extra installs, args, files; Steam's verbs exist. Unit tests on Linux, scenarios as integration tests |
+| 4. Three games | **green**. OpenTTD 15.3 (OpenTTD engine, GDI), Xonotic 0.8.6 (DarkPlaces, OpenGL, 1.24 GB), SuperTuxKart 1.5 (Antarctica, Direct3D 9): each passed `macron-check sandbox` (sbx_tb2l7cc7, sbx_7yz2k6go, sbx_uetmo4d4) and passes in CI |
 | 5. Steam's Play button | agent working on branch `steam-hook` |
 
 ## Layout
@@ -33,7 +33,10 @@ From building gate 1, 2026-11-14:
 - **OpenTTD's title screen moves by itself.** Its camera walks through map places on a timer, so the background depends on uptime; on Windows alone the original scores SSIM 0.209 against itself 30 s later. The scenario compares only the menu panel (region from the reference layout, evidence in reference run 43562346925; see the commit "openttd: compare the menu panel").
 - **Wine 11.21 stubs `GetFontResourceInfoW`.** Games that load a private font file and ask GDI for its face name (OpenTTD) get Wine's default sans-serif instead. OpenTTD's profile maps the file names with `FontSubstitutes`; the real fix is implementing the function in Wine (a candidate for a published Wine patch next to the DXMT one).
 - **OpenTTD draws its own mouse pointer**, so both sides park the pointer in the top-left corner before starting a game.
-- **The runner's GPU has no hardware OpenGL**, only the Apple Software Renderer, which winemac ignores unless `HKCU\Software\Wine\Mac Driver\AllowSoftwareRendering` is `y` (from the game survey).
+- **The runner's GPU has no hardware OpenGL.** Wine's OpenGL gets no pixel format there (Xonotic: `Failed to set video mode to 800x600: No matching GL pixel format available`, also with winemac's `AllowSoftwareRendering`), and Mesa's Zink (GL on Vulkan) cannot run on MoltenVK (`Zink requires the nullDescriptor feature of KHR/EXT robustness2`). That is the runner's virtual GPU, not Macron: the Xonotic scenario sets `MACRON_OPENGL=llvmpipe` (Mesa software OpenGL inside Wine, the same renderer the Windows reference uses). The hardware OpenGL path is untested until a Mac with a GPU runs it (the MacBook).
+- **Direct3D 9 works through wined3d's Vulkan renderer** (`WINE_D3D_CONFIG=renderer=vulkan`, MoltenVK); DXVK-macOS's d3d9 cannot make a device on the runner (no geometryShader/shaderCullDistance in MoltenVK). From the game survey.
+- **Vision OCR misreads stylised fonts now and then** (Xonotic "Credits" as "Eredits" once); the check reads each frame at 1x and 2x.
+- **Test setup belongs to the scenario** (`args`, `files`, `macronEnv`): window size, first-start answers. Profiles hold only what any player of the game needs.
 - **DXMT can present with a patched winemac.so** (branch `wine-dxmt`, `runtime/wine/` on main): it adds CrossOver's `macdrv_functions` table with a client-area view per window. The probe drew 60 frames through DXMT in a sandbox. Its release is being published by the Wine build workflow.
 
 
@@ -58,9 +61,11 @@ Existing projects worth reading (see the licence rule in GOAL.md): NotProton (`N
 
 ## Next
 
-1. Gate 4: two more games from other engines, one of them 1 GB or larger (survey on `game-survey`).
-2. Pin the published winemac.so overlay in the runtime and offer DXMT for Direct3D 11 games.
-3. Gate 5: review and merge `steam-hook`.
+1. Gate 5: review and merge `steam-hook`, or park it under "Needs Thalles" with the evidence.
+2. Pin the published winemac.so overlay (release `runtime-wine-11.21-macron.1`) in the runtime and run the probe through DXMT.
+3. Fold the game survey's full results into the README table.
+4. Try the hardware OpenGL path (Xonotic without `MACRON_OPENGL`) on the MacBook, with the game taking its own screenshot since the screen is locked.
+
 
 ## Needs Thalles
 

@@ -2,7 +2,7 @@
 
 Mac + Proton. Press Play on a Windows-only game in the Mac Steam client and have it run.
 
-**Status:** early. The launcher (`macron`), its pinned runtime, the fixes database and the scenario checks (`macron-check`) exist; Steam integration does not yet. PROGRESS.md has the details, the table below has every game tried.
+**Status:** early. The launcher (`macron`), its pinned runtime, the fixes database and the scenario checks (`macron-check`) exist, and three real games reach their menus through it on GitHub's macOS runners, checked against the originals on Windows. Steam integration is not done. PROGRESS.md has the details, the table below has every game tried.
 
 ## How it will work
 
@@ -51,6 +51,8 @@ Every game tried. "Where" is where it was checked: the sandbox/CI runner (virtua
 | Game | Engine | Graphics API | Backend | How far | Where | Notes |
 |---|---|---|---|---|---|---|
 | OpenTTD 15.3 (11 MB + OpenGFX/OpenSFX) | OpenTTD (own) | GDI (2D) | wined3d (plain Wine) | menu, matches Windows (menu panel SSIM 0.942, menu text found) | runner, CI | needs FontSubstitutes in its profile: Wine stubs `GetFontResourceInfoW`, so its own font was replaced by Wine's default |
+| Xonotic 0.8.6 (1.24 GB) | DarkPlaces | OpenGL | wined3d + `MACRON_OPENGL=llvmpipe` (software GL) | menu, matches Windows (SSIM 0.953, menu text found) | runner, CI | the runner has no hardware OpenGL: without the switch, `No matching GL pixel format available`; Mesa Zink needs robustness2 nullDescriptor, which MoltenVK lacks. Hardware GL on a real Mac not checked yet |
+| SuperTuxKart 1.5 (922 MB) | Antarctica (Irrlicht fork) | Direct3D 9 (`--render-driver=directx9`) | wined3d, Vulkan renderer (`WINE_D3D_CONFIG=renderer=vulkan`) | menu, matches Windows (SSIM 0.971, menu text found) | runner, CI | DXVK d3d9 can't make a device (MoltenVK lacks geometryShader, shaderCullDistance); no d3dx9_43, so fixed pipeline on both sides |
 | Direct3D 11 probe (ours, not a game) | none | Direct3D 11 | DXVK | draws its picture, matches Windows (SSIM 0.996) | runner | DXMT: device works, presenting needs a Wine that exports winemac functions |
 
 ## Licences
