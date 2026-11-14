@@ -110,8 +110,15 @@ func (k KnownBuild) matches(hashes map[string]string) bool {
 	return len(k.Files) > 0
 }
 
+// A Steam started from the notarised Steam.app keeps its manifest under a
+// "signed" name (steam_client_signed_osx.manifest, steam_client_signed-2_osx.manifest);
+// the client the installer DMG downloads on a fresh machine uses the plain name.
 func (h Hook) manifestVersion() string {
-	data, err := os.ReadFile(filepath.Join(h.clientDir(), "package", "steam_client_osx.manifest"))
+	paths, err := filepath.Glob(filepath.Join(h.clientDir(), "package", "steam_client*_osx.manifest"))
+	if err != nil || len(paths) == 0 {
+		return "unknown"
+	}
+	data, err := os.ReadFile(paths[0])
 	if err != nil {
 		return "unknown"
 	}

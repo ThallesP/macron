@@ -49,6 +49,8 @@ const (
 
 const installedMarker = "installed.json"
 
+const winemacDriver = "lib/wine/x86_64-unix/winemac.so"
+
 var dxmtArchitectures = []string{"x86_64-windows", "x86_64-unix", "i386-windows"}
 
 func Find(layout Layout, manifest Manifest) (Installed, error) {
@@ -71,6 +73,11 @@ func Install(ctx context.Context, layout Layout, manifest Manifest, progress fun
 
 	progress(fmt.Sprintf("downloading %s", manifest.Wine.Name))
 	wineArchive, err := Download(ctx, layout.DownloadsDir(), manifest.Wine)
+	if err != nil {
+		return Installed{}, err
+	}
+	progress(fmt.Sprintf("downloading %s", manifest.Winemac.Name))
+	winemacArchive, err := Download(ctx, layout.DownloadsDir(), manifest.Winemac)
 	if err != nil {
 		return Installed{}, err
 	}
@@ -98,6 +105,10 @@ func Install(ctx context.Context, layout Layout, manifest Manifest, progress fun
 	}
 	progress("adding DXMT")
 	if err := addDXMT(ctx, dxmtArchive, staging); err != nil {
+		return Installed{}, err
+	}
+	progress("adding Macron's Mac driver to the DXMT tree")
+	if err := addWinemac(ctx, winemacArchive, staging); err != nil {
 		return Installed{}, err
 	}
 	progress("adding DXVK")
@@ -155,6 +166,25 @@ func addDXMT(ctx context.Context, archive, staging string) error {
 		if err := copyFiles(ctx, source, filepath.Join(dxmt, "lib", "wine", arch)); err != nil {
 			return err
 		}
+	}
+	return os.RemoveAll(unpacked)
+}
+
+func addWinemac(ctx context.Context, archive, staging string) error {
+	unpacked := filepath.Join(staging, "unpacked-winemac")
+	if err := extract(ctx, archive, unpacked); err != nil {
+		return err
+	}
+	if _, err := os.Stat(filepath.Join(unpacked, winemacDriver)); err != nil {
+		return failure.Errorf(failure.CodeExtractFailed, "%s has no %s", filepath.Base(archive), winemacDriver)
+	}
+	dxmt := filepath.Join(staging, string(TreeDXMT))
+	if _, err := os.Stat(filepath.Join(dxmt, winemacDriver)); err != nil {
+		return failure.Errorf(failure.CodeExtractFailed, "Wine has no %s to replace", winemacDriver)
+	}
+	output, err := exec.CommandContext(ctx, "cp", "-R", unpacked+"/.", dxmt).CombinedOutput()
+	if err != nil {
+		return failure.Errorf(failure.CodeExtractFailed, "copying Macron's Mac driver into Wine: %s: %s", err, output)
 	}
 	return os.RemoveAll(unpacked)
 }

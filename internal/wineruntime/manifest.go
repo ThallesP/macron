@@ -10,17 +10,24 @@ type Archive struct {
 type Manifest struct {
 	Version string  `json:"version"`
 	Wine    Archive `json:"wine"`
+	Winemac Archive `json:"winemac"`
 	DXMT    Archive `json:"dxmt"`
 	DXVK    Archive `json:"dxvk"`
 }
 
 var Pinned = Manifest{
-	Version: "wine-11.21-dxmt-0.80-dxvk-1.10.3-20230507",
+	Version: "wine-11.21-macron.1-dxmt-0.80-dxvk-1.10.3-20230507",
 	Wine: Archive{
 		Name:      "wine-devel-11.21-osx64.tar.xz",
 		URL:       "https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.21/wine-devel-11.21-osx64.tar.xz",
 		SHA256:    "9909b486657e10ab66c7279371ae1f990345b596b3b1b3a0cf21f28af24fa0ce",
 		SizeBytes: 225612636,
+	},
+	Winemac: Archive{
+		Name:      "wine-11.21-macron.1-winemac-osx64.tar.xz",
+		URL:       "https://github.com/ThallesP/macron/releases/download/runtime-wine-11.21-macron.1/wine-11.21-macron.1-winemac-osx64.tar.xz",
+		SHA256:    "459d55d8bb0369390d95a4d8bea88cb0585f36f76dbe75c93c1fddd3ac6ccdab",
+		SizeBytes: 168028,
 	},
 	DXMT: Archive{
 		Name:      "dxmt-v0.80-builtin.tar.gz",

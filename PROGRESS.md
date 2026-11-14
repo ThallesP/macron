@@ -4,7 +4,16 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 
 ## State
 
-2026-11-14 (loop day 1): gates 1 to 4 are green in CI on main ([Scenarios run 43569307839](https://github.com/ThallesP/macron/actions/runs/43569307839)): the Direct3D 11 probe and three games from three engines (OpenTTD, Xonotic at 1.24 GB, SuperTuxKart) reach their main menus through `macron` on GitHub's macOS runner and match the original games captured on Windows runners. Gate 5 is green as far as it can go without a Steam account, and parked under "Needs Thalles" for pressing Play.
+2026-11-14, phase 2 starts. GOAL.md was rewritten: Thalles tried phase 1 on his MacBook, a game he owns ran only through a workaround and ran slowly, and Steam's own Install and Play buttons did not work. Phase 2's gates:
+
+| Gate | State |
+|---|---|
+| 1. Fast (Ultimate Custom Night at its own frame rate, cause measured, a frame-rate check in CI) | not started; suspects listed under "From the MacBook" |
+| 2. Steam's own Install and Play buttons on the MacBook | not started; registration alone is proven not enough |
+| 3. A DMG release Thalles can install | not started |
+| 4. The Steam bridge (`SteamAPI_Init`, achievements, cloud) | not started |
+
+Phase 1 (loop day 1) for reference: gates 1 to 4 are green in CI on main ([Scenarios run 43569307839](https://github.com/ThallesP/macron/actions/runs/43569307839)): the Direct3D 11 probe and three games from three engines (OpenTTD, Xonotic at 1.24 GB, SuperTuxKart) reach their main menus through `macron` on GitHub's macOS runner and match the original games captured on Windows runners. Its gate 5 (the Steam registration) is green in CI; what it could not check is now answered below.
 
 | Gate | State |
 |---|---|
@@ -19,6 +28,19 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 - `cmd/macron`, `internal/{wineruntime,launch,failure}`, `fixes/`: the launcher. README.md documents it.
 - `cmd/macron-check`, `internal/{check,imagecheck,scenario}`, `scenarios/`, `ci/build-bundle.sh`: the scenario checks. docs/checks.md defines the measure; it was committed before any Macron output was compared.
 - `.github/workflows/`: `test.yml` (Go tests, Linux), `scenarios.yml` (scenarios on macos-26), `reference.yml` (references on windows-latest), `sandbox.yml` (sbx).
+
+## From the MacBook, 2026-11-14
+
+Checked by hand on Thalles's MacBook Air (M3, macOS 26.5, Steam build 1794536281, logged in). Everything was removed afterwards; the MacBook is clean.
+
+- **Registration does not switch on Steam Play.** After `macron steam enable` and a restart, `compat_log.txt` had `Client version: 1794536281` and `Mapping AppID 0 to tool "macron" with priority 75`, yet the library page of Ultimate Custom Night (871720, Windows only) showed a greyed-out Install button, and `open steam://install/871720` gave a dialog: `An error occurred while installing Ultimate Custom Night: "Invalid platform"`. So the Mac client reads the mapping and still refuses Windows apps. NotProton's README says it works by "forcibly enabling the Steam Play functionality in macOS Steam (which is present and inert)", ships per-build signatures, and pins Steam builds (stable 1794424036 when read); with it, Steam's Compatibility settings and per-game "Force the use of a specific Steam Play compatibility tool" appear as on Linux.
+- **A logged-in Steam downloads Windows depots on request.** `steam_osx +download_depot 871720 871721`, run while Steam is running, is forwarded to it (`console_log.txt`: `ExecCommandLine`), and the files land in `Steam.AppBundle/Steam/Contents/MacOS/steamapps/content/app_871720/depot_871721/`. Useful for getting a test game onto the MacBook before gate 2 works; it is the workaround Thalles does not want as the product.
+- **Depot and launch data are local.** `appcache/appinfo.vdf` (binary VDF, magic `0x07564429`: keys are indexes into a string table whose offset follows the header) has every library app's depots, sizes, `oslist` and launch entries. Ultimate Custom Night: depot 871721, 274,753,071 bytes, launch `Ultimate Custom Night.exe`.
+- **Ultimate Custom Night runs, slowly.** `SteamAppId=871720 macron waitforexitandrun "Ultimate Custom Night.exe"` (default profile, `dxmt` tree) reached the title screen ("WARNING! ... PRESS ENTER") in a full-screen window of 1920x1243 points; Thalles called it "super slow". It did not need Steam to start. `WINEDEBUG=+loaddll` shows the path: the exe is PE32 (32-bit), unpacks Clickteam Fusion's runtime into `%TEMP%\mrt*.tmp` and loads `mmf2d3d9.dll`, then builtin `d3d9.dll`, `wined3d.dll`, `opengl32.dll`, `ddraw.dll`, `dsound.dll`, `winmm.dll`, `mmdevapi.dll`. So: Direct3D 9 on wined3d's OpenGL renderer, in Wine's 32-on-64 mode, under Rosetta. The log also repeats mpg123's `Illegal Audio-MPEG-Header ... Trying to resync` and creates several MoltenVK instances. `wineserver` in Gcenx's wine-devel 11.21 has no msync or esync strings. No frame times were measured: these are suspects.
+- **DXMT presents on a real Apple GPU** with the patched `winemac.so` (now pinned in the runtime, DXMT tree only): the Direct3D 11 probe through `SteamAppId=999999 macron waitforexitandrun probe.exe` printed `adapter: Apple M3`, `RESULT present: OK (60 frames in 529 ms)` and its window showed the reference picture. MoltenVK there reports Metal 3, GPU family Apple 9, MSL 3.1.
+- **The hook's build check and Steam's variants.** A Steam started from the notarised `/Applications/Steam.app` selects the package variant `macos-signed` and names its manifest `steam_client_signed_osx.manifest` (also `steam_client_signed-2_osx.manifest`), not `steam_client_osx.manifest`; the hook now globs for it. Its `steamclient.dylib` and `steam_osx` hashes at build 1794536281 are the same as the runner's. A stale client (his was from January) first installs an already-downloaded package, restarts, and only then fetches the current build, so the build can change between two starts.
+- **Tools on a Mac without mingw:** `zig cc -target x86_64-windows-gnu` builds the probe. `go test ./internal/launch` fails on macOS in `TestRunPassesTheGamesExitCodeAndProfile` because the temp folder is a symlink (`/var` and `/private/var`); it passes on Linux.
+- **Steam's logs folder is recreated at login**, so a watcher that tails `logs/bootstrap_log.txt` across a restart loses the file.
 
 ## What is known
 
@@ -61,23 +83,13 @@ Existing projects worth reading (see the licence rule in GOAL.md): NotProton (`N
 
 ## Next
 
-2. Pin the published winemac.so overlay (release `runtime-wine-11.21-macron.1`) in the runtime and run the probe through DXMT.
-3. Fold the game survey's full results into the README table.
-4. Try the hardware OpenGL path (Xonotic without `MACRON_OPENGL`) on the MacBook, with the game taking its own screenshot since the screen is locked.
-
+1. Gate 1: reproduce the Direct3D 9 slowness without the MacBook (a free 32-bit Clickteam Fusion or other Direct3D 9 game, or a 32-bit Direct3D 9 program of ours, on a sandbox), measure which layer costs the time, then confirm on the MacBook with Ultimate Custom Night. First things to compare: wined3d on OpenGL against wined3d's Vulkan renderer and DXVK's d3d9 on a real GPU, 32-bit against 64-bit, with and without msync, windowed against full screen, Retina mode on and off.
+2. Gate 2: find out how the Mac client decides "Invalid platform" and what switches Steam Play on.
+3. Gate 3 as soon as gate 2 works once.
+4. Left from phase 1: the scenario for the probe still uses DXVK; with the patched `winemac.so` pinned it can run through DXMT. The hardware OpenGL path (Xonotic without `MACRON_OPENGL`) is still unchecked on a real Mac.
 
 ## Needs Thalles
 
-- **Pressing Play in Steam (gate 5, parked).** Built and checked without an account, on the GitHub macOS runner with the current Mac Steam (build 1794536281), in the Steam hook workflow on main ([run 43570046626](https://github.com/ThallesP/macron/actions/runs/43570046626), artifact `steam-hook-evidence`):
-  - `macron steam enable` recognises the build by the SHA-256 of `steamclient.dylib` and `steam_osx` (table in `internal/steamhook/builds.go`), backs up `config/config.vdf`, writes `compatibilitytools.d/macron/` (whose command line calls `macron waitforexitandrun`) and sets `CompatToolMapping` app 0 to `macron`.
-  - After a restart Steam logs `Mapping AppID 0 to tool "macron" with priority 75` in `logs/compat_log.txt`, reaches its login window (`SetLoginState: WaitingForCredentials`, a "Sign in to Steam" window, screenshot `2-after-hook.png`), and keeps the mapping when it quits. `macron steam disable` restores the backup.
-  - On a copy of the client with one byte added to `steamclient.dylib`, `enable` exits 125 with `UNKNOWN_STEAM_BUILD` and changes no file.
-  - Not checked: whether the Mac client, once logged in, offers Play on a Windows-only game and actually calls `macron waitforexitandrun`. NotProton's notes say Mac Steam's compatibility manager keeps an "enabled" flag off while the client runs, and NotProton turns it on by injecting a dylib into Steam and setting the flag in memory. Macron's hook does only the registration Steam reads from its own config files and changes nothing inside Valve's signed client.
-  - **Decision for Thalles:** if a logged-in test shows Steam Play stays off, the only way known so far is to inject into or patch Valve's client, as NotProton does. That needs (a) a licence for Macron, because the known approach is GPL, and (b) your call on whether Macron should modify the Steam client at all. `macron`'s Steam verbs take the profile from `SteamAppId` and the prefix from `STEAM_COMPAT_DATA_PATH`, but have never been called by Steam.
-  - What is needed: a Steam account that owns a free Windows-only game (a throwaway account is safer than a personal one), logged in on the MacBook or provided as CI secrets for a workflow that never runs on forks. Then: `macron steam enable`, press Play, and check `logs/compat_log.txt` and macron's log in `~/Library/Application Support/Macron/logs/`.
-  - Steam updates itself; when the build changes, the workflow fails with the new build id and hashes, and README.md "Steam hook" says how to add it.
-
-- **A licence for Macron.** Until one is picked, no code is copied from GPL projects, which matters most for the Steam hook and the Steam bridge.
-- **A Steam account for testing Play.** Gate 5 can't press Play without a logged-in account that owns a Windows game. A throwaway account is safer than a personal one.
+- **A licence for Macron.** Until one is picked, no code is copied from GPL projects. Phase 2 writes its own Steam Play switch and ports the Steam bridge from Valve's Proton source.
+- **An Apple Developer ID** (99 USD a year) if the installer should open without a Gatekeeper warning. Without it the DMG is unsigned and the release notes say how to open it.
 - **Fork pull requests.** The repo only asks approval for first-time contributors. "Require approval for all external contributors" in the Actions settings stops a fork from using the Mac runner slots.
-- **The MacBook's screen was locked** on 2026-11-14, so no screenshots can be taken there from outside a game.

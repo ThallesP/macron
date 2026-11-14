@@ -2,7 +2,7 @@
 
 Mac + Proton. Press Play on a Windows-only game in the Mac Steam client and have it run.
 
-**Status:** early. The launcher (`macron`), its pinned runtime, the fixes database and the scenario checks (`macron-check`) exist, and three real games reach their menus through it on GitHub's macOS runners, checked against the originals on Windows. Steam integration is not done. PROGRESS.md has the details, the table below has every game tried.
+**Status:** early. The launcher (`macron`), its pinned runtime, the fixes database and the scenario checks (`macron-check`) exist, and three real games reach their menus through it on GitHub's macOS runners, checked against the originals on Windows. Steam integration is not done: registering Macron as a compatibility tool is not enough, the Mac client still refuses to install a Windows-only game ("Invalid platform"). PROGRESS.md has the details, the table below has every game tried.
 
 ## How it will work
 
@@ -23,7 +23,7 @@ Mac + Proton. Press Play on a Windows-only game in the Mac Steam client and have
 ## The launcher (`macron`)
 
 ```sh
-macron runtime install                       # Wine 11.21 + DXMT 0.80, pinned URLs and checksums
+macron runtime install                       # Wine 11.21 + Macron's winemac.so + DXMT 0.80 + DXVK, pinned URLs and checksums
 macron launch --game d3d11-probe -- probe.exe # start a program with its profile from fixes/games/
 macron kill --game d3d11-probe               # stop everything in that game's Windows environment
 macron waitforexitandrun <exe> [args]        # what Steam calls; the profile comes from SteamAppId
@@ -82,13 +82,15 @@ Every game tried. The first three are scenarios that pass in CI; the next five c
 | Rigs of Rods 2026.01 | OGRE | Direct3D 9 | wined3d, Vulkan renderer | background only, menu never appears | runner | log stops at `Texture 'accept.png': Loading`; DXVK d3d9: `Cannot create device!` |
 | 0 A.D. 0.28.0 | Pyrogenesis | OpenGL | wined3d + Mesa llvmpipe | crash before the menu | runner | `unhandled exception (Access violation reading 0x00000080)` right after GL comes up |
 | osu!(lazer) 2026.1005.0 | osu-framework (.NET) | Direct3D 11 | DXVK | crash before the menu | runner | its auth module crashes: `Unhandled exception code c0000005`, exit 5 |
-| Direct3D 11 probe (ours, not a game) | none | Direct3D 11 | DXVK | draws its picture, matches Windows (SSIM 0.996) | runner | DXMT: device works, presenting needs a Wine that exports winemac functions |
+| Ultimate Custom Night (Steam 871720, 262 MB) | Clickteam Fusion 2.5 (32-bit) | Direct3D 9 | wined3d on OpenGL (default profile, DXMT tree) | title screen, but far too slow to play | MacBook | checked by hand, not a scenario; files fetched with Steam's `+download_depot` because Steam's Install button refuses Windows-only games |
+| Direct3D 11 probe (ours, not a game) | none | Direct3D 11 | DXVK in CI; DXMT on the MacBook | draws its picture, matches Windows (SSIM 0.996 in CI; by eye on the MacBook, 60 frames in 529 ms) | runner, MacBook | DXMT presents with Macron's patched `winemac.so`, which the runtime now puts in its DXMT tree |
 
 ## Licences
 
 | Dependency | Licence | Used as |
 |---|---|---|
 | Wine (Gcenx/macOS_Wine_builds 11.21) | LGPL 2.1+ | downloaded at install time, unmodified |
+| Wine 11.21 `winemac.so` with Macron's patch (this repository's `runtime-wine-11.21-macron.1` release) | LGPL 2.1+ | downloaded at install time into the DXMT tree; source and patch are published with the release |
 | DXMT 0.80 (3Shain/dxmt) | LGPL 2.1+ | downloaded at install time, unmodified |
 | DXVK-macOS 1.10.3-20230507 (Gcenx/DXVK-macOS) | zlib | downloaded at install time, unmodified (the `dxvk` backend) |
 | Mesa 26.1.8 for Windows (pal1000/mesa-dist-win) | MIT | downloaded on Windows runners for OpenGL references, and by macron when `MACRON_OPENGL=llvmpipe` |

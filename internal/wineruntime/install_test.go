@@ -54,6 +54,7 @@ func serve(t *testing.T) *fixture {
 		"Wine Devel.app/Contents/Resources/wine/bin/wine":                          "wine",
 		"Wine Devel.app/Contents/Resources/wine/lib/wine/x86_64-windows/d3d11.dll": "wine d3d11",
 		"Wine Devel.app/Contents/Resources/wine/lib/wine/x86_64-unix/ntdll.so":     "ntdll",
+		"Wine Devel.app/Contents/Resources/wine/lib/wine/x86_64-unix/winemac.so":   "wine winemac",
 		"Wine Devel.app/Contents/Resources/wine/lib/wine/i386-windows/d3d11.dll":   "wine d3d11 32",
 	})
 	dxmt := tarball(t, map[string]string{
@@ -61,6 +62,10 @@ func serve(t *testing.T) *fixture {
 		"v0.80/x86_64-windows/winemetal.dll": "winemetal",
 		"v0.80/x86_64-unix/winemetal.so":     "winemetal unix",
 		"v0.80/i386-windows/d3d11.dll":       "dxmt d3d11 32",
+	})
+	winemac := tarball(t, map[string]string{
+		"lib/wine/x86_64-unix/winemac.so":   "macron winemac",
+		"share/doc/macron-wine/COPYING.LIB": "licence",
 	})
 	dxvk := tarball(t, map[string]string{
 		"dxvk-macOS/x64/d3d11.dll":     "dxvk d3d11",
@@ -70,7 +75,7 @@ func serve(t *testing.T) *fixture {
 	f := &fixture{}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		f.requests++
-		bodies := map[string][]byte{"/wine.tar.gz": wine, "/dxmt.tar.gz": dxmt, "/dxvk.tar.gz": dxvk}
+		bodies := map[string][]byte{"/wine.tar.gz": wine, "/winemac.tar.gz": winemac, "/dxmt.tar.gz": dxmt, "/dxvk.tar.gz": dxvk}
 		body, ok := bodies[r.URL.Path]
 		if !ok {
 			http.NotFound(w, r)
@@ -82,6 +87,7 @@ func serve(t *testing.T) *fixture {
 	f.manifest = Manifest{
 		Version: "test-1",
 		Wine:    Archive{Name: "wine.tar.gz", URL: server.URL + "/wine.tar.gz", SHA256: sum(wine), SizeBytes: int64(len(wine))},
+		Winemac: Archive{Name: "winemac.tar.gz", URL: server.URL + "/winemac.tar.gz", SHA256: sum(winemac), SizeBytes: int64(len(winemac))},
 		DXMT:    Archive{Name: "dxmt.tar.gz", URL: server.URL + "/dxmt.tar.gz", SHA256: sum(dxmt), SizeBytes: int64(len(dxmt))},
 		DXVK:    Archive{Name: "dxvk.tar.gz", URL: server.URL + "/dxvk.tar.gz", SHA256: sum(dxvk), SizeBytes: int64(len(dxvk))},
 	}
@@ -118,6 +124,15 @@ func TestInstallBuildsAPlainAndADXMTTree(t *testing.T) {
 	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/x86_64-unix/winemetal.so")); got != "winemetal unix" {
 		t.Errorf("DXMT tree winemetal.so = %q", got)
 	}
+	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/x86_64-unix/winemac.so")); got != "macron winemac" {
+		t.Errorf("DXMT tree winemac.so = %q", got)
+	}
+	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "share/doc/macron-wine/COPYING.LIB")); got != "licence" {
+		t.Errorf("DXMT tree licence = %q", got)
+	}
+	if got := read(t, filepath.Join(installed.Root(TreePlain), "lib/wine/x86_64-unix/winemac.so")); got != "wine winemac" {
+		t.Errorf("plain tree winemac.so = %q", got)
+	}
 	if got := read(t, installed.Wine(TreeDXMT)); got != "wine" {
 		t.Errorf("DXMT tree bin/wine = %q", got)
 	}
@@ -149,8 +164,8 @@ func TestInstallTwiceDownloadsOnce(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if f.requests != 3 {
-		t.Fatalf("made %d downloads, want 3 (cached after the first install)", f.requests)
+	if f.requests != 4 {
+		t.Fatalf("made %d downloads, want 4 (cached after the first install)", f.requests)
 	}
 }
 
@@ -164,7 +179,7 @@ func TestChecksumMismatchInstallsNothing(t *testing.T) {
 	if failure.CodeOf(err) != failure.CodeChecksumMismatch {
 		t.Fatalf("got %v, want %s", err, failure.CodeChecksumMismatch)
 	}
-	if f.requests != 3 {
+	if f.requests != 4 {
 		t.Errorf("retried a checksum mismatch: %d requests", f.requests)
 	}
 	if _, err := Find(layout, f.manifest); failure.CodeOf(err) != failure.CodeRuntimeMissing {
