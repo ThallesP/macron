@@ -15,6 +15,7 @@ type Report struct {
 	Stage       string             `json:"stage"`
 	Error       string             `json:"error,omitempty"`
 	Verdict     *Verdict           `json:"verdict,omitempty"`
+	FrameRate   *FrameRateVerdict  `json:"frameRate,omitempty"`
 	Window      *MacWindow         `json:"window,omitempty"`
 	TimingsSecs map[string]float64 `json:"timingsSeconds"`
 	Notes       []string           `json:"notes"`
@@ -57,9 +58,13 @@ func (r Report) Summary() string {
 			fmt.Fprintf(&b, "- %s\n", f)
 		}
 	}
+	if r.FrameRate != nil {
+		b.WriteString("\n")
+		b.WriteString(r.FrameRate.Summary())
+	}
 	if len(r.TimingsSecs) > 0 {
 		b.WriteString("\nTimings (s):")
-		for _, name := range []string{"prepareGame", "runtimeInstall", "firstWindow", "reached", "total"} {
+		for _, name := range []string{"prepareGame", "runtimeInstall", "firstWindow", "reached", "throttledRun", "total"} {
 			if value, ok := r.TimingsSecs[name]; ok {
 				fmt.Fprintf(&b, " %s %.0f,", name, value)
 			}

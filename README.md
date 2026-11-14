@@ -44,6 +44,8 @@ go build -o ~/.local/bin/macron-check ./cmd/macron-check
 macron-check sandbox d3d11-probe     # the whole check in a fresh sbx sandbox; evidence lands in evidence/
 ```
 
+A frame-rate scenario (`frameRate` in scenario.json, `scenarios/d3d9-fps-probe`) also reads the frame rate a probe of ours prints and runs it a second time throttled, which must fail. The `Frame rate (Windows)` workflow measures the probe on a Windows runner.
+
 CI runs every scenario marked `"ci": true` on each push to `main` (`.github/workflows/scenarios.yml`). References come from the `Reference` workflow on a Windows runner.
 
 ## Steam hook (`macron steam`)
@@ -85,6 +87,7 @@ Every game tried. The first three are scenarios that pass in CI; the next five c
 | 0 A.D. 0.28.0 | Pyrogenesis | OpenGL | wined3d + Mesa llvmpipe | crash before the menu | runner | `unhandled exception (Access violation reading 0x00000080)` right after GL comes up |
 | osu!(lazer) 2026.1005.0 | osu-framework (.NET) | Direct3D 11 | DXVK | crash before the menu | runner | its auth module crashes: `Unhandled exception code c0000005`, exit 5 |
 | Ultimate Custom Night (Steam 871720, 262 MB) | Clickteam Fusion 2.5 (32-bit) | Direct3D 9 | wined3d on OpenGL (default profile, DXMT tree) | title screen, but far too slow to play | MacBook | checked by hand, not a scenario; files fetched with Steam's `+download_depot` because Steam's Install button refuses Windows-only games |
+| Direct3D 9 frame-rate probe (ours, not a game) | none: 400 alpha-blended sprites, one draw each, like a Clickteam Fusion scene | Direct3D 9, 32-bit and 64-bit | wined3d with Mesa llvmpipe (`MACRON_OPENGL=llvmpipe`); wined3d's Vulkan renderer for 64-bit only | draws its picture, matches Windows (SSIM 1.000); frame rate measured, threshold not set yet (`ci: false`) | runner | 32-bit through wined3d's Vulkan renderer exits 3 after MoltenVK's `vkCreateBuffer(): Only external memory handle type VK_EXTERNAL_MEMORY_HANDLE_TYPE_MTLBUFFER_BIT_EXT and ..._MTLHEAP_BIT_EXT are supported`; DXVK cannot make a device (no geometryShader, shaderCullDistance); wined3d's OpenGL renderer gets no pixel format on the runner. docs/checks.md, "How a frame rate is checked" |
 | Direct3D 11 probe (ours, not a game) | none | Direct3D 11 | DXVK in CI; DXMT on the MacBook | draws its picture, matches Windows (SSIM 0.996 in CI; by eye on the MacBook, 60 frames in 529 ms) | runner, MacBook | DXMT presents with Macron's patched `winemac.so`, which the runtime now puts in its DXMT tree |
 
 ## Licences

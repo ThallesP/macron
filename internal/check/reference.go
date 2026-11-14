@@ -36,6 +36,7 @@ type ReferenceReport struct {
 	StabilityLate imagecheck.Score `json:"stabilityAfter30Seconds"`
 	SecondsToMenu float64          `json:"secondsToMenu"`
 	Extras        []string         `json:"extras"`
+	FrameRate     *FrameRateResult `json:"frameRate,omitempty"`
 }
 
 type windowsWindow struct {
@@ -102,6 +103,13 @@ func captureReference(ctx context.Context, in ReferenceInput, report *ReferenceR
 	}
 	report.SecondsToMenu = time.Since(started).Seconds()
 	report.Window = window.Title
+	if in.Scenario.FrameRate != nil {
+		measured, err := ParseFrameRate(output.String())
+		if err != nil {
+			return err
+		}
+		report.FrameRate = &measured
+	}
 	time.Sleep(time.Duration(in.Scenario.Reached.SettleSeconds) * time.Second)
 
 	in.Progress("capturing the window")

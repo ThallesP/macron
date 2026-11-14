@@ -83,6 +83,58 @@ func TestLoadRejectsBadScenarios(t *testing.T) {
 	}
 }
 
+const frameRateBlock = `"reached": {"output": "RESULT fps", "settleSeconds": 1, "timeoutSeconds": 600}, "frameRate": {"minFps": 30, "minFpsSource": "MacBook and Windows runner"},`
+
+func TestLoadAFrameRateScenario(t *testing.T) {
+	content := strings.Replace(valid, `"reached": {"output": "", "settleSeconds": 5, "timeoutSeconds": 600},`, frameRateBlock, 1)
+
+	s, err := Load(write(t, "some-game", content))
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.FrameRate == nil || s.FrameRate.MinFPS != 30 || !s.FrameRate.HasThreshold() {
+		t.Fatalf("loaded %+v", s.FrameRate)
+	}
+}
+
+func TestLoadRejectsBadFrameRateScenarios(t *testing.T) {
+	cases := map[string][2]string{
+		"no threshold in CI":    {`"minFps": 30`, `"minFps": 0`},
+		"negative threshold":    {`"minFps": 30`, `"minFps": -1`},
+		"no threshold source":   {`"minFpsSource": "MacBook and Windows runner"`, `"minFpsSource": ""`},
+		"reached by other text": {`"output": "RESULT fps"`, `"output": "RESULT present: OK"`},
+		"unknown frameRate key": {`"minFps": 30`, `"minFps": 30, "maxFrameMs": 20`},
+	}
+	base := strings.Replace(valid, `"reached": {"output": "", "settleSeconds": 5, "timeoutSeconds": 600},`, frameRateBlock, 1)
+	for name, change := range cases {
+		t.Run(name, func(t *testing.T) {
+			content := strings.Replace(base, change[0], change[1], 1)
+			if content == base {
+				t.Fatalf("the change %q did not apply", change[0])
+			}
+
+			_, err := Load(write(t, "some-game", content))
+
+			if failure.CodeOf(err) != failure.CodeInvalidInput {
+				t.Fatalf("got %v", err)
+			}
+		})
+	}
+}
+
+func TestAFrameRateScenarioWithoutThresholdLoadsOutsideCI(t *testing.T) {
+	content := strings.Replace(valid, `"reached": {"output": "", "settleSeconds": 5, "timeoutSeconds": 600},`, frameRateBlock, 1)
+	content = strings.Replace(content, `"minFps": 30`, `"minFps": 0`, 1)
+	content = strings.Replace(content, `"ci": true`, `"ci": false`, 1)
+
+	s, err := Load(write(t, "some-game", content))
+
+	if err != nil || s.FrameRate.HasThreshold() {
+		t.Fatalf("got %+v, %v", s.FrameRate, err)
+	}
+}
+
 func TestEveryCommittedScenarioLoads(t *testing.T) {
 	dirs, err := filepath.Glob("../../scenarios/*/scenario.json")
 	if err != nil || len(dirs) == 0 {
