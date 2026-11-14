@@ -7,7 +7,7 @@
   "window": { "title": "^Macron D3D11 probe$", "width": 640, "height": 480 },
   "reached": { "output": "RESULT present: OK", "settleSeconds": 5, "timeoutSeconds": 900 },
   "compare": { "text": [], "ignore": [] },
-  "reference": { "image": "reference.png", "source": "pending: captured by the Reference workflow on windows-latest" },
+  "reference": { "image": "reference.png", "source": "windows-latest, Microsoft Basic Render Driver, https://github.com/ThallesP/macron/actions/runs/43559562332" },
   "otherGame": "",
   "windowsExtra": [],
   "ci": true
