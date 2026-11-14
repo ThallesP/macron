@@ -4,7 +4,7 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 
 ## State
 
-2026-11-14 (loop day 1): gates 1 to 4 are green in CI on main ([Scenarios run 43569307839](https://github.com/ThallesP/macron/actions/runs/43569307839)): the Direct3D 11 probe and three games from three engines (OpenTTD, Xonotic at 1.24 GB, SuperTuxKart) reach their main menus through `macron` on GitHub's macOS runner and match the original games captured on Windows runners. Gate 5 (Steam hook) is with an agent on `steam-hook`.
+2026-11-14 (loop day 1): gates 1 to 4 are green in CI on main ([Scenarios run 43569307839](https://github.com/ThallesP/macron/actions/runs/43569307839)): the Direct3D 11 probe and three games from three engines (OpenTTD, Xonotic at 1.24 GB, SuperTuxKart) reach their main menus through `macron` on GitHub's macOS runner and match the original games captured on Windows runners. Gate 5 is green as far as it can go without a Steam account, and parked under "Needs Thalles" for pressing Play.
 
 | Gate | State |
 |---|---|
@@ -12,7 +12,7 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 | 2. A real game at its menu | **green**. OpenTTD 15.3 (GDI): `macron-check sandbox openttd` passed (sbx_tb2l7cc7) and the Scenarios workflow is green on main with it ([run 43563385587](https://github.com/ThallesP/macron/actions/runs/43563385587)) |
 | 3. Through Macron, not scripts | **green**. Every scenario launches through `macron launch` with its profile from `fixes/games/`: pinned runtime, per-game prefix, backend (dxmt, dxvk, wined3d), env, DLL overrides, registry, extra installs, args, files; Steam's verbs exist. Unit tests on Linux, scenarios as integration tests |
 | 4. Three games | **green**. OpenTTD 15.3 (OpenTTD engine, GDI), Xonotic 0.8.6 (DarkPlaces, OpenGL, 1.24 GB), SuperTuxKart 1.5 (Antarctica, Direct3D 9): each passed `macron-check sandbox` (sbx_tb2l7cc7, sbx_7yz2k6go, sbx_uetmo4d4) and passes in CI |
-| 5. Steam's Play button | agent working on branch `steam-hook` |
+| 5. Steam's Play button | **green without an account, parked for Play.** `macron steam enable` identifies the current Mac Steam build (1794536281) by hashes, registers Macron in `compatibilitytools.d` and makes it the default compatibility tool; Steam reads it (`Mapping AppID 0 to tool "macron"`), still reaches its login window, and an altered client is refused with `UNKNOWN_STEAM_BUILD` and nothing changed. Steam hook workflow green on main ([run 43570046626](https://github.com/ThallesP/macron/actions/runs/43570046626)). Pressing Play: see "Needs Thalles" |
 
 ## Layout
 
@@ -61,13 +61,20 @@ Existing projects worth reading (see the licence rule in GOAL.md): NotProton (`N
 
 ## Next
 
-1. Gate 5: review and merge `steam-hook`, or park it under "Needs Thalles" with the evidence.
 2. Pin the published winemac.so overlay (release `runtime-wine-11.21-macron.1`) in the runtime and run the probe through DXMT.
 3. Fold the game survey's full results into the README table.
 4. Try the hardware OpenGL path (Xonotic without `MACRON_OPENGL`) on the MacBook, with the game taking its own screenshot since the screen is locked.
 
 
 ## Needs Thalles
+
+- **Pressing Play in Steam (gate 5, parked).** Built and checked without an account, on the GitHub macOS runner with the current Mac Steam (build 1794536281), in the Steam hook workflow on main ([run 43570046626](https://github.com/ThallesP/macron/actions/runs/43570046626), artifact `steam-hook-evidence`):
+  - `macron steam enable` recognises the build by the SHA-256 of `steamclient.dylib` and `steam_osx` (table in `internal/steamhook/builds.go`), backs up `config/config.vdf`, writes `compatibilitytools.d/macron/` (whose command line calls `macron waitforexitandrun`) and sets `CompatToolMapping` app 0 to `macron`.
+  - After a restart Steam logs `Mapping AppID 0 to tool "macron" with priority 75` in `logs/compat_log.txt`, reaches its login window (`SetLoginState: WaitingForCredentials`, a "Sign in to Steam" window, screenshot `2-after-hook.png`), and keeps the mapping when it quits. `macron steam disable` restores the backup.
+  - On a copy of the client with one byte added to `steamclient.dylib`, `enable` exits 125 with `UNKNOWN_STEAM_BUILD` and changes no file.
+  - Not checked: whether the Mac client, once logged in, offers Play on a Windows-only game and actually calls `macron waitforexitandrun` (Steam may still hide Windows-only titles or the Steam Play setting on macOS; if it does, the hook needs a client patch, and that design should wait for the licence below). `macron`'s Steam verbs take the profile from `SteamAppId` and the prefix from `STEAM_COMPAT_DATA_PATH`, but have never been called by Steam.
+  - What is needed: a Steam account that owns a free Windows-only game (a throwaway account is safer than a personal one), logged in on the MacBook or provided as CI secrets for a workflow that never runs on forks. Then: `macron steam enable`, press Play, and check `logs/compat_log.txt` and macron's log in `~/Library/Application Support/Macron/logs/`.
+  - Steam updates itself; when the build changes, the workflow fails with the new build id and hashes, and README.md "Steam hook" says how to add it.
 
 - **A licence for Macron.** Until one is picked, no code is copied from GPL projects, which matters most for the Steam hook and the Steam bridge.
 - **A Steam account for testing Play.** Gate 5 can't press Play without a logged-in account that owns a Windows game. A throwaway account is safer than a personal one.
