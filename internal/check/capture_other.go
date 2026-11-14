@@ -9,6 +9,10 @@ import (
 
 var errWindowsOnly = errors.New("references are captured on Windows")
 
+func parkCursor() error {
+	return errWindowsOnly
+}
+
 func listWindowsWindows() ([]windowsWindow, error) {
 	return nil, errWindowsOnly
 }

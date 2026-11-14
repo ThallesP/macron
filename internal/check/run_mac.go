@@ -93,6 +93,9 @@ func (r *macRun) do(ctx context.Context) error {
 	}
 	r.mark("prepareGame", since)
 
+	if err := r.helper.ParkCursor(ctx); err != nil {
+		return err
+	}
 	r.stage("capturing the desktop before the game starts")
 	desktop := filepath.Join(r.Out, "desktop-before.png")
 	if err := screencapture(ctx, desktop); err != nil {

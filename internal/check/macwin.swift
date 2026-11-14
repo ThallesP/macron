@@ -67,9 +67,11 @@ let args = CommandLine.arguments
 switch args.count > 1 ? args[1] : "" {
 case "windows":
     windows()
+case "park-cursor":
+    CGWarpMouseCursorPosition(CGPoint(x: 0, y: 0))
 case "ocr" where args.count == 3:
     ocr(args[2])
 default:
-    FileHandle.standardError.write("usage: macwin windows | macwin ocr <image>\n".data(using: .utf8)!)
+    FileHandle.standardError.write("usage: macwin windows | macwin park-cursor | macwin ocr <image>\n".data(using: .utf8)!)
     exit(2)
 }

@@ -63,6 +63,13 @@ func (m macwin) Windows(ctx context.Context) ([]MacWindow, error) {
 	return windows, nil
 }
 
+func (m macwin) ParkCursor(ctx context.Context) error {
+	if output, err := exec.CommandContext(ctx, m.path, "park-cursor").CombinedOutput(); err != nil {
+		return fmt.Errorf("parking the pointer: %s: %s", err, output)
+	}
+	return nil
+}
+
 func (m macwin) Text(ctx context.Context, image string) (string, error) {
 	output, err := exec.CommandContext(ctx, m.path, "ocr", image).Output()
 	if err != nil {

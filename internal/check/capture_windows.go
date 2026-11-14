@@ -19,6 +19,7 @@ var (
 	procClientToScreen     = user32.NewProc("ClientToScreen")
 	procSetForeground      = user32.NewProc("SetForegroundWindow")
 	procSetProcessDPIAware = user32.NewProc("SetProcessDPIAware")
+	procSetCursorPos       = user32.NewProc("SetCursorPos")
 	procGetDC              = user32.NewProc("GetDC")
 	procReleaseDC          = user32.NewProc("ReleaseDC")
 	procCreateCompatibleDC = gdi32.NewProc("CreateCompatibleDC")
@@ -63,6 +64,13 @@ var (
 		return 1
 	})
 )
+
+func parkCursor() error {
+	if ok, _, err := procSetCursorPos.Call(0, 0); ok == 0 {
+		return fmt.Errorf("SetCursorPos: %w", err)
+	}
+	return nil
+}
 
 func listWindowsWindows() ([]windowsWindow, error) {
 	enumerated = nil

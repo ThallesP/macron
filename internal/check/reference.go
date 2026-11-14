@@ -74,6 +74,9 @@ func captureReference(ctx context.Context, in ReferenceInput, report *ReferenceR
 		env = append(env, "GALLIUM_DRIVER=llvmpipe")
 	}
 
+	if err := parkCursor(); err != nil {
+		return err
+	}
 	in.Progress("starting the game on Windows")
 	log, err := os.Create(filepath.Join(in.Out, "game.log"))
 	if err != nil {
