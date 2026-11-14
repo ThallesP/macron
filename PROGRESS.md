@@ -112,6 +112,12 @@ Existing projects worth reading (see the licence rule in GOAL.md): NotProton (`N
 
 ## Needs Thalles
 
+- **The Steam test account (blocks gates 2 to 5; a few minutes).** An agent cannot sign up honestly: Steam's sign-up page shows a CAPTCHA, and the loop has no mailbox of its own to confirm an email address. GOAL.md forbids getting around either. Steps:
+  1. On store.steampowered.com/join, make an account with an email address you can read that is not your main one (an alias is fine). Any account name works; nothing in the repo or the logs will show it.
+  2. Turn off Steam Guard for this account only: Steam > Settings > Security > Manage Steam Guard > "Turn Steam Guard off", then confirm from the email. Every sandbox is a new device, and without this each login waits for an email code the loop can't read. The account holds only free games, so there is little to protect. If you would rather keep Steam Guard on, add an authenticator whose shared secret the loop can use to compute codes (for example with `steamguard-cli`), and put the secret in the same file.
+  3. On the dev machine, put the login in `~/.config/macron/steam-test-account` with mode 600, two lines: `STEAM_TEST_USER=...` and `STEAM_TEST_PASSWORD=...` (plus `STEAM_TEST_SHARED_SECRET=...` if you chose the authenticator). Don't add the free games: the loop adds them itself from its first sandbox login (Ultimate Custom Night, a free Mac-native game, a free game with achievements and Steam Cloud, and later Overwatch).
+  
+  Until then the loop works on what needs no account: gate 1's measurements with programs of ours, the switch against Steam's login window, and the installer.
 - **Trying the release on his own Mac.** The sandboxes have a virtual GPU, so the frame rate on a real Apple GPU, and Overwatch past its sign-in screen (it needs his Blizzard account and about 100 GB of disk), are his to try once a release exists.
 - **A licence for Macron.** Until one is picked, no code is copied from GPL projects. Phase 2 writes its own Steam Play switch and ports the Steam bridge from Valve's Proton source.
 - **An Apple Developer ID** (99 USD a year) if the installer should open without a Gatekeeper warning. Without it the DMG is unsigned and the release notes say how to open it.
