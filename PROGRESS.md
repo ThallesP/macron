@@ -4,15 +4,21 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 
 ## State
 
-2026-11-14: nothing of Macron itself exists yet. The repo has the plan (README.md), the `sbx` sandbox CLI (`tools/sandbox/`, merged in PR #1), the sandbox workflow, and a one-off probe on the `ci-probe` branch.
+2026-11-14 (loop day 1): the launcher, runtime, fixes database and scenario checker exist and have unit tests; the first scenario (the Direct3D 11 probe) is being brought up on the runner. Two agents work in parallel on branches: `steam-hook` (gate 5) and `game-survey` (candidates for gates 2 and 4).
 
 | Gate | State |
 |---|---|
-| 1. The loop runs | not started |
-| 2. A real game at its menu | not started |
-| 3. Through Macron, not scripts | not started |
+| 1. The loop runs | built (`macron-check sandbox <scenario>`, `.github/workflows/scenarios.yml`); waiting for the probe's Windows reference and a first green run |
+| 2. A real game at its menu | game survey running |
+| 3. Through Macron, not scripts | `macron` launcher: pinned runtime, per-game prefixes, fixes database, Steam verbs; extra installs not yet |
 | 4. Three games | not started |
-| 5. Steam's Play button | not started |
+| 5. Steam's Play button | agent working on branch `steam-hook` |
+
+## Layout
+
+- `cmd/macron`, `internal/{wineruntime,launch,failure}`, `fixes/`: the launcher. README.md documents it.
+- `cmd/macron-check`, `internal/{check,imagecheck,scenario}`, `scenarios/`, `ci/build-bundle.sh`: the scenario checks. docs/checks.md defines the measure; it was committed before any Macron output was compared.
+- `.github/workflows/`: `test.yml` (Go tests, Linux), `scenarios.yml` (scenarios on macos-26), `reference.yml` (references on windows-latest), `sandbox.yml` (sbx).
 
 ## What is known
 
