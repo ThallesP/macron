@@ -1,0 +1,45 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Sat, 14 Nov 2026 23:45:00 +0000
+Subject: [PATCH] wined3d: Run the command stream on the application's thread
+ in a WoW64 process.
+
+On macOS, under Rosetta, a 32-bit Direct3D program on 64-bit Wine
+crashes or stops making progress when wined3d's command stream runs on
+its own thread. The crash is the application's thread jumping to two
+32-bit pointers read as one 64-bit address. Measured with a Direct3D 9
+probe that locks a dynamic texture every frame: with the command stream
+thread, 7 of 7 runs crashed or stalled; without it, 6 of 6 ran at 8.4
+to 8.7 frames a second.
+
+Turn the command stream thread off by default in a WoW64 process. The
+csmt setting (registry or WINE_D3D_CONFIG) still overrides it.
+---
+--- a/dlls/wined3d/wined3d_main.c
++++ b/dlls/wined3d/wined3d_main.c
+@@ -274,6 +274,13 @@
+     __wine_dbg_output(buffer);
+ }
+ 
++static BOOL wined3d_is_wow64(void)
++{
++    BOOL is_wow64;
++
++    return sizeof(void *) == sizeof(int) && IsWow64Process(GetCurrentProcess(), &is_wow64) && is_wow64;
++}
++
+ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
+ {
+     DWORD wined3d_context_tls_idx;
+@@ -294,6 +301,12 @@
+     }
+     context_set_tls_idx(wined3d_context_tls_idx);
+ 
++    /* A 32-bit process on 64-bit Wine on macOS (Rosetta) crashes or stops
++     * making progress when the command stream runs on its own thread. Keep it
++     * on the application's thread there; the csmt setting still overrides. */
++    if (wined3d_is_wow64())
++        wined3d_settings.cs_multithreaded = 0;
++
+     /* We need our own window class for a fake window which we use to retrieve GL capabilities */
+     /* We might need CS_OWNDC in the future if we notice strange things on Windows.
+      * Various articles/posts about OpenGL problems on Windows recommend this. */
