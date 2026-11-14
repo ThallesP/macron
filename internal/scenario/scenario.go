@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/ThallesP/macron/fixes"
 	"github.com/ThallesP/macron/internal/failure"
 	"github.com/ThallesP/macron/internal/imagecheck"
 	"github.com/ThallesP/macron/internal/wineruntime"
@@ -51,6 +52,7 @@ type Scenario struct {
 	Cwd          string            `json:"cwd"`
 	Args         []string          `json:"args"`
 	MacronEnv    map[string]string `json:"macronEnv"`
+	Files        []fixes.File      `json:"files"`
 	Window       Window            `json:"window"`
 	Reached      Reached           `json:"reached"`
 	Compare      Compare           `json:"compare"`
@@ -115,6 +117,9 @@ func (s Scenario) validate() error {
 	}
 	if _, err := regexp.Compile(s.Window.Title); err != nil {
 		return invalid("window title is not a pattern: %s", err)
+	}
+	if err := fixes.ValidateFiles("files", s.Files); err != nil {
+		return invalid("%s", err)
 	}
 	for name := range s.MacronEnv {
 		if !strings.HasPrefix(name, "MACRON_") {

@@ -64,6 +64,7 @@ func TestLoadRejectsBadScenarios(t *testing.T) {
 		"bad title pattern":        {`"title": "^Some Game$"`, `"title": "(("`},
 		"unknown extra":            {`["mesa-llvmpipe"]`, `["dxvk-on-windows"]`},
 		"foreign env":              {`"ci": true`, `"ci": true, "macronEnv": {"WINEDEBUG": "+all"}`},
+		"file outside":             {`"ci": true`, `"ci": true, "files": [{"path": "/etc/passwd", "content": ""}]`},
 		"unknown field":            {`"ci": true`, `"ci": true, "threshold": 0.5`},
 	}
 	for name, change := range cases {

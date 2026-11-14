@@ -61,7 +61,7 @@ func captureReference(ctx context.Context, in ReferenceInput, report *ReferenceR
 		return err
 	}
 	exe := prepared.Exe
-	if err := launch.WriteFiles(in.Profile.Files, windowsPlaces(filepath.Dir(exe))); err != nil {
+	if err := launch.WriteFiles(slices.Concat(in.Scenario.Files, in.Profile.Files), windowsPlaces(filepath.Dir(exe))); err != nil {
 		return err
 	}
 	env := os.Environ()

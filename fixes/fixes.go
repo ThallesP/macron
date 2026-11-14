@@ -113,13 +113,8 @@ func (p Profile) validate() error {
 			return failure.Errorf(failure.CodeBadProfile, "profile %s: DLL override %s=%q is not a Wine load order", p.ID, dll, mode)
 		}
 	}
-	for _, file := range p.Files {
-		if !slices.ContainsFunc(FilePlaces, func(place string) bool { return strings.HasPrefix(file.Path, place+"/") }) {
-			return failure.Errorf(failure.CodeBadProfile, "profile %s: file %q must start with one of %s", p.ID, file.Path, strings.Join(FilePlaces, ", "))
-		}
-		if slices.Contains(strings.Split(file.Path, "/"), "..") {
-			return failure.Errorf(failure.CodeBadProfile, "profile %s: file %q leaves its folder", p.ID, file.Path)
-		}
+	if err := ValidateFiles(p.ID, p.Files); err != nil {
+		return err
 	}
 	for _, value := range p.Registry {
 		if !validRegistryKey.MatchString(value.Key) || value.Name == "" || strings.ContainsAny(value.Name, "\"\n") || strings.Contains(value.Value, "\n") {
@@ -132,6 +127,18 @@ func (p Profile) validate() error {
 	for _, name := range p.Installs {
 		if _, ok := Installers[name]; !ok {
 			return failure.Errorf(failure.CodeBadProfile, "profile %s: unknown extra install %q", p.ID, name)
+		}
+	}
+	return nil
+}
+
+func ValidateFiles(owner string, files []File) error {
+	for _, file := range files {
+		if !slices.ContainsFunc(FilePlaces, func(place string) bool { return strings.HasPrefix(file.Path, place+"/") }) {
+			return failure.Errorf(failure.CodeBadProfile, "%s: file %q must start with one of %s", owner, file.Path, strings.Join(FilePlaces, ", "))
+		}
+		if slices.Contains(strings.Split(file.Path, "/"), "..") {
+			return failure.Errorf(failure.CodeBadProfile, "%s: file %q leaves its folder", owner, file.Path)
 		}
 	}
 	return nil

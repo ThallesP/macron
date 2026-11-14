@@ -15,7 +15,9 @@ import (
 	"time"
 
 	"github.com/ThallesP/macron/internal/imagecheck"
+	"github.com/ThallesP/macron/internal/launch"
 	"github.com/ThallesP/macron/internal/scenario"
+	"github.com/ThallesP/macron/internal/wineruntime"
 )
 
 type MacInput struct {
@@ -109,6 +111,9 @@ func (r *macRun) do(ctx context.Context) error {
 	}
 	r.mark("runtimeInstall", since)
 
+	if err := r.writeScenarioFiles(game); err != nil {
+		return err
+	}
 	r.stage("starting the game through macron")
 	window, err := r.launchAndWait(ctx, game)
 	defer r.stopGame()
@@ -129,6 +134,17 @@ func (r *macRun) do(ctx context.Context) error {
 		return fmt.Errorf("reading the reference: %w", err)
 	}
 	return r.judge(ctx, reference, frame, desktop)
+}
+
+func (r *macRun) writeScenarioFiles(game Game) error {
+	if len(r.Scenario.Files) == 0 {
+		return nil
+	}
+	layout, err := wineruntime.DefaultLayout()
+	if err != nil {
+		return err
+	}
+	return launch.WriteFiles(r.Scenario.Files, launch.Places(layout.PrefixDir(r.Scenario.Game), filepath.Dir(game.Exe)))
 }
 
 func (r *macRun) macron(ctx context.Context, logName string, args ...string) error {
