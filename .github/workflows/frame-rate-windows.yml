@@ -1,6 +1,8 @@
 # Runs the Direct3D 9 frame-rate probe natively on a GitHub Windows runner
 # (Microsoft Basic Render Driver, software Direct3D), 32-bit and 64-bit, in
-# every draw mode, and prints its RESULT lines. These are the Windows numbers a
+# every draw mode, and prints its RESULT lines. The window is 960x540 (the
+# 1280x720 back buffer scaled on Present) because the runners' desktops are
+# 1024x768 and shrink a wider window. These are the Windows numbers a
 # frame-rate threshold is set from (docs/checks.md); never set one from
 # Macron's own output.
 name: Frame rate (Windows)
@@ -56,7 +58,7 @@ jobs:
           for exe in probe32 probe64; do
             for mode in mix up vb tex; do
               status=0
-              timeout 120 "probe/$exe.exe" "$mode" > "out/$exe-$mode.log" 2>&1 || status=$?
+              timeout 120 "probe/$exe.exe" "$mode" --window 960x540 > "out/$exe-$mode.log" 2>&1 || status=$?
               echo "== $exe $mode (exit $status)"
               cat "out/$exe-$mode.log"
               echo "| $exe | $mode | $(grep -E '^RESULT (fps|present: FAILED|d3d9 device: FAILED)' "out/$exe-$mode.log" | tr '\n' ' ') (exit $status) |" >> "$GITHUB_STEP_SUMMARY"
@@ -66,7 +68,7 @@ jobs:
       - name: Screenshot while the probe presents
         shell: pwsh
         run: |
-          $probe = Start-Process -PassThru -FilePath probe/probe32.exe -ArgumentList "mix", "--seconds", "1", "--hold", "20" -RedirectStandardOutput out/screenshot-run.log
+          $probe = Start-Process -PassThru -FilePath probe/probe32.exe -ArgumentList "mix", "--window", "960x540", "--seconds", "1", "--hold", "20" -RedirectStandardOutput out/screenshot-run.log
           Start-Sleep -Seconds 10
           Add-Type -AssemblyName System.Windows.Forms, System.Drawing
           $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds

@@ -5,14 +5,14 @@
   "build": "build.sh",
   "exe": "probe32.exe",
   "cwd": "",
-  "args": ["mix", "--hold", "60"],
+  "args": ["mix", "--window", "960x540", "--hold", "60"],
   "macronEnv": {
     "MACRON_OPENGL": "llvmpipe"
   },
   "window": {
     "title": "^Macron D3D9 fps probe$",
-    "width": 1280,
-    "height": 720
+    "width": 960,
+    "height": 540
   },
   "reached": {
     "output": "RESULT fps",

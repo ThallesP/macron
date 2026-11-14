@@ -52,6 +52,8 @@ A frame-rate scenario is a scenario with a `frameRate` block. It runs a probe of
 2. 400 sprites (`--sprites`), each its own draw of two triangles with pretransformed vertices, alpha-blended, with a different texture from the previous sprite (64 textures of 64x64), every fifth one additive, every third one semi-transparent, the filter alternating between point and linear,
 3. a 512x256 panel texture and a full-window semi-transparent vignette.
 
+`--window WxH` makes the window's client area smaller than the 1280x720 back buffer, which `Present` then scales, as Fusion does with "Resize display to fill window" (Ultimate Custom Night ran full screen at 1920x1243 points on the MacBook). The scenario uses 960x540 because the desktops of GitHub's macOS and Windows runners are 1024x768, and both systems shrink a 1280-wide window to fit (Windows captured 1038x720 of it).
+
 The picture is the same every frame, so a screenshot taken at any time can be compared with the Windows reference; the work is redone every frame all the same. Modes (the first argument) change how the draws reach Direct3D:
 
 | Mode | Each sprite | Per frame |

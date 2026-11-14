@@ -4,7 +4,7 @@
  * RESULT lines. docs/checks.md describes the modes and the measure.
  *
  *   probe.exe [mix|up|vb|tex] [--sprites N] [--warmup S] [--seconds S]
- *             [--hold S] [--throttle-ms N] [--no-present]
+ *             [--hold S] [--window WxH] [--throttle-ms N] [--no-present]
  */
 #define COBJMACROS
 #include <windows.h>
@@ -37,6 +37,8 @@ typedef struct {
     double measure_seconds;
     double hold_seconds;
     int throttle_ms;
+    int window_width;
+    int window_height;
     BOOL present;
 } Options;
 
@@ -70,10 +72,10 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     return DefWindowProcW(hwnd, msg, wp, lp);
 }
 
-static HWND open_window(void)
+static HWND open_window(int width, int height)
 {
     WNDCLASSW wc;
-    RECT r = { 0, 0, WIDTH, HEIGHT };
+    RECT r = { 0, 0, width, height };
     DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
     HWND hwnd;
 
@@ -103,6 +105,8 @@ static BOOL parse_options(int argc, char **argv, Options *o)
     o->measure_seconds = 10;
     o->hold_seconds = 0;
     o->throttle_ms = 0;
+    o->window_width = WIDTH;
+    o->window_height = HEIGHT;
     o->present = TRUE;
     for (i = 1; i < argc; i++) {
         const char *a = argv[i];
@@ -132,12 +136,16 @@ static BOOL parse_options(int argc, char **argv, Options *o)
             o->hold_seconds = atof(value);
         else if (strcmp(a, "--throttle-ms") == 0)
             o->throttle_ms = atoi(value);
+        else if (strcmp(a, "--window") == 0) {
+            if (sscanf(value, "%dx%d", &o->window_width, &o->window_height) != 2)
+                return FALSE;
+        }
         else
             return FALSE;
         i++;
     }
     return o->sprites > 0 && o->sprites <= VERTEX_BUFFER_QUADS - 8 && o->measure_seconds > 0 && o->warmup_seconds >= 0 &&
-           o->hold_seconds >= 0 && o->throttle_ms >= 0;
+           o->hold_seconds >= 0 && o->throttle_ms >= 0 && o->window_width > 0 && o->window_height > 0;
 }
 
 static DWORD argb(int a, int r, int g, int b)
@@ -474,11 +482,11 @@ int main(int argc, char **argv)
     setvbuf(stdout, NULL, _IONBF, 0);
     memset(&s, 0, sizeof(s));
     if (!parse_options(argc, argv, &s.options)) {
-        printf("usage: probe.exe [mix|up|vb|tex] [--sprites N] [--warmup S] [--seconds S] [--hold S] [--throttle-ms N] "
-               "[--no-present]\n");
+        printf("usage: probe.exe [mix|up|vb|tex] [--sprites N] [--warmup S] [--seconds S] [--hold S] [--window WxH] "
+               "[--throttle-ms N] [--no-present]\n");
         return 2;
     }
-    hwnd = open_window();
+    hwnd = open_window(s.options.window_width, s.options.window_height);
     if (!hwnd) {
         printf("RESULT window: FAILED (CreateWindow error %lu)\n", GetLastError());
         return 1;
@@ -502,11 +510,11 @@ int main(int argc, char **argv)
         printf("RESULT d3d9 resources: FAILED (%s)\n", failed);
         return 1;
     }
-    printf("RESULT config mode %s sprites %d bits %d warmup_s %.1f measure_s %.1f throttle_ms %d present %s "
-           "dynamic_panel %s\n",
-           mode_names[s.options.mode], s.options.sprites, (int)(sizeof(void *) * 8), s.options.warmup_seconds,
-           s.options.measure_seconds, s.options.throttle_ms, s.options.present ? "yes" : "no",
-           s.panel_is_dynamic ? "yes" : "no");
+    printf("RESULT config mode %s sprites %d bits %d back_buffer %dx%d window %dx%d warmup_s %.1f measure_s %.1f "
+           "throttle_ms %d present %s dynamic_panel %s\n",
+           mode_names[s.options.mode], s.options.sprites, (int)(sizeof(void *) * 8), WIDTH, HEIGHT,
+           s.options.window_width, s.options.window_height, s.options.warmup_seconds, s.options.measure_seconds,
+           s.options.throttle_ms, s.options.present ? "yes" : "no", s.panel_is_dynamic ? "yes" : "no");
 
     QueryPerformanceFrequency(&frequency);
     QueryPerformanceCounter(&started);
