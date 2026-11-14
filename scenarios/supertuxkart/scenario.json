@@ -1,0 +1,42 @@
+{
+  "name": "supertuxkart",
+  "title": "SuperTuxKart 1.5 (Direct3D 9)",
+  "game": "supertuxkart",
+  "downloads": [
+    {
+      "name": "SuperTuxKart-1.5-win.zip",
+      "url": "https://github.com/supertuxkart/stk-code/releases/download/1.5/SuperTuxKart-1.5-win.zip",
+      "sha256": "9df7e2d67e8562127a3bb633030f1bd4ee77fa9e7f0ae110897473025af8acdc",
+      "sizeBytes": 922430727,
+      "unpack": "zip",
+      "into": "."
+    }
+  ],
+  "exe": "SuperTuxKart-1.5-win/stk-code/build-x86_64/bin/supertuxkart.exe",
+  "cwd": "SuperTuxKart-1.5-win/stk-code",
+  "window": {
+    "title": "^SuperTuxKart$",
+    "width": 800,
+    "height": 600
+  },
+  "reached": {
+    "output": "",
+    "settleSeconds": 10,
+    "timeoutSeconds": 900
+  },
+  "compare": {
+    "text": [
+      "Story Mode",
+      "Singleplayer",
+      "Addons"
+    ],
+    "ignore": []
+  },
+  "reference": {
+    "image": "reference.png",
+    "source": "TODO: Reference workflow run URL"
+  },
+  "otherGame": "openttd",
+  "windowsExtra": [],
+  "ci": true
+}

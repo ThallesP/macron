@@ -1,0 +1,50 @@
+{
+  "name": "ut99",
+  "title": "Unreal Tournament GOTY (469f)",
+  "game": "ut99",
+  "downloads": [
+    {
+      "name": "UT_GOTY_CD1.ISO",
+      "url": "https://files.oldunreal.net/UT_GOTY_CD1.ISO",
+      "sha256": "e184984ca88f001c5ddd52035d76cd64e266e26c74975161b5ed72366c74704f",
+      "sizeBytes": 649633792,
+      "unpack": "7z",
+      "into": "."
+    },
+    {
+      "name": "OldUnreal-UTPatch469f-Windows-amd64.zip",
+      "url": "https://github.com/OldUnreal/UnrealTournamentPatches/releases/download/v469f-rc6/OldUnreal-UTPatch469f-Windows-amd64.zip",
+      "sha256": "b8de78a4dca46ec8d56fbcd4f1f4bdc41796a1c480f184308b1b1646e7129fdc",
+      "sizeBytes": 108225846,
+      "unpack": "zip",
+      "into": "."
+    }
+  ],
+  "exe": "System/UnrealTournament.exe",
+  "cwd": "System",
+  "window": {
+    "title": "^Unreal Tournament$",
+    "width": 800,
+    "height": 600
+  },
+  "reached": {
+    "output": "",
+    "settleSeconds": 10,
+    "timeoutSeconds": 900
+  },
+  "compare": {
+    "text": [
+      "Press ESC to begin"
+    ],
+    "ignore": []
+  },
+  "reference": {
+    "image": "reference.png",
+    "source": "TODO: Reference workflow run URL"
+  },
+  "otherGame": "supertuxkart",
+  "windowsExtra": [
+    "mesa-llvmpipe"
+  ],
+  "ci": true
+}

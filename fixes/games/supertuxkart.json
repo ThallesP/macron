@@ -1,0 +1,28 @@
+{
+  "id": "supertuxkart",
+  "name": "SuperTuxKart 1.5",
+  "steamAppIds": [],
+  "backend": "wined3d",
+  "args": [
+    "--windowed",
+    "--screensize=800x600",
+    "--render-driver=directx9"
+  ],
+  "env": {
+    "WINE_D3D_CONFIG": "renderer=vulkan"
+  },
+  "dllOverrides": {},
+  "files": [
+    {
+      "path": "{appdata}/supertuxkart/config-0.10/config.xml",
+      "content": "<?xml version=\"1.0\"?>\n<stkconfig version=\"8\" >\n    <enable_internet value=\"2\" />\n    <Video old_driver_popup=\"false\" />\n</stkconfig>\n"
+    },
+    {
+      "path": "{appdata}/supertuxkart/config-0.10/players.xml",
+      "content": "<?xml version=\"1.0\"?>\n<players version=\"1\" >\n    <current player=\"Macron\"/>\n    <player name=\"Macron\" guest=\"false\" use-frequency=\"1\"\n            icon-filename=\"\"\n            unique-id=\"1\" saved-session=\"false\"\n            saved-user=\"0\" saved-token=\"\"\n            last-online-name=\"\" last-was-online=\"false\"\n            remember-password=\"false\" default-kart-color=\"0\">\n    </player>\n</players>\n"
+    }
+  ],
+  "registry": [],
+  "installs": [],
+  "notes": "Antarctica (STK's Irrlicht fork). Runs in its Direct3D 9 mode (--render-driver=directx9; OpenGL is STK's own default) through wined3d's Vulkan renderer (MoltenVK in the plain Wine tree), because the runner has no hardware OpenGL. Checked 2026-11-14: main menu on windows-latest (WARP) and on the Mac runner, same picture; both fall back to the fixed pipeline because d3dx9_43.dll is missing ('Could not load shader function D3DXAssembleShader'). config.xml: enable_internet=2 skips the internet question, <Video old_driver_popup=\"false\"/> (group settings are attributes) hides the 'graphics driver appears to be very old' popup the fixed pipeline triggers. players.xml with a current player skips the first-run player screen. DXVK-macOS d3d9 can't make a device on the runner (MoltenVK: geometryShader and shaderCullDistance not available). The OpenGL mode reaches the menu only with Mesa llvmpipe's opengl32.dll next to the exe."
+}
