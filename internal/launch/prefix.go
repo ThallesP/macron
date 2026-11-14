@@ -75,14 +75,27 @@ func EnsurePrefix(ctx context.Context, in PrefixInput) error {
 }
 
 func installDXVK(runtime wineruntime.Installed, prefix string) error {
+	return copyIntoWindows(prefix, map[string]string{
+		"system32": runtime.DXVK(wineruntime.DXVK64),
+		"syswow64": runtime.DXVK(wineruntime.DXVK32),
+	})
+}
+
+func installMesa(runtime wineruntime.Installed, prefix string) error {
+	return copyIntoWindows(prefix, map[string]string{
+		"system32": runtime.Mesa(wineruntime.Mesa64),
+		"syswow64": runtime.Mesa(wineruntime.Mesa32),
+	})
+}
+
+func copyIntoWindows(prefix string, sources map[string]string) error {
 	windows := filepath.Join(prefix, "drive_c", "windows")
-	folders := map[wineruntime.DXVKBits]string{wineruntime.DXVK64: "system32", wineruntime.DXVK32: "syswow64"}
-	for bits, folder := range folders {
+	for folder, source := range sources {
 		target := filepath.Join(windows, folder)
 		if _, err := os.Stat(target); err != nil {
 			continue
 		}
-		dlls, err := filepath.Glob(filepath.Join(runtime.DXVK(bits), "*.dll"))
+		dlls, err := filepath.Glob(filepath.Join(source, "*.dll"))
 		if err != nil {
 			return err
 		}
@@ -92,7 +105,7 @@ func installDXVK(runtime wineruntime.Installed, prefix string) error {
 				return err
 			}
 			if err := os.WriteFile(filepath.Join(target, filepath.Base(dll)), content, 0o644); err != nil {
-				return failure.Errorf(failure.CodePrefixFailed, "putting DXVK's %s into %s: %s", filepath.Base(dll), folder, err)
+				return failure.Errorf(failure.CodePrefixFailed, "putting %s into %s: %s", filepath.Base(dll), folder, err)
 			}
 		}
 	}

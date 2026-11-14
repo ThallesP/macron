@@ -6,6 +6,7 @@
   "exe": "probe.exe",
   "cwd": "",
   "args": [],
+  "macronEnv": {},
   "window": {
     "title": "^Macron D3D11 probe$",
     "width": 640,

@@ -7,14 +7,7 @@
   "env": {},
   "dllOverrides": {},
   "files": [],
-  "registry": [
-    {
-      "key": "HKEY_CURRENT_USER\\Software\\Wine\\Mac Driver",
-      "name": "AllowSoftwareRendering",
-      "type": "sz",
-      "value": "y"
-    }
-  ],
+  "registry": [],
   "installs": [],
-  "notes": "DarkPlaces engine, OpenGL through Wine's opengl32 and macOS OpenGL. AllowSoftwareRendering lets winemac use the Apple Software Renderer on Macs without a hardware OpenGL renderer, such as GitHub's runners; it changes nothing where a GPU is present."
+  "notes": "DarkPlaces engine, OpenGL through Wine's opengl32 and macOS OpenGL. On a Mac without a hardware OpenGL renderer (GitHub's runners) SDL finds no pixel format ('No matching GL pixel format available'); run it there with MACRON_OPENGL=llvmpipe."
 }

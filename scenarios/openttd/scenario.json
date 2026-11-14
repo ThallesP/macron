@@ -32,6 +32,7 @@
   "exe": "openttd-15.3-windows-win64/openttd.exe",
   "cwd": "",
   "args": [],
+  "macronEnv": {},
   "window": {
     "title": "^OpenTTD",
     "width": 800,

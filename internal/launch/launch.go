@@ -19,17 +19,18 @@ import (
 )
 
 type Input struct {
-	Runtime      wineruntime.Installed
-	Installers   map[string]fixes.Installer
-	DownloadsDir string
-	Profile      fixes.Profile
-	Prefix       string
-	Exe          string
-	Cwd          string
-	Args         []string
-	Output       io.Writer
-	Progress     func(string)
-	WaitForWine  bool
+	Runtime        wineruntime.Installed
+	Installers     map[string]fixes.Installer
+	DownloadsDir   string
+	Profile        fixes.Profile
+	Prefix         string
+	Exe            string
+	Cwd            string
+	Args           []string
+	Output         io.Writer
+	Progress       func(string)
+	WaitForWine    bool
+	SoftwareOpenGL bool
 }
 
 var backendTrees = map[fixes.Backend]wineruntime.Tree{
@@ -56,9 +57,21 @@ func Run(ctx context.Context, in Input) (int, error) {
 	}
 	tree := backendTrees[in.Profile.Backend]
 	env := Environment(in.Profile, in.Prefix, os.Environ())
+	if in.SoftwareOpenGL {
+		env = append(env, "GALLIUM_DRIVER=llvmpipe", "WINEDLLOVERRIDES="+dllOverrides(in.Profile, map[string]string{"opengl32": "n,b"}))
+	}
 
 	if err := EnsurePrefix(ctx, PrefixInput{Runtime: in.Runtime, Backend: in.Profile.Backend, Prefix: in.Prefix, Env: env, Output: in.Output, Progress: in.Progress}); err != nil {
 		return 0, err
+	}
+	if in.SoftwareOpenGL {
+		if err := wineruntime.EnsureMesa(ctx, in.DownloadsDir, in.Runtime, wineruntime.Mesa, in.Progress); err != nil {
+			return 0, err
+		}
+		if err := installMesa(in.Runtime, in.Prefix); err != nil {
+			return 0, err
+		}
+		in.Progress("OpenGL is drawn in software by Mesa llvmpipe (MACRON_OPENGL=llvmpipe)")
 	}
 	if err := EnsureRegistry(ctx, in, env); err != nil {
 		return 0, err
@@ -92,23 +105,27 @@ func Run(ctx context.Context, in Input) (int, error) {
 }
 
 func Environment(profile fixes.Profile, prefix string, base []string) []string {
-	overrides := maps.Clone(alwaysDisabledDLLs)
-	maps.Copy(overrides, backendDLLOverrides[profile.Backend])
-	maps.Copy(overrides, profile.DLLOverrides)
-	var entries []string
-	for _, dll := range slices.Sorted(maps.Keys(overrides)) {
-		entries = append(entries, dll+"="+overrides[dll])
-	}
-
 	env := slices.Concat(base, []string{
 		"WINEPREFIX=" + prefix,
 		"WINEDEBUG=-all",
-		"WINEDLLOVERRIDES=" + strings.Join(entries, ";"),
+		"WINEDLLOVERRIDES=" + dllOverrides(profile, nil),
 	})
 	for _, name := range slices.Sorted(maps.Keys(profile.Env)) {
 		env = append(env, name+"="+profile.Env[name])
 	}
 	return env
+}
+
+func dllOverrides(profile fixes.Profile, extra map[string]string) string {
+	overrides := maps.Clone(alwaysDisabledDLLs)
+	maps.Copy(overrides, backendDLLOverrides[profile.Backend])
+	maps.Copy(overrides, extra)
+	maps.Copy(overrides, profile.DLLOverrides)
+	var entries []string
+	for _, dll := range slices.Sorted(maps.Keys(overrides)) {
+		entries = append(entries, dll+"="+overrides[dll])
+	}
+	return strings.Join(entries, ";")
 }
 
 func Kill(ctx context.Context, runtime wineruntime.Installed, prefix string) error {

@@ -42,21 +42,22 @@ type Download struct {
 }
 
 type Scenario struct {
-	Name         string     `json:"name"`
-	Title        string     `json:"title"`
-	Game         string     `json:"game"`
-	Downloads    []Download `json:"downloads"`
-	Build        string     `json:"build"`
-	Exe          string     `json:"exe"`
-	Cwd          string     `json:"cwd"`
-	Args         []string   `json:"args"`
-	Window       Window     `json:"window"`
-	Reached      Reached    `json:"reached"`
-	Compare      Compare    `json:"compare"`
-	Reference    Reference  `json:"reference"`
-	OtherGame    string     `json:"otherGame"`
-	WindowsExtra []string   `json:"windowsExtra"`
-	CI           bool       `json:"ci"`
+	Name         string            `json:"name"`
+	Title        string            `json:"title"`
+	Game         string            `json:"game"`
+	Downloads    []Download        `json:"downloads"`
+	Build        string            `json:"build"`
+	Exe          string            `json:"exe"`
+	Cwd          string            `json:"cwd"`
+	Args         []string          `json:"args"`
+	MacronEnv    map[string]string `json:"macronEnv"`
+	Window       Window            `json:"window"`
+	Reached      Reached           `json:"reached"`
+	Compare      Compare           `json:"compare"`
+	Reference    Reference         `json:"reference"`
+	OtherGame    string            `json:"otherGame"`
+	WindowsExtra []string          `json:"windowsExtra"`
+	CI           bool              `json:"ci"`
 
 	Dir string `json:"-"`
 }
@@ -114,6 +115,11 @@ func (s Scenario) validate() error {
 	}
 	if _, err := regexp.Compile(s.Window.Title); err != nil {
 		return invalid("window title is not a pattern: %s", err)
+	}
+	for name := range s.MacronEnv {
+		if !strings.HasPrefix(name, "MACRON_") {
+			return invalid("macronEnv may only set MACRON_ variables, not %s", name)
+		}
 	}
 	if s.Reached.TimeoutSeconds <= 0 {
 		return invalid("reached.timeoutSeconds is required")

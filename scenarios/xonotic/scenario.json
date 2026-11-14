@@ -57,6 +57,9 @@
     "sv_masterextra3",
     ""
   ],
+  "macronEnv": {
+    "MACRON_OPENGL": "llvmpipe"
+  },
   "window": {
     "title": "^Xonotic",
     "width": 800,

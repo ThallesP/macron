@@ -19,6 +19,9 @@ const usage = `macron runs Windows games on macOS.
   macron waitforexitandrun <exe> [args]
   macron run <exe> [args]           what Steam calls; the profile comes from SteamAppId
 
+MACRON_OPENGL=llvmpipe draws OpenGL in software with Mesa, for Macs without a
+hardware OpenGL renderer (virtual machines, CI runners).
+
 Wrong usage exits 2. A failure inside macron exits 125; otherwise macron exits
 with the game's exit code.
 `

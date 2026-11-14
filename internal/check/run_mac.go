@@ -153,6 +153,10 @@ func (r *macRun) launchAndWait(ctx context.Context, g Game) (MacWindow, error) {
 	}
 	output := &lockedBuffer{}
 	game := exec.Command(r.Macron, append([]string{"launch", "--game", r.Scenario.Game, "--cwd", g.Cwd, "--", g.Exe}, r.Scenario.Args...)...)
+	game.Env = os.Environ()
+	for name, value := range r.Scenario.MacronEnv {
+		game.Env = append(game.Env, name+"="+value)
+	}
 	game.Stdout = io.MultiWriter(log, output)
 	game.Stderr = game.Stdout
 	launched := time.Now()

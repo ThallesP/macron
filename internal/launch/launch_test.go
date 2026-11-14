@@ -26,7 +26,7 @@ if [ "$1" = wineboot ]; then
 	exit 0
 fi
 [ "$1" = regedit ] && exit 0
-env | grep -E '^(WINE|DXMT)' | sort > "$WINEPREFIX/../game-env.txt"
+env | grep -E '^(WINE|DXMT|GALLIUM)' | sort > "$WINEPREFIX/../game-env.txt"
 pwd > "$WINEPREFIX/../game-cwd.txt"
 echo "game output"
 exit 3
@@ -287,5 +287,37 @@ func TestRegistryIsImportedOnceUntilItChanges(t *testing.T) {
 
 	if imports := strings.Count(g.read(t, "wine-calls.txt"), "regedit /S"); imports != 2 {
 		t.Errorf("regedit ran %d times, want 2", imports)
+	}
+}
+
+func TestSoftwareOpenGLPutsMesaInThePrefix(t *testing.T) {
+	g := newGame(t)
+	runtime := fakeRuntime(t)
+	for _, bits := range []wineruntime.MesaBits{wineruntime.Mesa64, wineruntime.Mesa32} {
+		if err := os.MkdirAll(runtime.Mesa(bits), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(runtime.Mesa(bits), "opengl32.dll"), []byte("mesa "+string(bits)), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(runtime.Dir, "mesa", wineruntime.Mesa.SHA256), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	in := Input{Runtime: runtime, Profile: fixes.Default("x"), Prefix: g.prefix, Exe: g.exe, Output: &bytes.Buffer{}, Progress: func(string) {}, SoftwareOpenGL: true}
+
+	if _, err := Run(context.Background(), in); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := g.read(t, "prefix/drive_c/windows/system32/opengl32.dll"); got != "mesa x64" {
+		t.Errorf("system32/opengl32.dll = %q", got)
+	}
+	if got := g.read(t, "prefix/drive_c/windows/syswow64/opengl32.dll"); got != "mesa x86" {
+		t.Errorf("syswow64/opengl32.dll = %q", got)
+	}
+	env := g.read(t, "game-env.txt")
+	if !strings.Contains(env, "opengl32=n,b") {
+		t.Errorf("opengl32 is not overridden:\n%s", env)
 	}
 }

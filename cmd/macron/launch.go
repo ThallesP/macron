@@ -90,22 +90,27 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 	progress := progressTo(output)
 	progress(fmt.Sprintf("game %s, log %s", in.Profile.ID, logFile.Name()))
 
+	openGL := os.Getenv("MACRON_OPENGL")
+	if openGL != "" && openGL != "llvmpipe" {
+		return fail(output, failure.Errorf(failure.CodeInvalidInput, "MACRON_OPENGL=%q; the only choice is llvmpipe", openGL))
+	}
 	installed, err := wineruntime.Install(ctx, layout, wineruntime.Pinned, progress)
 	if err != nil {
 		return fail(output, err)
 	}
 	exitCode, err := launch.Run(ctx, launch.Input{
-		Runtime:      installed,
-		Installers:   fixes.Installers,
-		DownloadsDir: layout.DownloadsDir(),
-		Profile:      in.Profile,
-		Prefix:       prefix,
-		Exe:          in.Exe,
-		Cwd:          in.Cwd,
-		Args:         in.Args,
-		Output:       output,
-		Progress:     progress,
-		WaitForWine:  in.WaitForWine,
+		Runtime:        installed,
+		Installers:     fixes.Installers,
+		DownloadsDir:   layout.DownloadsDir(),
+		Profile:        in.Profile,
+		Prefix:         prefix,
+		Exe:            in.Exe,
+		Cwd:            in.Cwd,
+		Args:           in.Args,
+		Output:         output,
+		Progress:       progress,
+		WaitForWine:    in.WaitForWine,
+		SoftwareOpenGL: openGL == "llvmpipe",
 	})
 	if err != nil {
 		return fail(output, err)

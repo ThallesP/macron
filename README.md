@@ -29,6 +29,8 @@ macron kill --game d3d11-probe               # stop everything in that game's Wi
 macron waitforexitandrun <exe> [args]        # what Steam calls; the profile comes from SteamAppId
 ```
 
+`MACRON_OPENGL=llvmpipe` draws OpenGL in software with Mesa (downloaded on first use), for Macs without a hardware OpenGL renderer such as virtual machines and GitHub's runners. Like Proton's `PROTON_USE_WINED3D`, it is a user switch, not part of any game's profile.
+
 Everything lives in `~/Library/Application Support/Macron` (or `$MACRON_HOME`): `runtimes/<version>/` holds two Wine trees, plain and with DXMT (an APFS clone, so it costs almost no disk), `prefixes/<game>/` one private Windows environment per game (its user folders are not linked to the Mac's), `logs/<game>/` a log per launch. A profile (`fixes/games/<id>.json`) picks the graphics backend (`dxmt` for Direct3D 10/11 through Metal, `wined3d` for Wine's Direct3D-to-OpenGL), and can add environment variables, DLL overrides, registry values (applied again whenever they change), extra installs (`vcrun2022`, pinned in `fixes/installers.go`, run once per prefix), launch arguments and files to write before the first start (`{game}/…`, `{appdata}/…`, `{documents}/…`). Failures inside macron exit 125 with a stable error code; otherwise macron exits with the game's exit code.
 
 ## Scenario checks (`macron-check`)
@@ -58,7 +60,7 @@ Every game tried. "Where" is where it was checked: the sandbox/CI runner (virtua
 | Wine (Gcenx/macOS_Wine_builds 11.21) | LGPL 2.1+ | downloaded at install time, unmodified |
 | DXMT 0.80 (3Shain/dxmt) | LGPL 2.1+ | downloaded at install time, unmodified |
 | DXVK-macOS 1.10.3-20230507 (Gcenx/DXVK-macOS) | zlib | downloaded at install time, unmodified (the `dxvk` backend) |
-| Mesa 26.1.8 for Windows (pal1000/mesa-dist-win) | MIT | downloaded only on Windows runners, for OpenGL references |
+| Mesa 26.1.8 for Windows (pal1000/mesa-dist-win) | MIT | downloaded on Windows runners for OpenGL references, and by macron when `MACRON_OPENGL=llvmpipe` |
 | Go standard library | BSD 3-Clause | built into macron and macron-check |
 
 Macron itself has no licence yet (see PROGRESS.md, "Needs Thalles").
