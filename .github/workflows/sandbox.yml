@@ -75,9 +75,12 @@ jobs:
           echo "$auto_stop_at" > "$dir/auto-stop-at"
           echo "SBX_HARD_STOP_AT=$hard_stop_at" >> "$GITHUB_ENV"
 
-          # A private sshd owned by the runner user, started from this job so
-          # that SSH sessions share the job's desktop session. Key-only: the
-          # runner user has passwordless sudo.
+          # A private sshd run by the runner user. Key-only: the runner user
+          # has passwordless sudo. It stays in the foreground (-D) because a
+          # daemonized sshd leaves the job's desktop session, and then SSH
+          # sessions cannot open windows or take screenshots.
+          # Every connection arrives from the tunnel on 127.0.0.1, so sshd's
+          # per-source penalties would lock everyone out together.
           ssh-keygen -q -t ed25519 -N '' -C "$SBX_ID" -f "$dir/host_key"
           printf '%s\n' "$SBX_SSH_PUBLIC_KEY" > "$dir/authorized_keys"
           cat > "$dir/sshd_config" <<EOF
@@ -92,13 +95,20 @@ jobs:
           PasswordAuthentication no
           KbdInteractiveAuthentication no
           UsePAM no
+          PerSourcePenalties no
+          MaxStartups 100:30:200
           ClientAliveInterval 30
           Subsystem sftp /usr/libexec/sftp-server
           SetEnv PATH="$PATH"
           EOF
           /usr/sbin/sshd -t -f "$dir/sshd_config"
-          env -i HOME="$HOME" USER="$USER" PATH="$PATH" \
-            /usr/sbin/sshd -f "$dir/sshd_config" -E "$dir/sshd.log"
+          env -i HOME="$HOME" USER="$USER" PATH="$PATH" nohup \
+            /usr/sbin/sshd -D -f "$dir/sshd_config" -E "$dir/sshd.log" > /dev/null 2>&1 < /dev/null &
+          for _ in $(seq 1 40); do
+            nc -z 127.0.0.1 2222 2>/dev/null && break
+            sleep 0.25
+          done
+          nc -z 127.0.0.1 2222 2>/dev/null || fail "sshd did not start"
 
           curl -fsSL --retry 3 -o "$dir/cloudflared.tgz" \
             "https://github.com/cloudflare/cloudflared/releases/download/$CLOUDFLARED_VERSION/cloudflared-darwin-arm64.tgz"
@@ -109,7 +119,7 @@ jobs:
           host=""
           for attempt in 1 2 3; do
             env -i HOME="$HOME" nohup "$dir/cloudflared" tunnel --no-autoupdate \
-              --url tcp://127.0.0.1:2222 > "$dir/cloudflared.log" 2>&1 &
+              --url tcp://127.0.0.1:2222 > "$dir/cloudflared.log" 2>&1 < /dev/null &
             for _ in $(seq 1 60); do
               host=$(grep -Eo 'https://[a-z0-9-]+\.trycloudflare\.com' "$dir/cloudflared.log" | head -1 | sed 's#^https://##' || true)
               if [ -n "$host" ] && grep -q 'Registered tunnel connection' "$dir/cloudflared.log"; then
