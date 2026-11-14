@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        game: ${{ fromJSON(inputs.games || '["ut99-gl"]') }}
+        game: ${{ fromJSON(inputs.games || '["stk-d3d9","stk"]') }}
     steps:
       - uses: actions/checkout@v4
       - name: Desktop

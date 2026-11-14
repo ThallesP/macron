@@ -1,7 +1,5 @@
 <?xml version="1.0"?>
 <stkconfig version="8" >
     <enable_internet value="2" />
-    <Video>
-        <old_driver_popup value="false" />
-    </Video>
+    <Video old_driver_popup="false" />
 </stkconfig>
