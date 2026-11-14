@@ -23,7 +23,7 @@ Mac + Proton. Press Play on a Windows-only game in the Mac Steam client and have
 ## The launcher (`macron`)
 
 ```sh
-macron runtime install                       # Wine 11.21 + Macron's winemac.so + DXMT 0.80 + DXVK, pinned URLs and checksums
+macron runtime install                       # Wine 11.21 + Macron's Wine patches + DXMT 0.80 + DXVK, pinned URLs and checksums
 macron launch --game d3d11-probe -- probe.exe # start a program with its profile from fixes/games/
 macron kill --game d3d11-probe               # stop everything in that game's Windows environment
 macron waitforexitandrun <exe> [args]        # what Steam calls; the profile comes from SteamAppId
@@ -95,7 +95,7 @@ Every game tried. The first three are scenarios that pass in CI; the next five c
 | Dependency | Licence | Used as |
 |---|---|---|
 | Wine (Gcenx/macOS_Wine_builds 11.21) | LGPL 2.1+ | downloaded at install time, unmodified |
-| Wine 11.21 `winemac.so` with Macron's patch (this repository's `runtime-wine-11.21-macron.1` release) | LGPL 2.1+ | downloaded at install time into the DXMT tree; source and patch are published with the release |
+| Wine 11.21 `winemac.so` and `wined3d.dll` with Macron's patches (this repository's `runtime-wine-11.21-macron.2` release) | LGPL 2.1+ | downloaded at install time: `winemac.so` into the DXMT tree, `wined3d.dll` into both trees; source and patches are published with the release |
 | DXMT 0.80 (3Shain/dxmt) | LGPL 2.1+ | downloaded at install time, unmodified |
 | DXVK-macOS 1.10.3-20230507 (Gcenx/DXVK-macOS) | zlib | downloaded at install time, unmodified (the `dxvk` backend) |
 | Mesa 26.1.8 for Windows (pal1000/mesa-dist-win) | MIT | downloaded on Windows runners for OpenGL references, and by macron when `MACRON_OPENGL=llvmpipe` |
