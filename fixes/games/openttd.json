@@ -1,0 +1,18 @@
+{
+  "id": "openttd",
+  "name": "OpenTTD 15.3",
+  "steamAppIds": [1536610],
+  "backend": "wined3d",
+  "args": ["-c", "openttd.cfg"],
+  "env": {},
+  "dllOverrides": {},
+  "files": [
+    {
+      "path": "{game}/openttd.cfg",
+      "content": "[misc]\nfullscreen = false\nresolution = 800,600\nvideo_hw_accel = false\n\n[network]\nparticipate_survey = no\n"
+    }
+  ],
+  "registry": [],
+  "installs": [],
+  "notes": "Draws with GDI (video_hw_accel off), so it needs no 3D at all. A config file next to the exe keeps it windowed at 800x600 and skips the first-start survey question."
+}
