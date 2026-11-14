@@ -42,12 +42,17 @@
     "timeoutSeconds": 1200
   },
   "compare": {
-    "text": [],
+    "text": [
+      "Story Mode",
+      "Singleplayer",
+      "Online",
+      "Addons"
+    ],
     "ignore": []
   },
   "reference": {
     "image": "reference.png",
-    "source": "pending"
+    "source": "windows-latest, Direct3D 9 on the Microsoft Basic Render Driver, https://github.com/ThallesP/macron/actions/runs/43567939483 (identical 30 s later)"
   },
   "otherGame": "openttd",
   "windowsExtra": [],
