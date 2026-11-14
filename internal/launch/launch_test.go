@@ -189,7 +189,7 @@ func TestDXVKBackendPutsItsDLLsInThePrefix(t *testing.T) {
 	if got := g.read(t, "prefix/drive_c/windows/syswow64/d3d11.dll"); got != "dxvk 32" {
 		t.Errorf("syswow64/d3d11.dll = %q", got)
 	}
-	if env := g.read(t, "game-env.txt"); !strings.Contains(env, "WINEDLLOVERRIDES=d3d10core=n;d3d11=n;mscoree=;mshtml=") {
+	if env := g.read(t, "game-env.txt"); !strings.Contains(env, "WINEDLLOVERRIDES=d3d10core=n;d3d11=n;dxgi=n;mscoree=;mshtml=") {
 		t.Errorf("DXVK overrides missing:\n%s", env)
 	}
 }

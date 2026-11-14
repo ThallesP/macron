@@ -37,7 +37,7 @@ var backendTrees = map[fixes.Backend]wineruntime.Tree{
 
 var backendDLLOverrides = map[fixes.Backend]map[string]string{
 	fixes.BackendDXMT:    {},
-	fixes.BackendDXVK:    {"d3d11": "n", "d3d10core": "n"},
+	fixes.BackendDXVK:    {"d3d11": "n", "d3d10core": "n", "dxgi": "n"},
 	fixes.BackendWineD3D: {},
 }
 

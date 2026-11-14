@@ -15,7 +15,7 @@ type Manifest struct {
 }
 
 var Pinned = Manifest{
-	Version: "wine-11.21-dxmt-0.80-dxvk-1.10.3",
+	Version: "wine-11.21-dxmt-0.80-dxvk-1.10.3-20230507",
 	Wine: Archive{
 		Name:      "wine-devel-11.21-osx64.tar.xz",
 		URL:       "https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.21/wine-devel-11.21-osx64.tar.xz",
@@ -29,9 +29,9 @@ var Pinned = Manifest{
 		SizeBytes: 18681669,
 	},
 	DXVK: Archive{
-		Name:      "dxvk-macOS-async-v1.10.3-20230507-repack.tar.gz",
-		URL:       "https://github.com/Gcenx/DXVK-macOS/releases/download/v1.10.3-20230507-repack/dxvk-macOS-async-v1.10.3-20230507-repack.tar.gz",
-		SHA256:    "acd1520ad105d8ef124a09c8e11a259a5dc8bdc565ad18e0e52693f9807b2477",
-		SizeBytes: 2793443,
+		Name:      "dxvk-macOS-async-v1.10.3-20230507.tar.gz",
+		URL:       "https://github.com/Gcenx/DXVK-macOS/releases/download/v1.10.3-20230507/dxvk-macOS-async-v1.10.3-20230507.tar.gz",
+		SHA256:    "f67d99d0a8eeedd7d406b283a3df9f939b5965acb00efcb33d0c6235c195a516",
+		SizeBytes: 7077450,
 	},
 }
