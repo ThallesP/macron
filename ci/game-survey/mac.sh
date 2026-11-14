@@ -68,6 +68,17 @@ run() {
     log "wineboot took $(( $(date +%s) - t ))s"
   fi
 
+  # The runner's paravirtual GPU has no accelerated OpenGL renderer, only
+  # "Apple Software Renderer", which winemac ignores unless this is set.
+  if [ "${MAC_SOFTWARE_GL:-1}" = 1 ]; then
+    "$wine" reg add 'HKCU\Software\Wine\Mac Driver' /v AllowSoftwareRendering /t REG_SZ /d y /f >/dev/null 2>&1
+    log "AllowSoftwareRendering=y"
+  fi
+  local k v
+  while IFS='=' read -r k v; do
+    [ -n "$k" ] && export "$k=$v" && log "env $k=$v"
+  done < <(jq -r '.mac_env // {} | to_entries[] | "\(.key)=\(.value)"' <<<"$spec")
+
   local t0=$(date +%s) n i
   n=$(jq '.downloads | length' <<<"$spec")
   for (( i = 0; i < n; i++ )); do
@@ -85,6 +96,10 @@ run() {
         inner=$(jq -r '.inner // empty' <<<"$d")
         if [ -n "$inner" ]; then 7zz x -y "-o$GS/setup-$game" "$file" >/dev/null; setup=$GS/setup-$game/$inner; fi
         timeout_run 900 "$wine" "$setup" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- "/DIR=C:\\game" >>"$out/install.log" 2>&1 || log "installer failed"
+        ;;
+      nsis-silent)
+        timeout_run 900 "$wine" "$file" /S "/D=C:\\game" >>"$out/install.log" 2>&1 || log "installer failed"
+        timeout_run 120 "$GS/wineroot/bin/wineserver" -w || true
         ;;
       *) echo "unknown extract $method" >&2; exit 1 ;;
     esac

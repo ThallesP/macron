@@ -66,7 +66,7 @@ function Screenshot($path) {
 $t0 = Get-Date
 foreach ($d in $spec.downloads) {
   $file = Fetch $d.url $d.sha256
-  $into = Join-Path $root $d.into
+  $into = [IO.Path]::GetFullPath((Join-Path $root $d.into)).TrimEnd('\')
   New-Item -ItemType Directory -Force $into | Out-Null
   switch ($d.extract) {
     { $_ -in 'zip', '7z' } {
@@ -82,6 +82,11 @@ foreach ($d in $spec.downloads) {
         $setup = "$dl\setup\$($d.inner)"
       }
       $p = Start-Process -FilePath $setup -Wait -PassThru -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', "/DIR=$into"
+      Log "installer exit code $($p.ExitCode)"
+    }
+    'nsis-silent' {
+      # NSIS installs with no window under /S. /D= must be the last argument.
+      $p = Start-Process -FilePath $file -Wait -PassThru -ArgumentList '/S', "/D=$into"
       Log "installer exit code $($p.ExitCode)"
     }
     default { throw "unknown extract method $($d.extract)" }
