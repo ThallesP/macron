@@ -1,0 +1,73 @@
+# Captures a scenario's reference picture from the original Windows program on
+# a GitHub Windows runner (real Windows, software Direct3D). The picture is
+# uploaded as an artifact; a person or agent commits it to the scenario after
+# looking at it. Never generate a reference from Macron's own output.
+name: Reference
+run-name: reference ${{ inputs.scenario }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Scenario name (a folder in scenarios/)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - name: Install MinGW
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq gcc-mingw-w64-x86-64
+      - name: Build the Windows bundle
+        run: ci/build-bundle.sh "$RUNNER_TEMP/bundle" windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-bundle
+          path: ${{ runner.temp }}/bundle
+
+  capture:
+    needs: bundle
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      SCENARIO: ${{ inputs.scenario }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-bundle
+          path: bundle
+      - name: Check the scenario name
+        shell: bash
+        run: '[[ "$SCENARIO" =~ ^[a-z0-9][a-z0-9-]*$ ]] && [ -f "bundle/scenarios/$SCENARIO/scenario.json" ]'
+      - name: Machine
+        shell: pwsh
+        run: |
+          Get-CimInstance Win32_VideoController | Format-List Name, DriverVersion, CurrentHorizontalResolution, CurrentVerticalResolution
+          Get-CimInstance Win32_OperatingSystem | Format-List Caption, Version
+      - name: Capture
+        shell: bash
+        run: bundle/bin/macron-check.exe reference "bundle/scenarios/$SCENARIO" --out out
+      - name: Desktop at the end
+        if: always()
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+          [System.Drawing.Graphics]::FromImage($bmp).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+          New-Item -ItemType Directory -Force out | Out-Null
+          $bmp.Save("out/desktop-end.png")
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reference-${{ inputs.scenario }}
+          path: out/

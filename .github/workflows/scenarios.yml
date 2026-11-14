@@ -1,0 +1,86 @@
+# Runs every scenario marked "ci": true on a GitHub macOS runner: macron
+# installs its runtime, launches the Windows program, and macron-check compares
+# the window with the committed reference from real Windows.
+name: Scenarios
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: One scenario to run (empty runs every CI scenario)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      scenarios: ${{ steps.plan.outputs.scenarios }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - name: Install MinGW
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq gcc-mingw-w64-x86-64
+      - name: Build the macOS bundle
+        run: ci/build-bundle.sh "$RUNNER_TEMP/bundle" darwin
+      - name: Pick the scenarios
+        id: plan
+        env:
+          ONLY: ${{ inputs.scenario }}
+        run: |
+          if [ -n "$ONLY" ]; then
+            [[ "$ONLY" =~ ^[a-z0-9][a-z0-9-]*$ ]] && [ -f "scenarios/$ONLY/scenario.json" ]
+            echo "scenarios=$(jq -cn --arg s "$ONLY" '[$s]')" >> "$GITHUB_OUTPUT"
+          else
+            echo "scenarios=$(jq -cs '[.[] | select(.ci) | .name]' scenarios/*/scenario.json)" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-bundle
+          path: ${{ runner.temp }}/bundle
+
+  check:
+    needs: bundle
+    if: needs.bundle.outputs.scenarios != '[]'
+    runs-on: macos-26
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        scenario: ${{ fromJSON(needs.bundle.outputs.scenarios) }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos-bundle
+          path: bundle
+      - name: Restore downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Application Support/Macron/downloads
+            ~/Library/Caches/macron-check
+          key: downloads-${{ matrix.scenario }}-${{ hashFiles('bundle/scenarios/*/scenario.json') }}
+          restore-keys: downloads-${{ matrix.scenario }}-
+      - name: Check
+        run: |
+          chmod +x bundle/bin/*
+          bundle/bin/macron-check run "bundle/scenarios/${{ matrix.scenario }}" --out out
+      - name: Summary
+        if: always()
+        run: cat out/summary.md >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidence-${{ matrix.scenario }}
+          path: |
+            out/
+            !out/bin/
