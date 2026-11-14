@@ -37,7 +37,7 @@
     "height": 600
   },
   "reached": {
-    "output": "",
+    "output": "LayoutManager: Statically sized widgets took all the place",
     "settleSeconds": 15,
     "timeoutSeconds": 1200
   },
