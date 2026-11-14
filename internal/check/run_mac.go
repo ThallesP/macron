@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"image"
 	"io"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -177,7 +178,11 @@ func (r *macRun) measureFrameRate(ctx context.Context, game Game, measuredOutput
 	throttleMs := ThrottleMsFor(*r.Scenario.FrameRate)
 	r.stage(fmt.Sprintf("running the probe throttled by %d ms a frame (negative control)", throttleMs))
 	args := append(slices.Clone(r.Scenario.Args), ThrottleArg, strconv.Itoa(throttleMs))
+	timings := maps.Clone(r.report.TimingsSecs)
+	since := time.Now()
 	_, throttled, err := r.launchAndWait(ctx, game, args, "game-throttled.log")
+	r.report.TimingsSecs = timings
+	r.mark("throttledRun", since)
 	if err != nil {
 		r.report.Notes = append(r.report.Notes, fmt.Sprintf("the throttled run failed: %s", err))
 	}

@@ -25,7 +25,7 @@
   },
   "reference": {
     "image": "reference.png",
-    "source": "pending"
+    "source": "windows-latest, Microsoft Basic Render Driver, https://github.com/ThallesP/macron/actions/runs/43632162296"
   },
   "frameRate": {
     "minFps": 0,

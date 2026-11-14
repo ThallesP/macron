@@ -63,7 +63,7 @@ func (r Report) Summary() string {
 	}
 	if len(r.TimingsSecs) > 0 {
 		b.WriteString("\nTimings (s):")
-		for _, name := range []string{"prepareGame", "runtimeInstall", "firstWindow", "reached", "total"} {
+		for _, name := range []string{"prepareGame", "runtimeInstall", "firstWindow", "reached", "throttledRun", "total"} {
 			if value, ok := r.TimingsSecs[name]; ok {
 				fmt.Fprintf(&b, " %s %.0f,", name, value)
 			}
