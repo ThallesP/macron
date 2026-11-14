@@ -59,6 +59,9 @@ func Run(ctx context.Context, in Input) (int, error) {
 	if err := EnsurePrefix(ctx, PrefixInput{Runtime: in.Runtime, Backend: in.Profile.Backend, Prefix: in.Prefix, Env: env, Output: in.Output, Progress: in.Progress}); err != nil {
 		return 0, err
 	}
+	if err := EnsureRegistry(ctx, in, env); err != nil {
+		return 0, err
+	}
 	if err := EnsureInstalls(ctx, in, env); err != nil {
 		return 0, err
 	}

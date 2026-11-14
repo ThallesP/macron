@@ -25,6 +25,7 @@ if [ "$1" = wineboot ]; then
 	ln -s "$WINEPREFIX/../mac-documents" "$home/Documents"
 	exit 0
 fi
+[ "$1" = regedit ] && exit 0
 env | grep -E '^(WINE|DXMT)' | sort > "$WINEPREFIX/../game-env.txt"
 pwd > "$WINEPREFIX/../game-cwd.txt"
 echo "game output"
@@ -247,5 +248,44 @@ func TestExtraInstallsRunOncePerPrefix(t *testing.T) {
 
 	if runs := strings.Count(g.read(t, "wine-calls.txt"), "setup.exe /quiet"); runs != 1 {
 		t.Errorf("the installer ran %d times:\n%s", runs, g.read(t, "wine-calls.txt"))
+	}
+}
+
+func TestRegFile(t *testing.T) {
+	got := RegFile([]fixes.RegistryValue{
+		{Key: `HKEY_CURRENT_USER\Software\Wine\Mac Driver`, Name: "AllowSoftwareRendering", Type: "sz", Value: "y"},
+		{Key: `HKEY_CURRENT_USER\Software\Wine\Mac Driver`, Name: "Path", Type: "sz", Value: `C:\a "b"`},
+		{Key: `HKEY_CURRENT_USER\Software\Game`, Name: "Width", Type: "dword", Value: "320"},
+	})
+
+	want := "Windows Registry Editor Version 5.00\r\n" +
+		"\r\n[HKEY_CURRENT_USER\\Software\\Wine\\Mac Driver]\r\n" +
+		"\"AllowSoftwareRendering\"=\"y\"\r\n" +
+		"\"Path\"=\"C:\\\\a \\\"b\\\"\"\r\n" +
+		"\r\n[HKEY_CURRENT_USER\\Software\\Game]\r\n" +
+		"\"Width\"=dword:00000320\r\n"
+	if got != want {
+		t.Fatalf("got\n%q\nwant\n%q", got, want)
+	}
+}
+
+func TestRegistryIsImportedOnceUntilItChanges(t *testing.T) {
+	g := newGame(t)
+	profile := fixes.Default("x")
+	profile.Registry = []fixes.RegistryValue{{Key: `HKEY_CURRENT_USER\Software\Wine\Mac Driver`, Name: "AllowSoftwareRendering", Type: "sz", Value: "y"}}
+	in := Input{Runtime: fakeRuntime(t), Profile: profile, Prefix: g.prefix, Exe: g.exe, Output: &bytes.Buffer{}, Progress: func(string) {}}
+
+	for range 2 {
+		if _, err := Run(context.Background(), in); err != nil {
+			t.Fatal(err)
+		}
+	}
+	in.Profile.Registry[0].Value = "n"
+	if _, err := Run(context.Background(), in); err != nil {
+		t.Fatal(err)
+	}
+
+	if imports := strings.Count(g.read(t, "wine-calls.txt"), "regedit /S"); imports != 2 {
+		t.Errorf("regedit ran %d times, want 2", imports)
 	}
 }

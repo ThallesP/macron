@@ -29,6 +29,13 @@ type File struct {
 	Content string `json:"content"`
 }
 
+type RegistryValue struct {
+	Key   string `json:"key"`
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
 type Profile struct {
 	ID           string            `json:"id"`
 	Name         string            `json:"name"`
@@ -38,6 +45,7 @@ type Profile struct {
 	Env          map[string]string `json:"env"`
 	DLLOverrides map[string]string `json:"dllOverrides"`
 	Files        []File            `json:"files"`
+	Registry     []RegistryValue   `json:"registry"`
 	Installs     []string          `json:"installs"`
 	Notes        string            `json:"notes"`
 }
@@ -52,6 +60,8 @@ var games embed.FS
 var (
 	validID          = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
 	validDLLOverride = regexp.MustCompile(`^(native|builtin|n|b|n,b|b,n|disabled|)$`)
+	validRegistryKey = regexp.MustCompile(`^(HKEY_CURRENT_USER|HKEY_LOCAL_MACHINE)(\\[^\\\]\[]+)+$`)
+	validDWORD       = regexp.MustCompile(`^[0-9a-fA-F]{1,8}$`)
 	FilePlaces       = []string{"{game}", "{appdata}", "{localappdata}", "{documents}", "{userprofile}"}
 )
 
@@ -109,6 +119,14 @@ func (p Profile) validate() error {
 		}
 		if slices.Contains(strings.Split(file.Path, "/"), "..") {
 			return failure.Errorf(failure.CodeBadProfile, "profile %s: file %q leaves its folder", p.ID, file.Path)
+		}
+	}
+	for _, value := range p.Registry {
+		if !validRegistryKey.MatchString(value.Key) || value.Name == "" || strings.ContainsAny(value.Name, "\"\n") || strings.Contains(value.Value, "\n") {
+			return failure.Errorf(failure.CodeBadProfile, "profile %s: registry value %s\\%s needs a key under HKEY_CURRENT_USER or HKEY_LOCAL_MACHINE and a plain name", p.ID, value.Key, value.Name)
+		}
+		if value.Type != "sz" && !(value.Type == "dword" && validDWORD.MatchString(value.Value)) {
+			return failure.Errorf(failure.CodeBadProfile, "profile %s: registry value %s must be type sz, or dword with up to 8 hex digits", p.ID, value.Name)
 		}
 	}
 	for _, name := range p.Installs {

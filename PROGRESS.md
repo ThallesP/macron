@@ -10,7 +10,7 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 |---|---|
 | 1. The loop runs | **green**. `macron-check sandbox d3d11-probe` passed from the dev machine (sandbox sbx_3qexmqkk, exit 0); Scenarios workflow green on main ([run 43559902376](https://github.com/ThallesP/macron/actions/runs/43559902376)) |
 | 2. A real game at its menu | game survey running |
-| 3. Through Macron, not scripts | `macron` launcher: pinned runtime, per-game prefixes, fixes database (backend, env, DLL overrides, extra installs, args, files), Steam verbs; the probe passes through it. Needs real games through it to count |
+| 3. Through Macron, not scripts | `macron` launcher: pinned runtime, per-game prefixes, fixes database (backend, env, DLL overrides, registry, extra installs, args, files), Steam verbs; the probe passes through it. Needs real games through it to count |
 | 4. Three games | not started |
 | 5. Steam's Play button | agent working on branch `steam-hook` |
 

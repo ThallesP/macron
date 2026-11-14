@@ -25,6 +25,8 @@ func TestParseRejectsBadProfiles(t *testing.T) {
 		"file outside":     `{"id": "a", "backend": "dxmt", "files": [{"path": "/etc/hosts", "content": ""}]}`,
 		"file escapes":     `{"id": "a", "backend": "dxmt", "files": [{"path": "{game}/../../x", "content": ""}]}`,
 		"bad DLL override": `{"id": "a", "backend": "dxmt", "dllOverrides": {"d3d9": "sometimes"}}`,
+		"registry outside": `{"id": "a", "backend": "dxmt", "registry": [{"key": "HKEY_USERS\\x", "name": "a", "type": "sz", "value": "b"}]}`,
+		"bad dword":        `{"id": "a", "backend": "dxmt", "registry": [{"key": "HKEY_CURRENT_USER\\x", "name": "a", "type": "dword", "value": "zz"}]}`,
 		"unknown install":  `{"id": "a", "backend": "dxmt", "installs": ["vcrun1999"]}`,
 	}
 	for name, content := range cases {
@@ -48,7 +50,8 @@ func TestParseAcceptsAFullProfile(t *testing.T) {
 		"args": ["-windowed"],
 		"env": {"DXMT_LOG_LEVEL": "info"},
 		"dllOverrides": {"d3d9": "n,b"},
-		"files": [{"path": "{appdata}/Some Game/settings.ini", "content": "width=800"}]
+		"files": [{"path": "{appdata}/Some Game/settings.ini", "content": "width=800"}],
+		"registry": [{"key": "HKEY_CURRENT_USER\\Software\\Wine\\Mac Driver", "name": "AllowSoftwareRendering", "type": "sz", "value": "y"}]
 	}`))
 	if err != nil {
 		t.Fatal(err)
