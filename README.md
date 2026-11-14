@@ -50,6 +50,7 @@ Things to know:
 - At most 5 sandboxes run at once (GitHub's limit for Mac jobs).
 - Only the machine that ran `sbx new` holds the sandbox's SSH key, in `~/.local/state/sbx/`. Other machines can list and stop it, not log in.
 - Every command accepts `--json`. `sbx`'s own failures exit 125 with an error code on stderr; wrong usage exits 2.
+- The tunnel sometimes stalls. Before login `sbx` retries by itself. After login it cannot know whether your command ran, so `exec` gives up after about a minute and exits 255: check the state on the sandbox before running the command again.
 - The repository is public, so the workflow's inputs, logs and artifacts are too. `sbx` puts only public keys there, and the tunnel address encrypted. Never print a secret from a workflow step.
 
 ## Not planned
