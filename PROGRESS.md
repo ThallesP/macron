@@ -12,6 +12,7 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 | 2. Steam's own Install and Play buttons on the MacBook | not started; registration alone is proven not enough |
 | 3. A DMG release Thalles can install | not started |
 | 4. The Steam bridge (`SteamAPI_Init`, achievements, cloud) | not started |
+| 5. Overwatch to its main menu through Play on the MacBook | not started; waits for gate 3 and for disk space |
 
 Phase 1 (loop day 1) for reference: gates 1 to 4 are green in CI on main ([Scenarios run 43569307839](https://github.com/ThallesP/macron/actions/runs/43569307839)): the Direct3D 11 probe and three games from three engines (OpenTTD, Xonotic at 1.24 GB, SuperTuxKart) reach their main menus through `macron` on GitHub's macOS runner and match the original games captured on Windows runners. Its gate 5 (the Steam registration) is green in CI; what it could not check is now answered below.
 
@@ -90,6 +91,7 @@ Existing projects worth reading (see the licence rule in GOAL.md): NotProton (`N
 
 ## Needs Thalles
 
+- **About 100 GB of free disk on the MacBook for Overwatch** (83 GB download; 24 GB was free on 2026-11-14). He said he would see about freeing space.
 - **A licence for Macron.** Until one is picked, no code is copied from GPL projects. Phase 2 writes its own Steam Play switch and ports the Steam bridge from Valve's Proton source.
 - **An Apple Developer ID** (99 USD a year) if the installer should open without a Gatekeeper warning. Without it the DMG is unsigned and the release notes say how to open it.
 - **Fork pull requests.** The repo only asks approval for first-time contributors. "Require approval for all external contributors" in the Actions settings stops a fork from using the Mac runner slots.
