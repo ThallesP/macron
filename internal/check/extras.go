@@ -13,10 +13,10 @@ import (
 )
 
 var mesaLLVMPipe = wineruntime.Archive{
-	Name:      "mesa3d-26.2.6-release-msvc.7z",
-	URL:       "https://github.com/pal1000/mesa-dist-win/releases/download/26.2.6/mesa3d-26.2.6-release-msvc.7z",
-	SHA256:    "b2e00615feaba45942343c265cc8c5f576142ca682c1ac6661922d4b72492877",
-	SizeBytes: 55964101,
+	Name:      "mesa3d-26.1.8-release-msvc.7z",
+	URL:       "https://github.com/pal1000/mesa-dist-win/releases/download/26.1.8/mesa3d-26.1.8-release-msvc.7z",
+	SHA256:    "4c6d32e653e0ff9ad07796e40c0bcfabf2764d849e3ce4f3b1590112c87e42f9",
+	SizeBytes: 71005136,
 }
 
 var mesaDLLs = []string{"opengl32.dll", "libgallium_wgl.dll", "libglapi.dll"}
