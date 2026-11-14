@@ -4,6 +4,7 @@
   "game": "d3d11-probe",
   "build": "build.sh",
   "exe": "probe.exe",
+  "cwd": "",
   "window": { "title": "^Macron D3D11 probe$", "width": 640, "height": 480 },
   "reached": { "output": "RESULT present: OK", "settleSeconds": 5, "timeoutSeconds": 900 },
   "compare": { "text": [], "ignore": [] },

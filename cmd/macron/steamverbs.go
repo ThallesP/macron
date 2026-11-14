@@ -27,7 +27,11 @@ func steamVerb(waitForWine bool) command {
 		if err != nil {
 			return fail(stderr, err)
 		}
-		in := gameStart{Profile: db.ForSteamApp(appID), Exe: args[0], Args: args[1:], WaitForWine: waitForWine}
+		cwd, err := os.Getwd()
+		if err != nil {
+			return fail(stderr, err)
+		}
+		in := gameStart{Profile: db.ForSteamApp(appID), Exe: args[0], Cwd: cwd, Args: args[1:], WaitForWine: waitForWine}
 		if compatData := os.Getenv("STEAM_COMPAT_DATA_PATH"); compatData != "" {
 			in.Prefix = filepath.Join(compatData, "pfx")
 		}

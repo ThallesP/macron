@@ -87,7 +87,7 @@ func (r *macRun) do(ctx context.Context) error {
 
 	r.stage("preparing the game files")
 	since := time.Now()
-	exe, err := PrepareGame(ctx, r.Scenario, r.CacheDir, WorkDir(r.Scenario))
+	game, err := PrepareGame(ctx, r.Scenario, r.CacheDir, WorkDir(r.Scenario))
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func (r *macRun) do(ctx context.Context) error {
 	r.mark("runtimeInstall", since)
 
 	r.stage("starting the game through macron")
-	window, err := r.launchAndWait(ctx, exe)
+	window, err := r.launchAndWait(ctx, game)
 	defer r.stopGame()
 	if err != nil {
 		return err
@@ -143,13 +143,13 @@ func (r *macRun) macron(ctx context.Context, logName string, args ...string) err
 	return nil
 }
 
-func (r *macRun) launchAndWait(ctx context.Context, exe string) (MacWindow, error) {
+func (r *macRun) launchAndWait(ctx context.Context, g Game) (MacWindow, error) {
 	log, err := os.Create(filepath.Join(r.Out, "game.log"))
 	if err != nil {
 		return MacWindow{}, err
 	}
 	output := &lockedBuffer{}
-	game := exec.Command(r.Macron, "launch", "--game", r.Scenario.Game, "--", exe)
+	game := exec.Command(r.Macron, "launch", "--game", r.Scenario.Game, "--cwd", g.Cwd, "--", g.Exe)
 	game.Stdout = io.MultiWriter(log, output)
 	game.Stderr = game.Stdout
 	launched := time.Now()

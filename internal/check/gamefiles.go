@@ -13,40 +13,50 @@ import (
 	"github.com/ThallesP/macron/internal/wineruntime"
 )
 
-func PrepareGame(ctx context.Context, s scenario.Scenario, cacheDir, workDir string) (string, error) {
-	if s.Download == nil {
-		exe, err := filepath.Abs(filepath.Join(s.Dir, s.Exe))
+type Game struct {
+	Exe string
+	Cwd string
+}
+
+func PrepareGame(ctx context.Context, s scenario.Scenario, cacheDir, workDir string) (Game, error) {
+	root, err := filepath.Abs(s.Dir)
+	if err != nil {
+		return Game{}, err
+	}
+	if len(s.Downloads) > 0 {
+		root, err = filepath.Abs(filepath.Join(workDir, "game"))
 		if err != nil {
-			return "", err
+			return Game{}, err
 		}
-		if _, err := os.Stat(exe); err != nil {
-			return "", failure.Errorf(failure.CodeInvalidInput, "%s is not built; it comes from %s", exe, s.Build)
+		if err := os.RemoveAll(root); err != nil {
+			return Game{}, err
 		}
-		return exe, nil
+	}
+	for _, d := range s.Downloads {
+		archive, err := wineruntime.Download(ctx, cacheDir, d.Archive)
+		if err != nil {
+			return Game{}, err
+		}
+		into := filepath.Join(root, filepath.FromSlash(d.Into))
+		if err := os.MkdirAll(into, 0o755); err != nil {
+			return Game{}, err
+		}
+		if err := unpack(ctx, d.Unpack, archive, into); err != nil {
+			return Game{}, err
+		}
 	}
 
-	archive, err := wineruntime.Download(ctx, cacheDir, s.Download.Archive)
-	if err != nil {
-		return "", err
+	game := Game{Exe: filepath.Join(root, filepath.FromSlash(s.Exe)), Cwd: filepath.Join(root, filepath.FromSlash(s.Cwd))}
+	if s.Cwd == "" {
+		game.Cwd = filepath.Dir(game.Exe)
 	}
-	gameDir, err := filepath.Abs(filepath.Join(workDir, "game"))
-	if err != nil {
-		return "", err
+	if _, err := os.Stat(game.Exe); err != nil {
+		if s.Build != "" {
+			return Game{}, failure.Errorf(failure.CodeInvalidInput, "%s is not built; it comes from %s", game.Exe, s.Build)
+		}
+		return Game{}, failure.Errorf(failure.CodeExtractFailed, "the downloads unpacked, but %s is not in them", s.Exe)
 	}
-	if err := os.RemoveAll(gameDir); err != nil {
-		return "", err
-	}
-	if err := os.MkdirAll(gameDir, 0o755); err != nil {
-		return "", err
-	}
-	if err := unpack(ctx, s.Download.Unpack, archive, gameDir); err != nil {
-		return "", err
-	}
-	exe := filepath.Join(gameDir, filepath.FromSlash(s.Exe))
-	if _, err := os.Stat(exe); err != nil {
-		return "", failure.Errorf(failure.CodeExtractFailed, "%s unpacked, but %s is not in it", s.Download.Name, s.Exe)
-	}
-	return exe, nil
+	return game, nil
 }
 
 func WorkDir(s scenario.Scenario) string {
@@ -54,6 +64,13 @@ func WorkDir(s scenario.Scenario) string {
 }
 
 func unpack(ctx context.Context, format, archive, into string) error {
+	if format == "none" {
+		content, err := os.ReadFile(archive)
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(filepath.Join(into, filepath.Base(archive)), content, 0o755)
+	}
 	command := exec.CommandContext(ctx, "tar", "-xf", archive, "-C", into)
 	if format == "7z" && runtime.GOOS == "windows" {
 		command = exec.CommandContext(ctx, "7z", "x", "-y", "-o"+into, archive)

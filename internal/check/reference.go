@@ -55,10 +55,11 @@ func captureReference(ctx context.Context, in ReferenceInput, report *ReferenceR
 		return err
 	}
 	in.Progress("preparing the game files")
-	exe, err := PrepareGame(ctx, in.Scenario, in.CacheDir, WorkDir(in.Scenario))
+	prepared, err := PrepareGame(ctx, in.Scenario, in.CacheDir, WorkDir(in.Scenario))
 	if err != nil {
 		return err
 	}
+	exe := prepared.Exe
 	if err := launch.WriteFiles(in.Profile.Files, windowsPlaces(filepath.Dir(exe))); err != nil {
 		return err
 	}
@@ -81,7 +82,7 @@ func captureReference(ctx context.Context, in ReferenceInput, report *ReferenceR
 	defer log.Close()
 	output := &lockedBuffer{}
 	game := exec.Command(exe, in.Profile.Args...)
-	game.Dir = filepath.Dir(exe)
+	game.Dir = prepared.Cwd
 	game.Env = env
 	game.Stdout = io.MultiWriter(log, output)
 	game.Stderr = game.Stdout

@@ -25,6 +25,7 @@ type Input struct {
 	Profile      fixes.Profile
 	Prefix       string
 	Exe          string
+	Cwd          string
 	Args         []string
 	Output       io.Writer
 	Progress     func(string)
@@ -71,7 +72,10 @@ func Run(ctx context.Context, in Input) (int, error) {
 
 	in.Progress(fmt.Sprintf("starting %s with the %s backend", filepath.Base(exe), in.Profile.Backend))
 	game := exec.CommandContext(ctx, in.Runtime.Wine(tree), slices.Concat([]string{exe}, in.Args, in.Profile.Args)...)
-	game.Dir = filepath.Dir(exe)
+	game.Dir = in.Cwd
+	if game.Dir == "" {
+		game.Dir = filepath.Dir(exe)
+	}
 	game.Env = env
 	game.Stdout = in.Output
 	game.Stderr = in.Output

@@ -19,8 +19,9 @@ func launchCommand(ctx context.Context, args []string, stdout, stderr io.Writer)
 	flags := flag.NewFlagSet("launch", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	gameID := flags.String("game", "", "profile id from the fixes database")
+	cwd := flags.String("cwd", "", "folder to start the game in (default: the exe's folder)")
 	if err := flags.Parse(args); err != nil || *gameID == "" || flags.NArg() == 0 {
-		fmt.Fprint(stderr, "usage: macron launch --game <id> -- <exe> [args]\n")
+		fmt.Fprint(stderr, "usage: macron launch --game <id> [--cwd <dir>] -- <exe> [args]\n")
 		return exitUsage
 	}
 
@@ -32,7 +33,7 @@ func launchCommand(ctx context.Context, args []string, stdout, stderr io.Writer)
 	if err != nil {
 		return fail(stderr, err)
 	}
-	return startGame(ctx, gameStart{Profile: profile, Exe: flags.Arg(0), Args: flags.Args()[1:], WaitForWine: true}, stderr)
+	return startGame(ctx, gameStart{Profile: profile, Exe: flags.Arg(0), Cwd: *cwd, Args: flags.Args()[1:], WaitForWine: true}, stderr)
 }
 
 func killCommand(ctx context.Context, args []string, stdout, stderr io.Writer) int {
@@ -62,6 +63,7 @@ type gameStart struct {
 	Profile     fixes.Profile
 	Prefix      string
 	Exe         string
+	Cwd         string
 	Args        []string
 	WaitForWine bool
 }
@@ -99,6 +101,7 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 		Profile:      in.Profile,
 		Prefix:       prefix,
 		Exe:          in.Exe,
+		Cwd:          in.Cwd,
 		Args:         in.Args,
 		Output:       output,
 		Progress:     progress,
