@@ -70,13 +70,18 @@ Known builds: `1794536281` (stable, 2026-11-13).
 
 ## Games
 
-Every game tried. "Where" is where it was checked: the sandbox/CI runner (virtual M2 Pro, no Metal 3) or Thalles's MacBook (M3).
+Every game tried. The first three are scenarios that pass in CI; the next five come from the game survey (branch `game-survey`, `docs/games.md`), checked by screenshot in a sandbox, not by a scenario. "Where" is where it was checked: the sandbox/CI runner (virtual M2 Pro, no Metal 3) or Thalles's MacBook (M3).
 
 | Game | Engine | Graphics API | Backend | How far | Where | Notes |
 |---|---|---|---|---|---|---|
 | OpenTTD 15.3 (11 MB + OpenGFX/OpenSFX) | OpenTTD (own) | GDI (2D) | wined3d (plain Wine) | menu, matches Windows (menu panel SSIM 0.942, menu text found) | runner, CI | needs FontSubstitutes in its profile: Wine stubs `GetFontResourceInfoW`, so its own font was replaced by Wine's default |
 | Xonotic 0.8.6 (1.24 GB) | DarkPlaces | OpenGL | wined3d + `MACRON_OPENGL=llvmpipe` (software GL) | menu, matches Windows (SSIM 0.953, menu text found) | runner, CI | the runner has no hardware OpenGL: without the switch, `No matching GL pixel format available`; Mesa Zink needs robustness2 nullDescriptor, which MoltenVK lacks. Hardware GL on a real Mac not checked yet |
 | SuperTuxKart 1.5 (922 MB) | Antarctica (Irrlicht fork) | Direct3D 9 (`--render-driver=directx9`) | wined3d, Vulkan renderer (`WINE_D3D_CONFIG=renderer=vulkan`) | menu, matches Windows (SSIM 0.971, menu text found) | runner, CI | DXVK d3d9 can't make a device (MoltenVK lacks geometryShader, shaderCullDistance); no d3dx9_43, so fixed pipeline on both sides |
+| Endless Sky 0.11.4 | its own | OpenGL | wined3d + Mesa llvmpipe | menu (survey, not a scenario) | runner | plain winemac GL: `No matching GL pixel format available` |
+| Unreal Tournament GOTY + OldUnreal 469f | Unreal Engine 1 | OpenGL / D3D9 / D3D11 renderers | OpenGLDrv + Mesa llvmpipe | title screen ("Press ESC to begin."), one key press short of the menu | runner | D3D11Drv under DXVK: black window, endless MoltenVK `VkDescriptorPool exhausted`; D3D9Drv under wined3d-Vulkan: black window |
+| Rigs of Rods 2026.01 | OGRE | Direct3D 9 | wined3d, Vulkan renderer | background only, menu never appears | runner | log stops at `Texture 'accept.png': Loading`; DXVK d3d9: `Cannot create device!` |
+| 0 A.D. 0.28.0 | Pyrogenesis | OpenGL | wined3d + Mesa llvmpipe | crash before the menu | runner | `unhandled exception (Access violation reading 0x00000080)` right after GL comes up |
+| osu!(lazer) 2026.1005.0 | osu-framework (.NET) | Direct3D 11 | DXVK | crash before the menu | runner | its auth module crashes: `Unhandled exception code c0000005`, exit 5 |
 | Direct3D 11 probe (ours, not a game) | none | Direct3D 11 | DXVK | draws its picture, matches Windows (SSIM 0.996) | runner | DXMT: device works, presenting needs a Wine that exports winemac functions |
 
 ## Licences
