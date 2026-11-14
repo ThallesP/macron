@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"sync"
 	"time"
@@ -38,6 +39,12 @@ func (b *lockedBuffer) Write(p []byte) (int, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	return b.buffer.Write(p)
+}
+
+func (b *lockedBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buffer.String()
 }
 
 func (b *lockedBuffer) Contains(text string) bool {
@@ -115,7 +122,7 @@ func (r *macRun) do(ctx context.Context) error {
 		return err
 	}
 	r.stage("starting the game through macron")
-	window, err := r.launchAndWait(ctx, game)
+	window, output, err := r.launchAndWait(ctx, game, r.Scenario.Args, "game.log")
 	defer r.stopGame()
 	if err != nil {
 		return err
@@ -126,6 +133,9 @@ func (r *macRun) do(ctx context.Context) error {
 	frame, err := r.captureWindow(ctx, window)
 	if err != nil {
 		return err
+	}
+	if r.Scenario.FrameRate != nil {
+		r.measureFrameRate(ctx, game, output.String())
 	}
 
 	r.stage("comparing with the reference")
@@ -162,13 +172,31 @@ func (r *macRun) macron(ctx context.Context, logName string, args ...string) err
 	return nil
 }
 
-func (r *macRun) launchAndWait(ctx context.Context, g Game) (MacWindow, error) {
-	log, err := os.Create(filepath.Join(r.Out, "game.log"))
+func (r *macRun) measureFrameRate(ctx context.Context, game Game, measuredOutput string) {
+	r.stopGame()
+	throttleMs := ThrottleMsFor(*r.Scenario.FrameRate)
+	r.stage(fmt.Sprintf("running the probe throttled by %d ms a frame (negative control)", throttleMs))
+	args := append(slices.Clone(r.Scenario.Args), ThrottleArg, strconv.Itoa(throttleMs))
+	_, throttled, err := r.launchAndWait(ctx, game, args, "game-throttled.log")
 	if err != nil {
-		return MacWindow{}, err
+		r.report.Notes = append(r.report.Notes, fmt.Sprintf("the throttled run failed: %s", err))
 	}
+	verdict := EvaluateFrameRate(FrameRateInput{
+		Threshold:       *r.Scenario.FrameRate,
+		MeasuredOutput:  measuredOutput,
+		ThrottleMs:      throttleMs,
+		ThrottledOutput: throttled.String(),
+	})
+	r.report.FrameRate = &verdict
+}
+
+func (r *macRun) launchAndWait(ctx context.Context, g Game, args []string, logName string) (MacWindow, *lockedBuffer, error) {
 	output := &lockedBuffer{}
-	game := exec.Command(r.Macron, append([]string{"launch", "--game", r.Scenario.Game, "--cwd", g.Cwd, "--", g.Exe}, r.Scenario.Args...)...)
+	log, err := os.Create(filepath.Join(r.Out, logName))
+	if err != nil {
+		return MacWindow{}, output, err
+	}
+	game := exec.Command(r.Macron, append([]string{"launch", "--game", r.Scenario.Game, "--cwd", g.Cwd, "--", g.Exe}, args...)...)
 	game.Env = os.Environ()
 	for name, value := range r.Scenario.MacronEnv {
 		game.Env = append(game.Env, name+"="+value)
@@ -178,7 +206,7 @@ func (r *macRun) launchAndWait(ctx context.Context, g Game) (MacWindow, error) {
 	launched := time.Now()
 	if err := game.Start(); err != nil {
 		log.Close()
-		return MacWindow{}, fmt.Errorf("starting macron: %w", err)
+		return MacWindow{}, output, fmt.Errorf("starting macron: %w", err)
 	}
 	exited := make(chan error, 1)
 	go func() {
@@ -194,21 +222,21 @@ func (r *macRun) launchAndWait(ctx context.Context, g Game) (MacWindow, error) {
 		select {
 		case err := <-exited:
 			r.saveWindows(lastWindows)
-			return MacWindow{}, fmt.Errorf("the game ended before reaching its menu (%v); see game.log", err)
+			return MacWindow{}, output, fmt.Errorf("the game ended before reaching its menu (%v); see %s", err, logName)
 		case <-timeout:
 			r.saveWindows(lastWindows)
 			game.Process.Kill()
-			return MacWindow{}, fmt.Errorf("the game did not reach its menu within %ds (window seen: %t, output %q seen: %t)",
+			return MacWindow{}, output, fmt.Errorf("the game did not reach its menu within %ds (window seen: %t, output %q seen: %t)",
 				r.Scenario.Reached.TimeoutSeconds, sawWindow, r.Scenario.Reached.Output, output.Contains(r.Scenario.Reached.Output))
 		case <-ctx.Done():
 			game.Process.Kill()
-			return MacWindow{}, ctx.Err()
+			return MacWindow{}, output, ctx.Err()
 		case <-time.After(2 * time.Second):
 		}
 
 		windows, err := r.helper.Windows(ctx)
 		if err != nil {
-			return MacWindow{}, err
+			return MacWindow{}, output, err
 		}
 		lastWindows = windows
 		window, found := findWindow(windows, pattern.MatchString)
@@ -228,12 +256,12 @@ func (r *macRun) launchAndWait(ctx context.Context, g Game) (MacWindow, error) {
 		r.saveWindows(windows)
 		windows, err = r.helper.Windows(ctx)
 		if err != nil {
-			return MacWindow{}, err
+			return MacWindow{}, output, err
 		}
 		if settled, found := findWindow(windows, pattern.MatchString); found {
 			window = settled
 		}
-		return window, nil
+		return window, output, nil
 	}
 }
 
@@ -322,7 +350,7 @@ func (r *macRun) judge(ctx context.Context, reference, frame image.Image, deskto
 		RecognisedText: text,
 	})
 	r.report.Verdict = &verdict
-	r.report.Passed = verdict.Passed
+	r.report.Passed = verdict.Passed && (r.report.FrameRate == nil || r.report.FrameRate.Passed)
 	r.report.Stage = "done"
 	return nil
 }

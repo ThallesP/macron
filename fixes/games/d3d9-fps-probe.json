@@ -1,0 +1,13 @@
+{
+  "id": "d3d9-fps-probe",
+  "name": "Macron Direct3D 9 frame-rate probe",
+  "steamAppIds": [],
+  "backend": "dxmt",
+  "args": [],
+  "env": {},
+  "dllOverrides": {},
+  "files": [],
+  "registry": [],
+  "installs": [],
+  "notes": "A small Direct3D 9 program from scenarios/d3d9-fps-probe that draws a 2D scene of a few hundred alpha-blended sprites, one draw each, without vsync, and prints its frame rate. Its profile is the default one (dxmt tree: Wine's builtin d3d9 on wined3d's OpenGL renderer), the path a game without a profile such as Ultimate Custom Night takes; MACRON_BACKEND, WINE_D3D_CONFIG and MACRON_OPENGL compare the others."
+}

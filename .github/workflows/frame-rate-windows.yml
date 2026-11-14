@@ -1,0 +1,81 @@
+# Runs the Direct3D 9 frame-rate probe natively on a GitHub Windows runner
+# (Microsoft Basic Render Driver, software Direct3D), 32-bit and 64-bit, in
+# every draw mode, and prints its RESULT lines. These are the Windows numbers a
+# frame-rate threshold is set from (docs/checks.md); never set one from
+# Macron's own output.
+name: Frame rate (Windows)
+
+on:
+  push:
+    paths:
+      - scenarios/d3d9-fps-probe/**
+      - .github/workflows/frame-rate-windows.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MinGW
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq gcc-mingw-w64-x86-64 gcc-mingw-w64-i686
+      - name: Build the probe
+        run: |
+          mkdir -p "$RUNNER_TEMP/probe"
+          scenarios/d3d9-fps-probe/build.sh "$RUNNER_TEMP/probe"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d3d9-fps-probe
+          path: ${{ runner.temp }}/probe
+
+  measure:
+    needs: build
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: d3d9-fps-probe
+          path: probe
+      - name: Machine
+        shell: pwsh
+        run: |
+          Get-CimInstance Win32_VideoController | Format-List Name, DriverVersion, CurrentHorizontalResolution, CurrentVerticalResolution
+          Get-CimInstance Win32_Processor | Format-List Name, NumberOfCores, NumberOfLogicalProcessors
+          Get-CimInstance Win32_OperatingSystem | Format-List Caption, Version
+      - name: Measure
+        shell: bash
+        run: |
+          mkdir -p out
+          echo "| exe | mode | RESULT |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          for exe in probe32 probe64; do
+            for mode in mix up vb tex; do
+              status=0
+              timeout 120 "probe/$exe.exe" "$mode" > "out/$exe-$mode.log" 2>&1 || status=$?
+              echo "== $exe $mode (exit $status)"
+              cat "out/$exe-$mode.log"
+              echo "| $exe | $mode | $(grep -E '^RESULT (fps|present: FAILED|d3d9 device: FAILED)' "out/$exe-$mode.log" | tr '\n' ' ') (exit $status) |" >> "$GITHUB_STEP_SUMMARY"
+            done
+          done
+          grep -h '^RESULT adapter' out/*.log | sort -u >> "$GITHUB_STEP_SUMMARY"
+      - name: Screenshot while the probe presents
+        shell: pwsh
+        run: |
+          $probe = Start-Process -PassThru -FilePath probe/probe32.exe -ArgumentList "mix", "--seconds", "1", "--hold", "20" -RedirectStandardOutput out/screenshot-run.log
+          Start-Sleep -Seconds 10
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+          [System.Drawing.Graphics]::FromImage($bmp).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+          $bmp.Save("out/desktop-probe32-mix.png")
+          $probe.WaitForExit(60000)
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frame-rate-windows
+          path: out/

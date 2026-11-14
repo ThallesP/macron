@@ -1,0 +1,37 @@
+{
+  "name": "d3d9-fps-probe",
+  "title": "Direct3D 9 frame-rate probe (32-bit, 2D sprites)",
+  "game": "d3d9-fps-probe",
+  "build": "build.sh",
+  "exe": "probe32.exe",
+  "cwd": "",
+  "args": ["mix", "--hold", "60"],
+  "macronEnv": {
+    "MACRON_OPENGL": "llvmpipe"
+  },
+  "window": {
+    "title": "^Macron D3D9 fps probe$",
+    "width": 1280,
+    "height": 720
+  },
+  "reached": {
+    "output": "RESULT fps",
+    "settleSeconds": 1,
+    "timeoutSeconds": 900
+  },
+  "compare": {
+    "text": [],
+    "ignore": []
+  },
+  "reference": {
+    "image": "reference.png",
+    "source": "pending"
+  },
+  "frameRate": {
+    "minFps": 0,
+    "minFpsSource": "not set: waits for the MacBook's and the Windows runner's numbers"
+  },
+  "otherGame": "d3d11-probe",
+  "windowsExtra": [],
+  "ci": false
+}

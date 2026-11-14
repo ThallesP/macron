@@ -36,6 +36,15 @@ type Reference struct {
 	Source string `json:"source"`
 }
 
+type FrameRate struct {
+	MinFPS       float64 `json:"minFps"`
+	MinFPSSource string  `json:"minFpsSource"`
+}
+
+func (f FrameRate) HasThreshold() bool {
+	return f.MinFPS > 0
+}
+
 type Download struct {
 	wineruntime.Archive
 	Unpack string `json:"unpack"`
@@ -59,10 +68,13 @@ type Scenario struct {
 	Reference    Reference         `json:"reference"`
 	OtherGame    string            `json:"otherGame"`
 	WindowsExtra []string          `json:"windowsExtra"`
+	FrameRate    *FrameRate        `json:"frameRate,omitempty"`
 	CI           bool              `json:"ci"`
 
 	Dir string `json:"-"`
 }
+
+const FrameRateLine = "RESULT fps"
 
 var (
 	validName     = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
@@ -131,6 +143,15 @@ func (s Scenario) validate() error {
 	}
 	if s.Reference.Image == "" || s.Reference.Source == "" {
 		return invalid("reference needs an image and where it came from")
+	}
+	if s.FrameRate != nil && (s.FrameRate.MinFPS < 0 || s.FrameRate.MinFPSSource == "") {
+		return invalid("frameRate needs a minFps of 0 or more and a minFpsSource saying where it came from, or that it is not set yet")
+	}
+	if s.FrameRate != nil && s.CI && !s.FrameRate.HasThreshold() {
+		return invalid("a frame-rate scenario runs in CI only with a threshold (frameRate.minFps above 0)")
+	}
+	if s.FrameRate != nil && s.Reached.Output != FrameRateLine {
+		return invalid("a frame-rate scenario is reached when the probe prints %q", FrameRateLine)
 	}
 	for _, extra := range s.WindowsExtra {
 		if !slices.Contains(windowsExtras, extra) {
