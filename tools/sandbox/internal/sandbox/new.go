@@ -19,12 +19,12 @@ func (a *App) New(ctx context.Context, in NewInput) (Sandbox, error) {
 		return Sandbox{}, err
 	}
 
-	id := newID()
-	if err := a.Store.Create(id); err != nil {
-		return Sandbox{}, err
-	}
 	seal, err := newSealKey()
 	if err != nil {
+		return Sandbox{}, err
+	}
+	id := newID()
+	if err := a.Store.Create(id); err != nil {
 		return Sandbox{}, err
 	}
 
