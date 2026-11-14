@@ -44,6 +44,30 @@ macron-check sandbox d3d11-probe     # the whole check in a fresh sbx sandbox; e
 
 CI runs every scenario marked `"ci": true` on each push to `main` (`.github/workflows/scenarios.yml`). References come from the `Reference` workflow on a Windows runner.
 
+## Steam hook (`macron steam`)
+
+The Mac Steam client ships Linux Steam's compatibility-tool code: it scans `compatibilitytools.d` and reads `CompatToolMapping` from `config.vdf`. The hook registers Macron there the way Steam expects.
+
+```sh
+macron steam status    # which Steam build this is, and whether Macron is registered
+macron steam enable    # register Macron and make it the default tool for every app (AppID 0)
+macron steam disable   # put config.vdf's old AppID 0 mapping back and remove Macron's tool folder
+```
+
+All three take `--steam-dir <dir>` (default `~/Library/Application Support/Steam`) and `--json`. Quit Steam first: it rewrites `config.vdf` when it exits, so `enable` and `disable` refuse (`STEAM_RUNNING`) while `steam_osx` runs. `steam_osx -shutdown` quits it from a script.
+
+`enable` writes `compatibilitytools.d/macron/` (`compatibilitytool.vdf`, a version 2 `toolmanifest.vdf` whose command line is `/macron %verb%`, and a link to the `macron` binary, so Steam calls `macron waitforexitandrun <game>`), backs `config.vdf` up to `config.vdf.before-macron`, and maps AppID 0 to `macron`. It changes nothing inside Steam's app bundle.
+
+`enable` only runs on a Steam build it knows: the SHA-256 of `steamclient.dylib` and `steam_osx` in `Steam.AppBundle/Steam/Contents/MacOS/` must match a row of `KnownBuilds` in `internal/steamhook/builds.go`. Anything else exits 125 with `UNKNOWN_STEAM_BUILD`, the observed build id and hashes, and changes nothing. `disable` works on any build, so it still undoes the hook after Steam updates itself.
+
+Steam updates itself, so the known build goes stale. When the `Steam hook` workflow fails with "Steam build not in the table", add the new build:
+
+1. Take the build id and the two hashes from the failed run's log (or run `macron steam status` on a Mac with the new Steam).
+2. Add a row to `KnownBuilds` with that id and those hashes. Keep the old rows: people who have not updated yet still run them.
+3. Push; the workflow applies the hook to the new build, restarts Steam and checks it reaches its login window again.
+
+Known builds: `1794536281` (stable, 2026-11-13).
+
 ## Games
 
 Every game tried. "Where" is where it was checked: the sandbox/CI runner (virtual M2 Pro, no Metal 3) or Thalles's MacBook (M3).
@@ -64,6 +88,7 @@ Every game tried. "Where" is where it was checked: the sandbox/CI runner (virtua
 | DXVK-macOS 1.10.3-20230507 (Gcenx/DXVK-macOS) | zlib | downloaded at install time, unmodified (the `dxvk` backend) |
 | Mesa 26.1.8 for Windows (pal1000/mesa-dist-win) | MIT | downloaded on Windows runners for OpenGL references, and by macron when `MACRON_OPENGL=llvmpipe` |
 | Go standard library | BSD 3-Clause | built into macron and macron-check |
+| Steam for Mac (Valve) | proprietary | installed by the `Steam hook` workflow to test against; never redistributed, the repo keeps only file hashes |
 
 Macron itself has no licence yet (see PROGRESS.md, "Needs Thalles").
 

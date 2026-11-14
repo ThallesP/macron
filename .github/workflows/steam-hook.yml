@@ -1,0 +1,123 @@
+name: Steam hook
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - internal/steamhook/**
+      - cmd/macron/steam.go
+      - ci/steam-hook/**
+      - .github/workflows/steam-hook.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  steam:
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      EVIDENCE: ${{ github.workspace }}/evidence
+      WINDOWS_BIN: ${{ github.workspace }}/bin/windows
+      STEAM_DIR: /Users/runner/Library/Application Support/Steam
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Build macron and the window lister
+        run: |
+          set -euo pipefail
+          mkdir -p bin "$EVIDENCE"
+          go build -o bin/macron ./cmd/macron
+          swiftc -O ci/steam-hook/windows.swift -o bin/windows
+
+      - name: Install the current Steam and wait for its login window
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/steam.dmg" https://cdn.cloudflare.steamstatic.com/client/installer/steam.dmg
+          hdiutil attach -nobrowse -noverify -mountpoint "$RUNNER_TEMP/steamdmg" "$RUNNER_TEMP/steam.dmg"
+          cp -R "$RUNNER_TEMP/steamdmg/Steam.app" /Applications/
+          hdiutil detach "$RUNNER_TEMP/steamdmg"
+          open -a /Applications/Steam.app
+          ci/steam-hook/steam.sh wait-login 0 1500
+          screencapture -x "$EVIDENCE/1-before-hook.png"
+
+      - name: Apply the hook
+        run: |
+          set -euo pipefail
+          ci/steam-hook/steam.sh shutdown
+          bin/macron steam status | tee "$EVIDENCE/status-before.txt"
+          if ! bin/macron steam enable > "$EVIDENCE/enable.txt" 2> "$EVIDENCE/enable.err"; then
+            cat "$EVIDENCE/enable.err"
+            build=$(bin/macron steam status --json | sed -E 's/.*"id":"([^"]*)".*/\1/')
+            echo "::error title=Steam build not in the table::The current Steam build is $build; macron steam enable refused it: $(cat "$EVIDENCE/enable.err"). README.md \"Steam hook\" says how to add it."
+            exit 1
+          fi
+          cat "$EVIDENCE/enable.txt"
+          grep -q '^tool registered: true$' "$EVIDENCE/enable.txt"
+          grep -q '^default tool:    true$' "$EVIDENCE/enable.txt"
+          ls -la "$STEAM_DIR/compatibilitytools.d/macron"
+
+      - name: Restart Steam and wait for its login window
+        run: |
+          set -euo pipefail
+          login_lines=$(wc -l < "$STEAM_DIR/logs/steamui_login.txt")
+          open -a /Applications/Steam.app
+          ci/steam-hook/steam.sh wait-login "$login_lines" 600 | tee "$EVIDENCE/login-after-hook.txt"
+          sleep 5
+          screencapture -x "$EVIDENCE/2-after-hook.png"
+          "$WINDOWS_BIN" > "$EVIDENCE/windows-after-hook.txt"
+          echo "Steam's compat log:"
+          cat "$STEAM_DIR/logs/compat_log.txt"
+          grep -q 'Mapping AppID 0 to tool "macron"' "$STEAM_DIR/logs/compat_log.txt" \
+            || { echo "::error::Steam did not read the macron mapping"; exit 1; }
+
+      - name: Steam keeps the mapping when it quits, and disable restores the config
+        run: |
+          set -euo pipefail
+          ci/steam-hook/steam.sh shutdown
+          grep -A3 '"CompatToolMapping"' "$STEAM_DIR/config/config.vdf"
+          bin/macron steam status | grep -q '^default tool:    true$' \
+            || { echo "::error::Steam dropped the macron mapping when it quit"; exit 1; }
+          bin/macron steam disable | tee "$EVIDENCE/disable.txt"
+          grep -q '^tool registered: false$' "$EVIDENCE/disable.txt"
+          grep -q '^default tool:    false$' "$EVIDENCE/disable.txt"
+          if grep -q '"macron"' "$STEAM_DIR/config/config.vdf"; then
+            echo "::error::config.vdf still names macron after disable"
+            exit 1
+          fi
+          [ ! -e "$STEAM_DIR/compatibilitytools.d/macron" ]
+
+      - name: The hook refuses an altered client and changes nothing
+        run: |
+          set -euo pipefail
+          altered="$RUNNER_TEMP/altered-steam"
+          cp -cR "$STEAM_DIR" "$altered"
+          printf 'x' >> "$altered/Steam.AppBundle/Steam/Contents/MacOS/steamclient.dylib"
+          listing() { find "$altered" -print0 | xargs -0 stat -f '%N %z %m %p' | sort | shasum -a 256; }
+          before=$(listing)
+          code=0
+          bin/macron steam enable --steam-dir "$altered" > "$EVIDENCE/refusal.txt" 2> "$EVIDENCE/refusal.err" || code=$?
+          cat "$EVIDENCE/refusal.err"
+          [ "$code" = 125 ] || { echo "::error::enable exited $code on an altered client, want 125"; exit 1; }
+          grep -q 'UNKNOWN_STEAM_BUILD' "$EVIDENCE/refusal.err"
+          [ "$(listing)" = "$before" ] || { echo "::error::enable changed files on an altered client"; exit 1; }
+          echo "Refused with exit $code and changed nothing."
+
+      - name: Collect Steam's logs
+        if: always()
+        run: |
+          for log in compat_log.txt steamui_login.txt bootstrap_log.txt; do
+            cp "$STEAM_DIR/logs/$log" "$EVIDENCE/" 2>/dev/null || true
+          done
+          screencapture -x "$EVIDENCE/3-end.png" || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: steam-hook-evidence
+          path: evidence
+          retention-days: 30
