@@ -33,8 +33,8 @@
   "cwd": "",
   "window": { "title": "^OpenTTD", "width": 800, "height": 600 },
   "reached": { "output": "", "settleSeconds": 20, "timeoutSeconds": 900 },
-  "compare": { "text": [], "ignore": [] },
-  "reference": { "image": "reference.png", "source": "pending" },
+  "compare": { "text": ["New Game", "Load Game", "Game Options", "Scenario Editor", "Quit"], "ignore": [] },
+  "reference": { "image": "reference.png", "source": "windows-latest, GDI, https://github.com/ThallesP/macron/actions/runs/43561567772 (two captures 5 s apart: SSIM 0.949, the title game moves behind the menu)" },
   "otherGame": "d3d11-probe",
   "windowsExtra": [],
   "ci": false
