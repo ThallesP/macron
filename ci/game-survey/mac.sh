@@ -14,6 +14,10 @@ WINE_URL=https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.21/wine
 WINE_SHA=9909b486657e10ab66c7279371ae1f990345b596b3b1b3a0cf21f28af24fa0ce
 DXMT_URL=https://github.com/3Shain/dxmt/releases/download/v0.80/dxmt-v0.80-builtin.tar.gz
 DXMT_SHA=8f260e36b5739e68f3bad613381441385c4dc7b85b78ba8de653d5a6a264529d
+DXVK_URL=https://github.com/Gcenx/DXVK-macOS/releases/download/v1.10.3-20230507/dxvk-macOS-async-v1.10.3-20230507.tar.gz
+DXVK_SHA=f67d99d0a8eeedd7d406b283a3df9f939b5965acb00efcb33d0c6235c195a516
+MESA_URL=https://github.com/pal1000/mesa-dist-win/releases/download/26.1.8/mesa3d-26.1.8-release-msvc.7z
+MESA_SHA=4c6d32e653e0ff9ad07796e40c0bcfabf2764d849e3ce4f3b1590112c87e42f9
 
 timeout_run() { perl -e 'alarm shift; exec @ARGV' "$@"; }
 
@@ -68,12 +72,17 @@ run() {
     log "wineboot took $(( $(date +%s) - t ))s"
   fi
 
-  # The runner's paravirtual GPU has no accelerated OpenGL renderer, only
-  # "Apple Software Renderer", which winemac ignores unless this is set.
-  if [ "${MAC_SOFTWARE_GL:-1}" = 1 ]; then
-    "$wine" reg add 'HKCU\Software\Wine\Mac Driver' /v AllowSoftwareRendering /t REG_SZ /d y /f >/dev/null 2>&1
-    log "AllowSoftwareRendering=y"
+  local backend overrides="mscoree,mshtml=;winemenubuilder.exe=d"
+  backend=$(jq -r .backend <<<"$spec")
+  if [ "$backend" = dxvk ]; then
+    # DXVK-macOS over MoltenVK, set up the way main's launcher does it.
+    local dxvk sys32=$WINEPREFIX/drive_c/windows/system32
+    dxvk=$(fetch "$DXVK_URL" "$DXVK_SHA")
+    rm -rf "$GS/dxvk" && mkdir -p "$GS/dxvk" && tar -xzf "$dxvk" -C "$GS/dxvk" 2>/dev/null
+    cp -f "$GS"/dxvk/*/x64/{d3d11,d3d10core,dxgi}.dll "$sys32/"
+    overrides="$overrides;d3d11,d3d10core,dxgi=n"
   fi
+  export WINEDLLOVERRIDES=$overrides
   local k v
   while IFS='=' read -r k v; do
     [ -n "$k" ] && export "$k=$v" && log "env $k=$v"
@@ -112,6 +121,36 @@ run() {
   cwd=$(jq -r '.cwd // empty' <<<"$spec")
   if [ -n "$cwd" ]; then cwd=$root/$cwd; else cwd=$(dirname "$exe"); fi
 
+  # One-time steps after unpacking, moves, and configs derived from shipped files.
+  local np step_exe step_cwd
+  np=$(jq '.prelaunch // [] | length' <<<"$spec")
+  for (( i = 0; i < np; i++ )); do
+    step_exe=$root/$(jq -r ".prelaunch[$i].exe" <<<"$spec")
+    step_cwd=$root/$(jq -r ".prelaunch[$i].cwd" <<<"$spec")
+    local step_args=()
+    while IFS= read -r a; do step_args+=("$a"); done < <(jq -r ".prelaunch[$i].args[]" <<<"$spec")
+    local rc=0
+    (cd "$step_cwd" && timeout_run 300 "$wine" "$step_exe" "${step_args[@]}") >>"$out/prelaunch.log" 2>&1 || rc=$?
+    log "prelaunch $(basename "$step_exe") ${step_args[*]}: exit $rc"
+  done
+  local nm
+  nm=$(jq '.moves // [] | length' <<<"$spec")
+  for (( i = 0; i < nm; i++ )); do
+    mv -f "$root/$(jq -r ".moves[$i].from" <<<"$spec")" "$root/$(jq -r ".moves[$i].to" <<<"$spec")" || log "move $i failed"
+  done
+  local nd from
+  nd=$(jq '.derive // [] | length' <<<"$spec")
+  for (( i = 0; i < nd; i++ )); do
+    from=$(jq -r ".derive[$i].from" <<<"$spec"); from=${from//\{game\}/$root}
+    to=$(jq -r ".derive[$i].to" <<<"$spec"); to=${to//\{game\}/$root}
+    jq -r ".derive[$i].replace[] | @json" <<<"$spec" > "$GS/replace.json"
+    python3 -I -c 'import json,sys
+s=open(sys.argv[1],encoding="latin-1").read()
+for line in open(sys.argv[3]): a,b=json.loads(line); s=s.replace(a,b)
+open(sys.argv[2],"w",encoding="latin-1").write(s)' "$from" "$to" "$GS/replace.json"
+    log "derived $to"
+  done
+
   local nf to
   nf=$(jq '.files // [] | length' <<<"$spec")
   for (( i = 0; i < nf; i++ )); do
@@ -121,6 +160,19 @@ run() {
     cp "$HERE/config/$(jq -r ".files[$i].from" <<<"$spec")" "$to"
     log "wrote $to"
   done
+
+  if [ "$(jq -r .opengl <<<"$spec")" = true ]; then
+    # Stock winemac only offers accelerated GL pixel formats and this GPU has
+    # none, so OpenGL games get Mesa's llvmpipe opengl32.dll next to the exe,
+    # the same renderer the Windows reference uses. It presents through GDI.
+    local mesa
+    mesa=$(fetch "$MESA_URL" "$MESA_SHA")
+    7zz x -y "-o$GS/mesa" "$mesa" x64/opengl32.dll x64/libgallium_wgl.dll >/dev/null
+    cp -f "$GS"/mesa/x64/*.dll "$(dirname "$exe")/"
+    export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;opengl32=n,b" GALLIUM_DRIVER=llvmpipe
+    log "Mesa llvmpipe opengl32.dll placed next to the exe"
+  fi
+  log "WINEDLLOVERRIDES=$WINEDLLOVERRIDES"
 
   local args=()
   while IFS= read -r a; do args+=("$a"); done < <(jq -r '.args[]' <<<"$spec")

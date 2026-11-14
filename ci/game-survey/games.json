@@ -201,7 +201,7 @@
         }
       ],
       "opengl": false,
-      "backend": "dxmt",
+      "backend": "dxvk",
       "shots": [
         30,
         60,
@@ -211,7 +211,7 @@
         "{appdata}/osu/logs/*.log"
       ],
       "mac_env": {
-        "WINEDLLOVERRIDES": "mshtml=;winemenubuilder.exe=d"
+        "WINEDLLOVERRIDES": "mshtml=;winemenubuilder.exe=d;d3d11,d3d10core,dxgi=n"
       }
     },
     "endlesssky": {
@@ -262,6 +262,110 @@
         120
       ],
       "logs": []
+    },
+    "ut99": {
+      "downloads": [
+        {
+          "url": "https://files.oldunreal.net/UT_GOTY_CD1.ISO",
+          "sha256": "e184984ca88f001c5ddd52035d76cd64e266e26c74975161b5ed72366c74704f",
+          "extract": "7z",
+          "into": "."
+        },
+        {
+          "url": "https://github.com/OldUnreal/UnrealTournamentPatches/releases/download/v469f-rc6/OldUnreal-UTPatch469f-Windows-amd64.zip",
+          "sha256": "b8de78a4dca46ec8d56fbcd4f1f4bdc41796a1c480f184308b1b1646e7129fdc",
+          "extract": "zip",
+          "into": "."
+        }
+      ],
+      "prelaunch": [
+        {
+          "exe": "System/UCC.exe",
+          "args": [
+            "decompress",
+            "../Maps/CityIntro.unr.uz",
+            "-nohomedir"
+          ],
+          "cwd": "System"
+        },
+        {
+          "exe": "System/UCC.exe",
+          "args": [
+            "decompress",
+            "../Maps/Entry.unr.uz",
+            "-nohomedir"
+          ],
+          "cwd": "System"
+        },
+        {
+          "exe": "System/UCC.exe",
+          "args": [
+            "decompress",
+            "../Maps/UT-Logo-Map.unr.uz",
+            "-nohomedir"
+          ],
+          "cwd": "System"
+        }
+      ],
+      "moves": [
+        {
+          "from": "System/CityIntro.unr",
+          "to": "Maps/CityIntro.unr"
+        },
+        {
+          "from": "System/Entry.unr",
+          "to": "Maps/Entry.unr"
+        },
+        {
+          "from": "System/UT-Logo-Map.unr",
+          "to": "Maps/UT-Logo-Map.unr"
+        }
+      ],
+      "derive": [
+        {
+          "from": "{game}/System/Default.ini",
+          "to": "{game}/System/UnrealTournament.ini",
+          "replace": [
+            [
+              "GameRenderDevice=OpenGLDrv.OpenGLRenderDevice",
+              "GameRenderDevice=D3D11Drv.D3D11RenderDevice"
+            ],
+            [
+              "StartupFullscreen=True",
+              "StartupFullscreen=False"
+            ],
+            [
+              "WindowedViewportX=1024",
+              "WindowedViewportX=800"
+            ],
+            [
+              "WindowedViewportY=768",
+              "WindowedViewportY=600"
+            ],
+            [
+              "FirstRun=0",
+              "FirstRun=469"
+            ]
+          ]
+        }
+      ],
+      "exe": "System/UnrealTournament.exe",
+      "args": [
+        "-nohomedir"
+      ],
+      "opengl": false,
+      "backend": "dxvk",
+      "mac_env": {
+        "WINEDLLOVERRIDES": "mscoree,mshtml=;winemenubuilder.exe=d;d3d11,d3d10core,dxgi=n"
+      },
+      "shots": [
+        30,
+        60,
+        120
+      ],
+      "logs": [
+        "{game}/System/UnrealTournament.log"
+      ]
     }
   }
 }

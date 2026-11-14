@@ -101,6 +101,22 @@ if (-not (Test-Path $exe)) {
 }
 $cwd = if ($spec.cwd) { Join-Path $root $spec.cwd } else { Split-Path $exe }
 
+# One-time steps a game needs after unpacking (UT99: decompress its maps).
+foreach ($step in $spec.prelaunch) {
+  $p = Start-Process -FilePath (Join-Path $root $step.exe) -ArgumentList $step.args -WorkingDirectory (Join-Path $root $step.cwd) -Wait -PassThru -NoNewWindow
+  Log "prelaunch $($step.exe) $($step.args -join ' '): exit $($p.ExitCode)"
+}
+foreach ($m in $spec.moves) {
+  Move-Item -Force (Join-Path $root $m.from) (Join-Path $root $m.to)
+}
+# Config files made from a file the game ships, with text replaced.
+foreach ($d in $spec.derive) {
+  $text = Get-Content -Raw (Expand-Path $d.from)
+  foreach ($r in $d.replace) { $text = $text.Replace($r[0], $r[1]) }
+  Set-Content -NoNewline (Expand-Path $d.to) $text
+  Log "derived $(Expand-Path $d.to)"
+}
+
 foreach ($f in $spec.files) {
   $to = Expand-Path $f.to
   New-Item -ItemType Directory -Force (Split-Path $to) | Out-Null
