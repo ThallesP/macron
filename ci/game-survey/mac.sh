@@ -79,8 +79,8 @@ run() {
     local dxvk sys32=$WINEPREFIX/drive_c/windows/system32
     dxvk=$(fetch "$DXVK_URL" "$DXVK_SHA")
     rm -rf "$GS/dxvk" && mkdir -p "$GS/dxvk" && tar -xzf "$dxvk" -C "$GS/dxvk" 2>/dev/null
-    cp -f "$GS"/dxvk/*/x64/{d3d11,d3d10core,dxgi}.dll "$sys32/"
-    overrides="$overrides;d3d11,d3d10core,dxgi=n"
+    cp -f "$GS"/dxvk/*/x64/{d3d9,d3d11,d3d10core,dxgi}.dll "$sys32/"
+    overrides="$overrides;d3d9,d3d11,d3d10core,dxgi=n"
   fi
   export WINEDLLOVERRIDES=$overrides
   local k v
@@ -155,7 +155,7 @@ open(sys.argv[2],"w",encoding="latin-1").write(s)' "$from" "$to" "$GS/replace.js
   nf=$(jq '.files // [] | length' <<<"$spec")
   for (( i = 0; i < nf; i++ )); do
     to=$(jq -r ".files[$i].to" <<<"$spec")
-    to=${to//\{game\}/$root}; to=${to//\{appdata\}/$appdata}
+    to=${to//\{game\}/$root}; to=${to//\{appdata\}/$appdata}; to=${to//\{documents\}/$WINEPREFIX/drive_c/users/$USER/Documents}
     mkdir -p "$(dirname "$to")"
     cp "$HERE/config/$(jq -r ".files[$i].from" <<<"$spec")" "$to"
     log "wrote $to"
@@ -196,8 +196,8 @@ open(sys.argv[2],"w",encoding="latin-1").write(s)' "$from" "$to" "$GS/replace.js
   timeout_run 30 "$GS/wineroot/bin/wineserver" -k || true
   local l p
   while IFS= read -r l; do
-    p=${l//\{game\}/$root}; p=${p//\{appdata\}/$appdata}
-    for f in $p; do [ -f "$f" ] && cp "$f" "$out/" || true; done
+    p=${l//\{game\}/$root}; p=${p//\{appdata\}/$appdata}; p=${p//\{documents\}/$WINEPREFIX/drive_c/users/$USER/Documents}
+    if [ -f "$p" ]; then cp "$p" "$out/"; else for f in $p; do [ -f "$f" ] && cp "$f" "$out/" || true; done; fi
   done < <(jq -r '.logs[]?' <<<"$spec")
   grep -iE 'err:|dxmt|metal|failed|exception|error' "$out/wine.log" | sort | uniq -c | sort -rn | head -40 > "$out/wine-errors.txt" || true
   log done

@@ -342,6 +342,10 @@
             [
               "FirstRun=0",
               "FirstRun=469"
+            ],
+            [
+              "LocalMap=CityIntro.unr",
+              "LocalMap=UT-Logo-Map.unr"
             ]
           ]
         }
@@ -352,9 +356,6 @@
       ],
       "opengl": false,
       "backend": "dxvk",
-      "mac_env": {
-        "WINEDLLOVERRIDES": "mscoree,mshtml=;winemenubuilder.exe=d;d3d11,d3d10core,dxgi=n"
-      },
       "shots": [
         30,
         60,
@@ -383,9 +384,24 @@
         120
       ],
       "logs": [
-        "{documents}/My Games/Rigs of Rods/logs/RoR.log",
-        "{documents}/Rigs of Rods 2026.01/logs/RoR.log"
+        "{documents}/My Games/Rigs of Rods/logs/RoR.log"
+      ],
+      "files": [
+        {
+          "from": "ror/ogre.cfg",
+          "to": "{documents}/My Games/Rigs of Rods/config/ogre.cfg"
+        }
       ]
+    },
+    "stk-d3d9-dxvk": {
+      "same_as": "stk",
+      "args": [
+        "--windowed",
+        "--screensize=800x600",
+        "--render-driver=directx9"
+      ],
+      "opengl": false,
+      "backend": "dxvk"
     }
   }
 }
