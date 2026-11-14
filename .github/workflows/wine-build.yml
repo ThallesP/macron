@@ -1,0 +1,73 @@
+# Builds Macron's patched winemac.so (runtime/wine) on a GitHub macOS runner
+# and, when started on main, publishes it as a release asset that
+# internal/wineruntime pins by URL and SHA-256. Wine is LGPL: the release
+# carries the patch and names the exact source it was built from.
+#
+# Manual trigger only. Never add a pull_request, push or schedule trigger here.
+name: Wine build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build winemac.so and check it against Gcenx's
+        run: runtime/wine/build-winemac.sh "$RUNNER_TEMP/work" out
+      - name: Summary
+        if: always()
+        run: |
+          { echo '```'; cat out/abi-check.txt; cat out/*.sha256; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wine-overlay
+          path: out/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: wine-overlay
+          path: out
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          . runtime/wine/release.env
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "$RELEASE_TAG is already published; bump RELEASE_TAG in runtime/wine/release.env" >&2
+            exit 1
+          fi
+          sha=$(cut -d ' ' -f 1 "out/$ASSET_NAME.sha256")
+          patch=$(cd out && ls *.patch)
+          {
+            echo "Wine $WINE_VERSION's Mac driver (\`winemac.so\`, x86_64) with Macron's patches, as an overlay for Gcenx's [wine-devel $WINE_VERSION]($GCENX_WINE_URL) build. Unpack it over that Wine tree. It lets DXMT present Direct3D frames to a window."
+            echo
+            echo "- \`$ASSET_NAME\`: SHA-256 \`$sha\`"
+            echo "- Source: Wine \`wine-$WINE_VERSION\` (https://gitlab.winehq.org/wine/wine/-/tree/wine-$WINE_VERSION), built from $WINE_SOURCE_URL (SHA-256 \`$WINE_SOURCE_SHA256\`) with [\`$patch\`]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/runtime/wine/patches/$patch), attached below and in the archive."
+            echo "- Built by $RUN_URL from $GITHUB_SHA."
+            echo
+            echo "Wine and this patch are licensed under the GNU LGPL 2.1 or later; the licence text is in the archive under \`share/doc/macron-wine/COPYING.LIB\`. What the patch does: [runtime/wine/patches/README.md]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/runtime/wine/patches/README.md)."
+            echo
+            echo "ABI check against Gcenx's build:"
+            echo '```'
+            cat out/abi-check.txt
+            echo '```'
+          } > notes.md
+          gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --title "Wine $WINE_VERSION for Macron (${RELEASE_TAG#runtime-wine-})" \
+            --notes-file notes.md "out/$ASSET_NAME" "out/$ASSET_NAME.sha256" "out/$patch"
