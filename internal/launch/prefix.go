@@ -11,51 +11,92 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ThallesP/macron/fixes"
 	"github.com/ThallesP/macron/internal/failure"
 	"github.com/ThallesP/macron/internal/wineruntime"
 )
 
 type prefixRecord struct {
-	Runtime string           `json:"runtime"`
-	Tree    wineruntime.Tree `json:"tree"`
+	Runtime string        `json:"runtime"`
+	Backend fixes.Backend `json:"backend"`
+}
+
+type PrefixInput struct {
+	Runtime  wineruntime.Installed
+	Backend  fixes.Backend
+	Prefix   string
+	Env      []string
+	Output   io.Writer
+	Progress func(string)
 }
 
 const prefixMarker = ".macron-prefix.json"
 
-func EnsurePrefix(ctx context.Context, runtime wineruntime.Installed, tree wineruntime.Tree, prefix string, env []string, output io.Writer, progress func(string)) error {
-	want := prefixRecord{Runtime: runtime.Version, Tree: tree}
+func EnsurePrefix(ctx context.Context, in PrefixInput) error {
+	want := prefixRecord{Runtime: in.Runtime.Version, Backend: in.Backend}
 	var have prefixRecord
-	if recorded, err := os.ReadFile(filepath.Join(prefix, prefixMarker)); err == nil && json.Unmarshal(recorded, &have) == nil && have == want {
+	if recorded, err := os.ReadFile(filepath.Join(in.Prefix, prefixMarker)); err == nil && json.Unmarshal(recorded, &have) == nil && have == want {
 		return nil
 	}
-	if err := os.MkdirAll(prefix, 0o755); err != nil {
+	if err := os.MkdirAll(in.Prefix, 0o755); err != nil {
 		return err
 	}
 
-	progress(fmt.Sprintf("preparing the Windows environment at %s", prefix))
+	tree := backendTrees[in.Backend]
+	in.Progress(fmt.Sprintf("preparing the Windows environment at %s", in.Prefix))
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
-	boot := exec.CommandContext(ctx, runtime.Wine(tree), "wineboot", "-u")
-	boot.Env = env
-	boot.Stdout = output
-	boot.Stderr = output
+	boot := exec.CommandContext(ctx, in.Runtime.Wine(tree), "wineboot", "-u")
+	boot.Env = in.Env
+	boot.Stdout = in.Output
+	boot.Stderr = in.Output
 	if err := boot.Run(); err != nil {
 		return failure.Errorf(failure.CodePrefixFailed, "wineboot failed: %s", err)
 	}
-	wait := exec.CommandContext(ctx, runtime.Wineserver(tree), "-w")
-	wait.Env = env
+	wait := exec.CommandContext(ctx, in.Runtime.Wineserver(tree), "-w")
+	wait.Env = in.Env
 	if err := wait.Run(); err != nil {
 		return failure.Errorf(failure.CodePrefixFailed, "waiting for wineboot to finish: %s", err)
 	}
-	if err := makeUserFoldersPrivate(prefix); err != nil {
+	if err := makeUserFoldersPrivate(in.Prefix); err != nil {
 		return err
+	}
+	if in.Backend == fixes.BackendDXVK {
+		if err := installDXVK(in.Runtime, in.Prefix); err != nil {
+			return err
+		}
 	}
 
 	recorded, err := json.Marshal(want)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filepath.Join(prefix, prefixMarker), recorded, 0o644)
+	return os.WriteFile(filepath.Join(in.Prefix, prefixMarker), recorded, 0o644)
+}
+
+func installDXVK(runtime wineruntime.Installed, prefix string) error {
+	windows := filepath.Join(prefix, "drive_c", "windows")
+	folders := map[wineruntime.DXVKBits]string{wineruntime.DXVK64: "system32", wineruntime.DXVK32: "syswow64"}
+	for bits, folder := range folders {
+		target := filepath.Join(windows, folder)
+		if _, err := os.Stat(target); err != nil {
+			continue
+		}
+		dlls, err := filepath.Glob(filepath.Join(runtime.DXVK(bits), "*.dll"))
+		if err != nil {
+			return err
+		}
+		for _, dll := range dlls {
+			content, err := os.ReadFile(dll)
+			if err != nil {
+				return err
+			}
+			if err := os.WriteFile(filepath.Join(target, filepath.Base(dll)), content, 0o644); err != nil {
+				return failure.Errorf(failure.CodePrefixFailed, "putting DXVK's %s into %s: %s", filepath.Base(dll), folder, err)
+			}
+		}
+	}
+	return nil
 }
 
 func makeUserFoldersPrivate(prefix string) error {

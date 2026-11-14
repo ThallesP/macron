@@ -16,11 +16,12 @@ type Backend string
 
 const (
 	BackendDXMT    Backend = "dxmt"
+	BackendDXVK    Backend = "dxvk"
 	BackendWineD3D Backend = "wined3d"
 )
 
 func (b Backend) IsKnown() bool {
-	return b == BackendDXMT || b == BackendWineD3D
+	return b == BackendDXMT || b == BackendDXVK || b == BackendWineD3D
 }
 
 type File struct {

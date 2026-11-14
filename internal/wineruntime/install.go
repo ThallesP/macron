@@ -36,6 +36,17 @@ func (r Installed) Wineserver(tree Tree) string {
 	return filepath.Join(r.Root(tree), "bin", "wineserver")
 }
 
+func (r Installed) DXVK(bits DXVKBits) string {
+	return filepath.Join(r.Dir, "dxvk", string(bits))
+}
+
+type DXVKBits string
+
+const (
+	DXVK64 DXVKBits = "x64"
+	DXVK32 DXVKBits = "x32"
+)
+
 const installedMarker = "installed.json"
 
 var dxmtArchitectures = []string{"x86_64-windows", "x86_64-unix", "i386-windows"}
@@ -68,6 +79,11 @@ func Install(ctx context.Context, layout Layout, manifest Manifest, progress fun
 	if err != nil {
 		return Installed{}, err
 	}
+	progress(fmt.Sprintf("downloading %s", manifest.DXVK.Name))
+	dxvkArchive, err := Download(ctx, layout.DownloadsDir(), manifest.DXVK)
+	if err != nil {
+		return Installed{}, err
+	}
 
 	dir := layout.RuntimeDir(manifest.Version)
 	staging := dir + ".partial"
@@ -82,6 +98,10 @@ func Install(ctx context.Context, layout Layout, manifest Manifest, progress fun
 	}
 	progress("adding DXMT")
 	if err := addDXMT(ctx, dxmtArchive, staging); err != nil {
+		return Installed{}, err
+	}
+	progress("adding DXVK")
+	if err := addDXVK(ctx, dxvkArchive, staging); err != nil {
 		return Installed{}, err
 	}
 
@@ -139,6 +159,27 @@ func addDXMT(ctx context.Context, archive, staging string) error {
 	return os.RemoveAll(unpacked)
 }
 
+func addDXVK(ctx context.Context, archive, staging string) error {
+	unpacked := filepath.Join(staging, "unpacked-dxvk")
+	if err := extract(ctx, archive, unpacked); err != nil {
+		return err
+	}
+	for _, bits := range []DXVKBits{DXVK64, DXVK32} {
+		source, err := findDir(unpacked, string(bits))
+		if err != nil {
+			return err
+		}
+		target := filepath.Join(staging, "dxvk", string(bits))
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			return err
+		}
+		if err := os.Rename(source, target); err != nil {
+			return err
+		}
+	}
+	return os.RemoveAll(unpacked)
+}
+
 func extract(ctx context.Context, archive, into string) error {
 	if err := os.MkdirAll(into, 0o755); err != nil {
 		return err
@@ -189,7 +230,7 @@ func findDir(root, name string) (string, error) {
 		return "", err
 	}
 	if found == "" {
-		return "", failure.Errorf(failure.CodeExtractFailed, "DXMT's archive has no %s folder", name)
+		return "", failure.Errorf(failure.CodeExtractFailed, "the archive has no %s folder", name)
 	}
 	return found, nil
 }

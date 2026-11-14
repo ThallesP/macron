@@ -15,7 +15,10 @@ import (
 
 func PrepareGame(ctx context.Context, s scenario.Scenario, cacheDir, workDir string) (string, error) {
 	if s.Download == nil {
-		exe := filepath.Join(s.Dir, s.Exe)
+		exe, err := filepath.Abs(filepath.Join(s.Dir, s.Exe))
+		if err != nil {
+			return "", err
+		}
 		if _, err := os.Stat(exe); err != nil {
 			return "", failure.Errorf(failure.CodeInvalidInput, "%s is not built; it comes from %s", exe, s.Build)
 		}
@@ -26,7 +29,10 @@ func PrepareGame(ctx context.Context, s scenario.Scenario, cacheDir, workDir str
 	if err != nil {
 		return "", err
 	}
-	gameDir := filepath.Join(workDir, "game")
+	gameDir, err := filepath.Abs(filepath.Join(workDir, "game"))
+	if err != nil {
+		return "", err
+	}
 	if err := os.RemoveAll(gameDir); err != nil {
 		return "", err
 	}

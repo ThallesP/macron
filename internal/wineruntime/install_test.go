@@ -62,10 +62,15 @@ func serve(t *testing.T) *fixture {
 		"v0.80/x86_64-unix/winemetal.so":     "winemetal unix",
 		"v0.80/i386-windows/d3d11.dll":       "dxmt d3d11 32",
 	})
+	dxvk := tarball(t, map[string]string{
+		"dxvk-macOS/x64/d3d11.dll":     "dxvk d3d11",
+		"dxvk-macOS/x64/d3d10core.dll": "dxvk d3d10core",
+		"dxvk-macOS/x32/d3d11.dll":     "dxvk d3d11 32",
+	})
 	f := &fixture{}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		f.requests++
-		bodies := map[string][]byte{"/wine.tar.gz": wine, "/dxmt.tar.gz": dxmt}
+		bodies := map[string][]byte{"/wine.tar.gz": wine, "/dxmt.tar.gz": dxmt, "/dxvk.tar.gz": dxvk}
 		body, ok := bodies[r.URL.Path]
 		if !ok {
 			http.NotFound(w, r)
@@ -78,6 +83,7 @@ func serve(t *testing.T) *fixture {
 		Version: "test-1",
 		Wine:    Archive{Name: "wine.tar.gz", URL: server.URL + "/wine.tar.gz", SHA256: sum(wine), SizeBytes: int64(len(wine))},
 		DXMT:    Archive{Name: "dxmt.tar.gz", URL: server.URL + "/dxmt.tar.gz", SHA256: sum(dxmt), SizeBytes: int64(len(dxmt))},
+		DXVK:    Archive{Name: "dxvk.tar.gz", URL: server.URL + "/dxvk.tar.gz", SHA256: sum(dxvk), SizeBytes: int64(len(dxvk))},
 	}
 	return f
 }
@@ -115,6 +121,12 @@ func TestInstallBuildsAPlainAndADXMTTree(t *testing.T) {
 	if got := read(t, installed.Wine(TreeDXMT)); got != "wine" {
 		t.Errorf("DXMT tree bin/wine = %q", got)
 	}
+	if got := read(t, filepath.Join(installed.DXVK(DXVK64), "d3d11.dll")); got != "dxvk d3d11" {
+		t.Errorf("DXVK x64 d3d11.dll = %q", got)
+	}
+	if got := read(t, filepath.Join(installed.DXVK(DXVK32), "d3d11.dll")); got != "dxvk d3d11 32" {
+		t.Errorf("DXVK x32 d3d11.dll = %q", got)
+	}
 	if _, err := os.Stat(filepath.Join(installed.Root(TreePlain), "lib/wine/x86_64-unix/winemetal.so")); err == nil {
 		t.Error("the plain tree has DXMT's files")
 	}
@@ -137,14 +149,14 @@ func TestInstallTwiceDownloadsOnce(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if f.requests != 2 {
-		t.Fatalf("made %d downloads, want 2 (cached after the first install)", f.requests)
+	if f.requests != 3 {
+		t.Fatalf("made %d downloads, want 3 (cached after the first install)", f.requests)
 	}
 }
 
 func TestChecksumMismatchInstallsNothing(t *testing.T) {
 	f := serve(t)
-	f.manifest.DXMT.SHA256 = sum([]byte("something else"))
+	f.manifest.DXVK.SHA256 = sum([]byte("something else"))
 	layout := Layout{Home: t.TempDir()}
 
 	_, err := Install(context.Background(), layout, f.manifest, func(string) {})
@@ -152,7 +164,7 @@ func TestChecksumMismatchInstallsNothing(t *testing.T) {
 	if failure.CodeOf(err) != failure.CodeChecksumMismatch {
 		t.Fatalf("got %v, want %s", err, failure.CodeChecksumMismatch)
 	}
-	if f.requests != 2 {
+	if f.requests != 3 {
 		t.Errorf("retried a checksum mismatch: %d requests", f.requests)
 	}
 	if _, err := Find(layout, f.manifest); failure.CodeOf(err) != failure.CodeRuntimeMissing {

@@ -17,7 +17,7 @@ const fakeWine = `#!/bin/sh
 echo "$*" >> "$WINEPREFIX/../wine-calls.txt"
 if [ "$1" = wineboot ]; then
 	home="$WINEPREFIX/drive_c/users/$USER"
-	mkdir -p "$home/AppData/Roaming" "$WINEPREFIX/../mac-documents"
+	mkdir -p "$home/AppData/Roaming" "$WINEPREFIX/../mac-documents" "$WINEPREFIX/drive_c/windows/system32" "$WINEPREFIX/drive_c/windows/syswow64"
 	ln -s "$WINEPREFIX/../mac-documents" "$home/Documents"
 	exit 0
 fi
@@ -162,6 +162,35 @@ func TestChangingBackendRefreshesThePrefix(t *testing.T) {
 
 	if boots := strings.Count(g.read(t, "wine-calls.txt"), "wineboot"); boots != 2 {
 		t.Errorf("wineboot ran %d times, want 2", boots)
+	}
+}
+
+func TestDXVKBackendPutsItsDLLsInThePrefix(t *testing.T) {
+	g := newGame(t)
+	runtime := fakeRuntime(t)
+	for bits, content := range map[wineruntime.DXVKBits]string{wineruntime.DXVK64: "dxvk 64", wineruntime.DXVK32: "dxvk 32"} {
+		if err := os.MkdirAll(runtime.DXVK(bits), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(runtime.DXVK(bits), "d3d11.dll"), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	profile := fixes.Default("x")
+	profile.Backend = fixes.BackendDXVK
+
+	if _, err := Run(context.Background(), Input{Runtime: runtime, Profile: profile, Prefix: g.prefix, Exe: g.exe, Output: &bytes.Buffer{}, Progress: func(string) {}}); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := g.read(t, "prefix/drive_c/windows/system32/d3d11.dll"); got != "dxvk 64" {
+		t.Errorf("system32/d3d11.dll = %q", got)
+	}
+	if got := g.read(t, "prefix/drive_c/windows/syswow64/d3d11.dll"); got != "dxvk 32" {
+		t.Errorf("syswow64/d3d11.dll = %q", got)
+	}
+	if env := g.read(t, "game-env.txt"); !strings.Contains(env, "WINEDLLOVERRIDES=d3d10core=n;d3d11=n;mscoree=;mshtml=") {
+		t.Errorf("DXVK overrides missing:\n%s", env)
 	}
 }
 

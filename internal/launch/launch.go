@@ -31,7 +31,14 @@ type Input struct {
 
 var backendTrees = map[fixes.Backend]wineruntime.Tree{
 	fixes.BackendDXMT:    wineruntime.TreeDXMT,
+	fixes.BackendDXVK:    wineruntime.TreePlain,
 	fixes.BackendWineD3D: wineruntime.TreePlain,
+}
+
+var backendDLLOverrides = map[fixes.Backend]map[string]string{
+	fixes.BackendDXMT:    {},
+	fixes.BackendDXVK:    {"d3d11": "n", "d3d10core": "n"},
+	fixes.BackendWineD3D: {},
 }
 
 var alwaysDisabledDLLs = map[string]string{"mscoree": "", "mshtml": ""}
@@ -47,7 +54,7 @@ func Run(ctx context.Context, in Input) (int, error) {
 	tree := backendTrees[in.Profile.Backend]
 	env := Environment(in.Profile, in.Prefix, os.Environ())
 
-	if err := EnsurePrefix(ctx, in.Runtime, tree, in.Prefix, env, in.Output, in.Progress); err != nil {
+	if err := EnsurePrefix(ctx, PrefixInput{Runtime: in.Runtime, Backend: in.Profile.Backend, Prefix: in.Prefix, Env: env, Output: in.Output, Progress: in.Progress}); err != nil {
 		return 0, err
 	}
 	if err := WriteFiles(in.Profile.Files, Places(in.Prefix, filepath.Dir(exe))); err != nil {
@@ -74,6 +81,7 @@ func Run(ctx context.Context, in Input) (int, error) {
 
 func Environment(profile fixes.Profile, prefix string, base []string) []string {
 	overrides := maps.Clone(alwaysDisabledDLLs)
+	maps.Copy(overrides, backendDLLOverrides[profile.Backend])
 	maps.Copy(overrides, profile.DLLOverrides)
 	var entries []string
 	for _, dll := range slices.Sorted(maps.Keys(overrides)) {
