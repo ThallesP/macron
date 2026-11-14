@@ -1,0 +1,46 @@
+# Throwaway workflow for the game survey (docs/games.md): does each candidate
+# reach its main menu on real Windows? Lives only on the game-survey branch.
+#
+# Artifacts hold screenshots and the games' own logs, never game files.
+name: Game survey (Windows)
+
+on:
+  push:
+    branches: [game-survey]
+    paths:
+      - ci/game-survey/**
+      - .github/workflows/game-survey.yml
+  workflow_dispatch:
+    inputs:
+      games:
+        description: JSON array of game keys from ci/game-survey/games.json
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: ${{ matrix.game }}
+    runs-on: windows-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        game: ${{ fromJSON(inputs.games || '["openttd","stk","stk-d3d9","osu","endlesssky","tmnf"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Desktop
+        run: |
+          Add-Type -AssemblyName System.Windows.Forms
+          [System.Windows.Forms.SystemInformation]::VirtualScreen
+          Get-CimInstance Win32_VideoController | Select-Object Name, DriverVersion, CurrentHorizontalResolution, CurrentVerticalResolution
+      - name: Run ${{ matrix.game }}
+        run: ./ci/game-survey/windows.ps1 -Game '${{ matrix.game }}' -OutDir "$env:GITHUB_WORKSPACE\out"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-${{ matrix.game }}
+          path: out/
+          retention-days: 7

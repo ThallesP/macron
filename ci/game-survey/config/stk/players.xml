@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<players version="1" >
+    <current player="Macron"/>
+    <player name="Macron" guest="false" use-frequency="1"
+            icon-filename=""
+            unique-id="1" saved-session="false"
+            saved-user="0" saved-token=""
+            last-online-name="" last-was-online="false"
+            remember-password="false" default-kart-color="0">
+    </player>
+</players>

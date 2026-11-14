@@ -1,0 +1,148 @@
+{
+  "mesa": {
+    "url": "https://github.com/pal1000/mesa-dist-win/releases/download/26.1.8/mesa3d-26.1.8-release-msvc.7z",
+    "sha256": "4c6d32e653e0ff9ad07796e40c0bcfabf2764d849e3ce4f3b1590112c87e42f9",
+    "files": ["x64/opengl32.dll", "x64/libgallium_wgl.dll"]
+  },
+  "games": {
+    "xonotic": {
+      "downloads": [
+        {
+          "url": "https://dl.xonotic.org/xonotic-0.8.6.zip",
+          "sha256": "XONOTIC_SHA",
+          "extract": "zip",
+          "into": "."
+        }
+      ],
+      "exe": "Xonotic/xonotic.exe",
+      "args": ["-nohome", "-condebug", "-window", "-width", "800", "-height", "600",
+               "+vid_fullscreen", "0", "+vid_width", "800", "+vid_height", "600",
+               "+_cl_name", "Macron", "+_termsofservice_accepted", "9999"],
+      "opengl": true,
+      "backend": "opengl",
+      "shots": [30, 60, 120],
+      "logs": ["{game}/Xonotic/data/qconsole.log"]
+    },
+    "openttd": {
+      "downloads": [
+        {
+          "url": "https://cdn.openttd.org/openttd-releases/15.3/openttd-15.3-windows-win64.zip",
+          "sha256": "61c0a6a43d81008c7ff4330fb56351bbf66a980cdad041f1d0e08b51f2eeb34c",
+          "extract": "zip",
+          "into": "."
+        },
+        {
+          "url": "https://cdn.openttd.org/opengfx-releases/8.0/opengfx-8.0-all.zip",
+          "sha256": "43a0c1dabf39cb865394f3a6cc36d4da5c10ecfaaf55652043104806810903be",
+          "extract": "zip",
+          "into": "openttd-15.3-windows-win64/baseset"
+        }
+      ],
+      "exe": "openttd-15.3-windows-win64/openttd.exe",
+      "args": ["-c", "openttd.cfg", "-r", "800x600"],
+      "files": [{ "from": "openttd/openttd.cfg", "to": "{game}/openttd-15.3-windows-win64/openttd.cfg" }],
+      "opengl": true,
+      "backend": "opengl",
+      "shots": [20, 45, 90],
+      "logs": []
+    },
+    "stk": {
+      "downloads": [
+        {
+          "url": "https://github.com/supertuxkart/stk-code/releases/download/1.5/SuperTuxKart-1.5-win.zip",
+          "sha256": "9df7e2d67e8562127a3bb633030f1bd4ee77fa9e7f0ae110897473025af8acdc",
+          "extract": "zip",
+          "into": "."
+        }
+      ],
+      "exe": "SuperTuxKart-1.5-win/stk-code/build-x86_64/bin/supertuxkart.exe",
+      "cwd": "SuperTuxKart-1.5-win/stk-code",
+      "args": ["--windowed", "--screensize=800x600"],
+      "files": [
+        { "from": "stk/config.xml", "to": "{appdata}/supertuxkart/config-0.10/config.xml" },
+        { "from": "stk/players.xml", "to": "{appdata}/supertuxkart/config-0.10/players.xml" }
+      ],
+      "opengl": true,
+      "backend": "opengl",
+      "shots": [30, 60, 120],
+      "logs": ["{appdata}/supertuxkart/config-0.10/stdout.log"]
+    },
+    "stk-d3d9": {
+      "same_as": "stk",
+      "args": ["--windowed", "--screensize=800x600", "--render-driver=directx9"],
+      "opengl": false,
+      "backend": "wined3d"
+    },
+    "0ad": {
+      "downloads": [
+        {
+          "url": "https://releases.wildfiregames.com/0ad-0.28.0-win64.exe",
+          "sha256": "9b5e1a16d4e0df9c84e052f56fb75da69518d5634c88d2b38db69baee63c16a1",
+          "extract": "7z",
+          "into": "."
+        }
+      ],
+      "exe": "binaries/system/pyrogenesis.exe",
+      "args": [],
+      "files": [{ "from": "0ad/user.cfg", "to": "{appdata}/0ad/config/user.cfg" }],
+      "opengl": true,
+      "backend": "opengl",
+      "shots": [45, 90, 150],
+      "logs": ["{appdata}/0ad/logs/mainlog.html", "{appdata}/0ad/logs/interestinglog.html"]
+    },
+    "osu": {
+      "downloads": [
+        {
+          "url": "https://github.com/ppy/osu/releases/download/2026.1005.0-lazer/osulazer-2026.1005.0-lazer-full.nupkg",
+          "sha256": "d23d47d63ccb9c7d157b25cf5ac465d0e4d4cb17bab67c83f1ac112afd3e6cfa",
+          "extract": "zip",
+          "into": "."
+        }
+      ],
+      "exe": "lib/app/osu!.exe",
+      "args": [],
+      "files": [
+        { "from": "osu/framework.ini", "to": "{appdata}/osu/framework.ini" },
+        { "from": "osu/game.ini", "to": "{appdata}/osu/game.ini" }
+      ],
+      "opengl": false,
+      "backend": "dxmt",
+      "shots": [30, 60, 120],
+      "logs": ["{appdata}/osu/logs/*.log"]
+    },
+    "endlesssky": {
+      "downloads": [
+        {
+          "url": "https://github.com/endless-sky/endless-sky/releases/download/v0.11.4/EndlessSky-win64-v0.11.4.zip",
+          "sha256": "d795bf08472089ade412fa3d1167bb6f0ee0cb553025a930328d635de6364ccc",
+          "extract": "zip",
+          "into": "."
+        }
+      ],
+      "exe": "Endless Sky.exe",
+      "args": [],
+      "files": [{ "from": "endlesssky/preferences.txt", "to": "{appdata}/endless-sky/preferences.txt" }],
+      "opengl": true,
+      "backend": "opengl",
+      "shots": [30, 60, 120],
+      "logs": ["{appdata}/endless-sky/errors.txt"]
+    },
+    "tmnf": {
+      "downloads": [
+        {
+          "url": "http://nadeo-download.cdn.ubi.com/trackmaniaforever/tmnationsforever_setup.exe",
+          "sha256": "2f659138ed4409da404970841e18f03d29921beaf6a424824c8312ddb20f6355",
+          "extract": "inno-silent",
+          "inner": "TmNationsForever_Setup_Tmp.exe",
+          "into": "."
+        }
+      ],
+      "exe": "TmForever.exe",
+      "args": [],
+      "opengl": false,
+      "backend": "wined3d",
+      "shots": [30, 60, 120],
+      "logs": []
+    }
+  }
+}
