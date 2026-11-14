@@ -37,6 +37,7 @@ func commands() map[string]command {
 		"kill":              killCommand,
 		"waitforexitandrun": steamVerb(true),
 		"run":               steamVerb(false),
+		"steam":             steamCommand,
 	}
 }
 
