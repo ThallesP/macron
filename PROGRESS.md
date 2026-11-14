@@ -58,12 +58,29 @@ Checked by hand on Thalles's MacBook Air (M3, macOS 26.5, Steam build 1794536281
   - Without persistent maps, wined3d serves every `NOOVERWRITE` or `DISCARD` buffer map by mapping the whole buffer object, with no invalidate flag. `wined3d_cs_map_upload_bo` cannot use its fast path ("BO is not mapped"), so `buffer_resource_sub_resource_map` maps `resource->size`.
   - So each `DrawPrimitiveUP` copies the whole streaming buffer (at least 512 KB, `SB_MIN_SIZE`) in and out. A 64-bit program uses the driver's pointer directly.
 - **Measured on the runner** (sandbox sbx_dcs7vyrm, patch 0002, stock wined3d, the probe in `mix` mode in 32-bit with `WINEDEBUG=+opengl`): **51,844 copies totalling 27,181,187,072 bytes**. Every one was 524,288 bytes, the whole streaming buffer. About 66 frames were drawn in that run (60 warm-up and 3 measured, plus a few), so that is roughly **780 copies and 410 MB copied per frame**. That matches the M3's 5 frames a second at 185% CPU (PROGRESS, "From the MacBook").
-- **Frame rates on the runner's software renderer are noisy and are relative only.** Apple's software renderer compiles every new shader through `CVMCompiler`, which takes seconds, and the first frames of a run can crawl. In a first round with a 2 s warm-up, stock wined3d measured 2.62 fps in 32-bit `mix`, 2.55 `up`, 2.92 `vb`, and 2.54 fps in 64-bit `mix`. The software rasterizer caps both at about the same number. In a second round with a 40 s warm-up, every stock 32-bit mode stalled: wined3d presented about one frame per 150 s, and none finished. 64-bit `mix` ran at 3.49 fps.
-- **The fix, Wine patch 0003 (`wined3d.dll`).** When the process is 32-bit under Wine's 32-on-64 mode and buffers cannot be mapped persistently, `DISCARD` and `NOOVERWRITE` maps of buffers the program cannot read go through a heap copy the size of the mapped range. The command stream thread uploads it on unmap with `glBufferSubData`, which takes the 32-bit pointer without a copy. A whole-buffer upload uses `glBufferSubData` instead of a map.
-  - Measured in the 40 s warm-up round: patched 32-bit `up` (each sprite a `DrawPrimitiveUP`) ran at **8.82 fps** (p50 112 ms, p99 149 ms, 89 frames), where stock 32-bit `up` stalled. Patched 64-bit `mix` ran at 4.42 fps.
-  - Patched 32-bit `mix` and `vb` still stalled. d3d9 creates every dynamic vertex buffer CPU-readable (`MAP_R`), so 0003 leaves `vb`'s locks on the old path. `mix` also rewrites a texture with `LockRect` every frame, and textures still map through a buffer object.
-  - A first version of 0003 pinned dynamic buffers in system memory instead. It made every map wait for the command stream thread, and the probe hung, so it was dropped.
-- **Not yet explained:** why stock 32-bit (and patched `mix` and `vb`) degrade from about 2.6 fps to near zero when a run lasts longer. The suspect is low-memory exhaustion: every `DISCARD` on the stock path makes a new GL buffer, and Wine gives each one its own low-memory copy. That is unverified. Several runs on the same sandbox also exited right after creating their window (exit 1 or 5, no `RESULT d3d9 device` line), stock and patched alike. Both need a fresh sandbox.
+- **How to measure on the runner without fooling yourself.** Three things made the first rounds misleading:
+  - Wine processes from killed runs kept running and took the CPU. `pkill -f "probe32\|probe64"` matches nothing, because `\|` is a literal in pkill's pattern syntax.
+  - `reg add` followed by `kill -9` loses the value, because wineserver writes the registry only when it exits. Use `MACRON_OPENGL=apple-software`, which waits for the server.
+  - Apple's software renderer compiles every new shader with `CVMCompiler`, which takes seconds, so a cold machine's first runs crawl.
+  
+  The clean method, `/tmp/gltest/iso.sh` on sbx_vfintpyh: a fresh APFS clone of a prepared prefix per run (`STEAM_COMPAT_DATA_PATH`), every Wine process killed by name between runs, three repetitions, a 15 s warm-up, a 10 s measurement, and a 180 s cap.
+- **Clean results** (the probe at 960x540, 400 sprites, Apple's software renderer through `MACRON_OPENGL=apple-software`):
+
+  | build | 32-bit `up` | 32-bit `vb` | 32-bit `mix` | 64-bit `mix` |
+  |---|---|---|---|---|
+  | stock wined3d | never finished (3 of 3 hit 180 s) | never finished (3 of 3) | crash, crash, 2.75 fps | 3.30, 3.98, 3.40 fps |
+  | patch 0003 | 7.05, 6.76 fps, then one hit 180 s | 7.44, 7.94, 7.47 fps | crash, 6.93 fps, crash | 3.57, 4.09, 2.96 fps |
+
+  Copies traced with `+opengl` (each run has at least 60 warm-up frames):
+  - stock 32-bit `up`: 51,588 copies, 27,046,969,344 bytes, about 410 MB per frame;
+  - patched 32-bit `vb`: 2 copies, 1,048,576 bytes for the whole run.
+  
+  With 0003, 32-bit runs faster than 64-bit on the runner's software renderer. Without it, 32-bit mostly never gets through warm-up.
+- **Still wrong: an intermittent crash and stall in 32-bit, stock and patched alike.**
+  - `mix` crashes with an access violation (exit 5) about half the time, in stock and patched builds alike. Wine's `+seh` trace shows the probe's own thread jumping to `rip=7a83c7307a83c670`: two 32-bit values (`0x7a83c670`, `0x7a83c730`) read as one 64-bit pointer, as if 32-bit code ran a table of function pointers in 64-bit mode. `rdi` held wined3d's device context.
+  - Some runs of the other modes also stop making progress.
+  - `mix` locks a dynamic texture every frame, which waits for wined3d's command stream thread, so the cross-thread sync under Wine's 32-on-64 mode and Rosetta is the suspect. A comparison with the command stream thread off (`WINE_D3D_CONFIG=csmt=0x0`) is running.
+- **Correction:** commit fb001cf says SuperTuxKart's failing frame was its loading screen. It was not: the failing frames show the main menu drawn with corrupt geometry (wined3d's Vulkan renderer, 64-bit). Waiting for the menu's log line is harmless but does not fix that, and a subagent is investigating it on branch `stk-flaky`. Scenarios passed on ddc040e with the pinned overlay.
 - **Wine build.** `runtime/wine/build-overlay.sh` (renamed from `build-winemac.sh`) now builds `winemac.so` and `wined3d.dll` (i386 and x86_64) with patches 0001 to 0003. `check-pe-exports.sh` checks that `wined3d.dll` exports what Gcenx's does: it passed on the sandbox, 377 symbols for both architectures, and the `winemac.so` ABI check passed too. `internal/wineruntime` copies the overlay's `wined3d.dll` into both Wine trees and keeps `winemac.so` in the DXMT tree only. The Wine build workflow published it as [runtime-wine-11.21-macron.2](https://github.com/ThallesP/macron/releases/tag/runtime-wine-11.21-macron.2) (run 43648292454; the archive's `wined3d.dll` has the heap path of 0003 and not its dropped first version), and the runtime pins it.
 
 ## Gate 2 findings, dev machine, 2026-11-14
