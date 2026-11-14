@@ -16,7 +16,7 @@ case "$1" in
         && "$windows" | grep -q $'^Steam Helper\tSign in to Steam$'; then
         echo "Steam is at its login window:"
         "$windows" | grep -i steam
-        tail -n +"$(( since + 1 ))" "$login_log" | grep 'WaitingForCredentials' | tail -1
+        tail -n +"$(( since + 1 ))" "$login_log" | grep 'SetLoginState: WaitingForCredentials' | tail -1
         exit 0
       fi
       sleep 5
