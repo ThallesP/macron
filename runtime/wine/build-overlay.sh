@@ -1,9 +1,9 @@
 #!/bin/bash
-# Builds winemac.so (x86_64) from Wine 11.21 with the patches in
-# runtime/wine/patches, checks that it is a drop-in for the winemac.so in
-# Gcenx's wine-devel 11.21 build, and packs it as an overlay for that tree.
-# Runs on an Apple silicon Mac (a GitHub macos-26 runner) with Xcode and
-# Homebrew. Usage: runtime/wine/build-winemac.sh <work-dir> <out-dir>
+# Builds winemac.so (x86_64) and wined3d.dll (i386 and x86_64) from Wine 11.21
+# with the patches in runtime/wine/patches, checks that they are drop-ins for
+# the same files in Gcenx's wine-devel 11.21 build, and packs them as an
+# overlay for that tree. Runs on an Apple silicon Mac (a GitHub macos-26
+# runner) with Xcode and Homebrew. Usage: runtime/wine/build-overlay.sh <work-dir> <out-dir>
 set -euo pipefail
 
 work=$1
@@ -33,7 +33,8 @@ rm -rf llvm-mingw && mkdir llvm-mingw
 tar -xJf llvm-mingw.tar.xz -C llvm-mingw --strip-components 1
 
 rm -rf gcenx && mkdir gcenx
-tar -xJf gcenx-wine.tar.xz -C gcenx --include '*/x86_64-unix/winemac.so' --include '*/x86_64-unix/win32u.so'
+tar -xJf gcenx-wine.tar.xz -C gcenx --include '*/x86_64-unix/winemac.so' --include '*/x86_64-unix/win32u.so' \
+  --include '*/i386-windows/wined3d.dll' --include '*/x86_64-windows/wined3d.dll'
 gcenx_winemac=$(find gcenx -path '*/x86_64-unix/winemac.so')
 gcenx_win32u=$(find gcenx -path '*/x86_64-unix/win32u.so')
 minos=$(otool -l "$gcenx_winemac" | awk '/LC_BUILD_VERSION/ {b=1} b && $1 == "minos" {print $2; exit}')
@@ -45,7 +46,7 @@ tar -xzf wine-source.tar.gz -C src --strip-components 1
 
 configure() {
   (cd build && MACOSX_DEPLOYMENT_TARGET=$minos arch -x86_64 ../src/configure -C \
-    --enable-archs=x86_64 --with-mingw="$work/llvm-mingw/bin/clang" \
+    --enable-archs=i386,x86_64 --with-mingw="$work/llvm-mingw/bin/clang" \
     --disable-tests --disable-winebth_sys \
     --without-alsa --without-capi --with-coreaudio --without-cups --without-dbus \
     --without-ffmpeg --without-fontconfig --without-freetype --without-gettext \
@@ -58,13 +59,15 @@ configure() {
 }
 
 build() {
-  (cd build && MACOSX_DEPLOYMENT_TARGET=$minos arch -x86_64 make -j"$(sysctl -n hw.ncpu)" dlls/winemac.drv/winemac.so dlls/win32u/win32u.so)
+  (cd build && MACOSX_DEPLOYMENT_TARGET=$minos arch -x86_64 make -j"$(sysctl -n hw.ncpu)" dlls/winemac.drv/winemac.so dlls/win32u/win32u.so \
+    dlls/wined3d/i386-windows/wined3d.dll dlls/wined3d/x86_64-windows/wined3d.dll)
 }
 
 configure
 build
 cp build/dlls/winemac.drv/winemac.so "$work/winemac-upstream.so"
 install_name_tool -id "$install_name" "$work/winemac-upstream.so"
+for arch in i386 x86_64; do cp "build/dlls/wined3d/$arch-windows/wined3d.dll" "$work/wined3d-upstream-$arch.dll"; done
 
 for patch in "$here"/patches/*.patch; do
   patch -d src -p1 --forward <"$patch"
@@ -74,12 +77,18 @@ build
 cp build/dlls/winemac.drv/winemac.so "$work/winemac-patched.so"
 install_name_tool -id "$install_name" "$work/winemac-patched.so"
 cp build/dlls/win32u/win32u.so "$work/win32u-upstream.so"
+for arch in i386 x86_64; do cp "build/dlls/wined3d/$arch-windows/wined3d.dll" "$work/wined3d-patched-$arch.dll"; done
 
 "$here/check-abi.sh" "$gcenx_winemac" "$gcenx_win32u" "$work/winemac-upstream.so" "$work/win32u-upstream.so" "$work/winemac-patched.so" | tee "$out/abi-check.txt"
+for arch in i386 x86_64; do
+  "$here/check-pe-exports.sh" "$work/llvm-mingw/bin/llvm-objdump" "$(find gcenx -path "*/$arch-windows/wined3d.dll")" \
+    "$work/wined3d-upstream-$arch.dll" "$work/wined3d-patched-$arch.dll" | tee -a "$out/abi-check.txt"
+done
 
 stage="$work/stage"
-rm -rf "$stage" && mkdir -p "$stage/lib/wine/x86_64-unix" "$stage/share/doc/macron-wine"
+rm -rf "$stage" && mkdir -p "$stage/lib/wine/x86_64-unix" "$stage/lib/wine/i386-windows" "$stage/lib/wine/x86_64-windows" "$stage/share/doc/macron-wine"
 cp "$work/winemac-patched.so" "$stage/lib/wine/x86_64-unix/winemac.so"
+for arch in i386 x86_64; do cp "$work/wined3d-patched-$arch.dll" "$stage/lib/wine/$arch-windows/wined3d.dll"; done
 codesign --force --sign - "$stage/lib/wine/x86_64-unix/winemac.so"
 cp "$here"/patches/*.patch "$here/patches/README.md" src/COPYING.LIB "$out/abi-check.txt" "$stage/share/doc/macron-wine/"
 tar -C "$stage" -cJf "$out/$ASSET_NAME" lib share

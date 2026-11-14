@@ -53,6 +53,8 @@ const winemacDriver = "lib/wine/x86_64-unix/winemac.so"
 
 var dxmtArchitectures = []string{"x86_64-windows", "x86_64-unix", "i386-windows"}
 
+var windowsArchitectures = []string{"i386-windows", "x86_64-windows"}
+
 func Find(layout Layout, manifest Manifest) (Installed, error) {
 	dir := layout.RuntimeDir(manifest.Version)
 	recorded, err := os.ReadFile(filepath.Join(dir, installedMarker))
@@ -76,8 +78,8 @@ func Install(ctx context.Context, layout Layout, manifest Manifest, progress fun
 	if err != nil {
 		return Installed{}, err
 	}
-	progress(fmt.Sprintf("downloading %s", manifest.Winemac.Name))
-	winemacArchive, err := Download(ctx, layout.DownloadsDir(), manifest.Winemac)
+	progress(fmt.Sprintf("downloading %s", manifest.WineOverlay.Name))
+	overlayArchive, err := Download(ctx, layout.DownloadsDir(), manifest.WineOverlay)
 	if err != nil {
 		return Installed{}, err
 	}
@@ -107,8 +109,8 @@ func Install(ctx context.Context, layout Layout, manifest Manifest, progress fun
 	if err := addDXMT(ctx, dxmtArchive, staging); err != nil {
 		return Installed{}, err
 	}
-	progress("adding Macron's Mac driver to the DXMT tree")
-	if err := addWinemac(ctx, winemacArchive, staging); err != nil {
+	progress("adding Macron's Wine patches")
+	if err := addWineOverlay(ctx, overlayArchive, staging); err != nil {
 		return Installed{}, err
 	}
 	progress("adding DXVK")
@@ -170,8 +172,8 @@ func addDXMT(ctx context.Context, archive, staging string) error {
 	return os.RemoveAll(unpacked)
 }
 
-func addWinemac(ctx context.Context, archive, staging string) error {
-	unpacked := filepath.Join(staging, "unpacked-winemac")
+func addWineOverlay(ctx context.Context, archive, staging string) error {
+	unpacked := filepath.Join(staging, "unpacked-overlay")
 	if err := extract(ctx, archive, unpacked); err != nil {
 		return err
 	}
@@ -182,11 +184,27 @@ func addWinemac(ctx context.Context, archive, staging string) error {
 	if _, err := os.Stat(filepath.Join(dxmt, winemacDriver)); err != nil {
 		return failure.Errorf(failure.CodeExtractFailed, "Wine has no %s to replace", winemacDriver)
 	}
-	output, err := exec.CommandContext(ctx, "cp", "-R", unpacked+"/.", dxmt).CombinedOutput()
-	if err != nil {
-		return failure.Errorf(failure.CodeExtractFailed, "copying Macron's Mac driver into Wine: %s: %s", err, output)
+	if err := copyTree(ctx, unpacked, dxmt); err != nil {
+		return err
+	}
+	for _, arch := range windowsArchitectures {
+		modules := filepath.Join(unpacked, "lib", "wine", arch)
+		if _, err := os.Stat(modules); err != nil {
+			continue
+		}
+		if err := copyTree(ctx, modules, filepath.Join(staging, string(TreePlain), "lib", "wine", arch)); err != nil {
+			return err
+		}
 	}
 	return os.RemoveAll(unpacked)
+}
+
+func copyTree(ctx context.Context, source, target string) error {
+	output, err := exec.CommandContext(ctx, "cp", "-R", source+"/.", target).CombinedOutput()
+	if err != nil {
+		return failure.Errorf(failure.CodeExtractFailed, "copying Macron's Wine patches into %s: %s: %s", target, err, output)
+	}
+	return nil
 }
 
 func addDXVK(ctx context.Context, archive, staging string) error {

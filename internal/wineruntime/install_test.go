@@ -64,8 +64,10 @@ func serve(t *testing.T) *fixture {
 		"v0.80/i386-windows/d3d11.dll":       "dxmt d3d11 32",
 	})
 	winemac := tarball(t, map[string]string{
-		"lib/wine/x86_64-unix/winemac.so":   "macron winemac",
-		"share/doc/macron-wine/COPYING.LIB": "licence",
+		"lib/wine/x86_64-unix/winemac.so":     "macron winemac",
+		"lib/wine/i386-windows/wined3d.dll":   "macron wined3d 32",
+		"lib/wine/x86_64-windows/wined3d.dll": "macron wined3d",
+		"share/doc/macron-wine/COPYING.LIB":   "licence",
 	})
 	dxvk := tarball(t, map[string]string{
 		"dxvk-macOS/x64/d3d11.dll":     "dxvk d3d11",
@@ -85,11 +87,11 @@ func serve(t *testing.T) *fixture {
 	}))
 	t.Cleanup(server.Close)
 	f.manifest = Manifest{
-		Version: "test-1",
-		Wine:    Archive{Name: "wine.tar.gz", URL: server.URL + "/wine.tar.gz", SHA256: sum(wine), SizeBytes: int64(len(wine))},
-		Winemac: Archive{Name: "winemac.tar.gz", URL: server.URL + "/winemac.tar.gz", SHA256: sum(winemac), SizeBytes: int64(len(winemac))},
-		DXMT:    Archive{Name: "dxmt.tar.gz", URL: server.URL + "/dxmt.tar.gz", SHA256: sum(dxmt), SizeBytes: int64(len(dxmt))},
-		DXVK:    Archive{Name: "dxvk.tar.gz", URL: server.URL + "/dxvk.tar.gz", SHA256: sum(dxvk), SizeBytes: int64(len(dxvk))},
+		Version:     "test-1",
+		Wine:        Archive{Name: "wine.tar.gz", URL: server.URL + "/wine.tar.gz", SHA256: sum(wine), SizeBytes: int64(len(wine))},
+		WineOverlay: Archive{Name: "winemac.tar.gz", URL: server.URL + "/winemac.tar.gz", SHA256: sum(winemac), SizeBytes: int64(len(winemac))},
+		DXMT:        Archive{Name: "dxmt.tar.gz", URL: server.URL + "/dxmt.tar.gz", SHA256: sum(dxmt), SizeBytes: int64(len(dxmt))},
+		DXVK:        Archive{Name: "dxvk.tar.gz", URL: server.URL + "/dxvk.tar.gz", SHA256: sum(dxvk), SizeBytes: int64(len(dxvk))},
 	}
 	return f
 }
@@ -132,6 +134,14 @@ func TestInstallBuildsAPlainAndADXMTTree(t *testing.T) {
 	}
 	if got := read(t, filepath.Join(installed.Root(TreePlain), "lib/wine/x86_64-unix/winemac.so")); got != "wine winemac" {
 		t.Errorf("plain tree winemac.so = %q", got)
+	}
+	for _, tree := range []Tree{TreePlain, TreeDXMT} {
+		if got := read(t, filepath.Join(installed.Root(tree), "lib/wine/i386-windows/wined3d.dll")); got != "macron wined3d 32" {
+			t.Errorf("%s tree 32-bit wined3d.dll = %q", tree, got)
+		}
+		if got := read(t, filepath.Join(installed.Root(tree), "lib/wine/x86_64-windows/wined3d.dll")); got != "macron wined3d" {
+			t.Errorf("%s tree wined3d.dll = %q", tree, got)
+		}
 	}
 	if got := read(t, installed.Wine(TreeDXMT)); got != "wine" {
 		t.Errorf("DXMT tree bin/wine = %q", got)

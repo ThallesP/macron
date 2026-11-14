@@ -1,0 +1,45 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Sat, 14 Nov 2026 20:30:00 +0000
+Subject: [PATCH] winemac.drv: Fall back to the software renderer when
+ AllowSoftwareRendering is on.
+
+init_gl_info() asks CGL for an accelerated renderer only. On a Mac
+without one (a virtual machine, such as GitHub's macOS runners) the
+pixel formats of Apple's software renderer are listed when
+AllowSoftwareRendering is set, but OpenGL still fails to start because
+init_context() cannot make the context it reads the GL version from.
+With AllowSoftwareRendering on, retry with the generic float renderer.
+A Mac with an accelerated renderer takes the same path as before.
+---
+--- a/dlls/winemac.drv/opengl.c
++++ b/dlls/winemac.drv/opengl.c
+@@ -1047,7 +1047,7 @@
+     CGLPixelFormatAttribute attribs[] =
+     {
+         kCGLPFADisplayMask, CGDisplayIDToOpenGLDisplayMask(CGMainDisplayID()),
+-        kCGLPFAAccelerated, kCGLPFAOpenGLProfile, (CGLPixelFormatAttribute)profile, 0,
++        kCGLPFAAccelerated, kCGLPFAOpenGLProfile, (CGLPixelFormatAttribute)profile, 0, 0,
+     };
+     CGLPixelFormatObj pix;
+     CGLContextObj context;
+@@ -1057,7 +1057,19 @@
+     if ((err = CGLChoosePixelFormat(attribs, &pix, &screens)) || !pix)
+     {
+         WARN("CGLChoosePixelFormat() failed with error %d %s\n", err, CGLErrorString(err));
+-        return NULL;
++        if (!allow_software_rendering) return NULL;
++
++        attribs[2] = kCGLPFARendererID;
++        attribs[3] = kCGLRendererGenericFloatID;
++        attribs[4] = kCGLPFAOpenGLProfile;
++        attribs[5] = (CGLPixelFormatAttribute)profile;
++        attribs[6] = 0;
++        if ((err = CGLChoosePixelFormat(attribs, &pix, &screens)) || !pix)
++        {
++            WARN("CGLChoosePixelFormat() for the software renderer failed with error %d %s\n", err, CGLErrorString(err));
++            return NULL;
++        }
++        TRACE("no accelerated renderer, using the software renderer because AllowSoftwareRendering is on\n");
+     }
+     if ((err = CGLCreateContext(pix, NULL, &context)) || !context)
+     {

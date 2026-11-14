@@ -1,0 +1,104 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Sat, 14 Nov 2026 21:00:00 +0000
+Subject: [PATCH] wined3d: Upload buffer maps through heap memory when buffer
+ maps are copied.
+
+A 32-bit process on 64-bit Wine cannot use a host pointer above 4 GB,
+so when the host OpenGL has neither GL_MESA_map_buffer_client_pointer
+nor persistent mapping (Apple's OpenGL has neither), opengl32 emulates
+glMapBufferRange: it copies the mapped range into low memory on map and
+back on unmap. Without persistent maps, wined3d maps a buffer for a
+DISCARD or NOOVERWRITE map by mapping the whole buffer object, so every
+DrawPrimitiveUP and every dynamic vertex buffer lock copies the whole
+streaming buffer, 512 KB or more, twice.
+
+When the process is WoW64 and buffers cannot be mapped persistently,
+map buffers the application cannot read, and whose system memory is not
+pinned, through heap memory the size of the mapped range, as
+UpdateSubresource does: the command stream thread uploads it on unmap
+with glBufferSubData, which takes a 32-bit pointer without a copy. An
+upload of a whole buffer (DISCARD) uses glBufferSubData too instead of
+mapping the buffer object.
+---
+--- a/dlls/wined3d/wined3d_private.h
++++ b/dlls/wined3d/wined3d_private.h
+@@ -244,6 +244,7 @@
+     uint32_t subpixel_viewport : 1;
+     uint32_t fences : 1;
+     uint32_t persistent_map : 1;
++    uint32_t copied_maps : 1;
+     uint32_t gpu_push_constants : 1;
+     uint32_t ffp_hlsl : 1;
+     enum wined3d_feature_level feature_level;
+--- a/dlls/wined3d/adapter_gl.c
++++ b/dlls/wined3d/adapter_gl.c
+@@ -4903,6 +4903,13 @@
+     .adapter_generate_mipmap = adapter_gl_generate_mipmap,
+ };
+ 
++static BOOL wined3d_is_wow64(void)
++{
++    BOOL is_wow64;
++
++    return sizeof(void *) == sizeof(int) && IsWow64Process(GetCurrentProcess(), &is_wow64) && is_wow64;
++}
++
+ static void wined3d_adapter_gl_init_d3d_info(struct wined3d_adapter_gl *adapter_gl, uint32_t wined3d_creation_flags)
+ {
+     const struct wined3d_gl_info *gl_info = &adapter_gl->gl_info;
+@@ -4963,6 +4970,10 @@
+     d3d_info->feature_level = feature_level_from_caps(gl_info, &shader_caps, &d3d_info->ffp_fragment_caps);
+     d3d_info->filling_convention_offset = gl_info->filling_convention_offset;
+     d3d_info->persistent_map = !!gl_info->supported[ARB_BUFFER_STORAGE];
++    /* A 32-bit process on 64-bit Wine gets buffer maps that opengl32 emulates
++     * by copying the whole mapped range into and out of low memory, unless the
++     * host can map buffers persistently. */
++    d3d_info->copied_maps = !d3d_info->persistent_map && wined3d_is_wow64();
+     d3d_info->ffp_hlsl = wined3d_settings.ffp_hlsl;
+ 
+     if (gl_info->supported[ARB_TEXTURE_MULTISAMPLE])
+--- a/dlls/wined3d/context_gl.c
++++ b/dlls/wined3d/context_gl.c
+@@ -3029,7 +3029,8 @@
+     }
+     else if (dst_bo && !src_bo)
+     {
+-        if ((map_flags & WINED3D_MAP_DISCARD) && (dst_bo->flags & GL_MAP_WRITE_BIT))
++        if ((map_flags & WINED3D_MAP_DISCARD) && (dst_bo->flags & GL_MAP_WRITE_BIT)
++                && !context_gl->c.d3d_info->copied_maps)
+         {
+             dst_ptr = wined3d_context_gl_map_bo_address(context_gl, dst, dst_bo->size, map_flags);
+             memcpy(dst_ptr, src->addr, dst_bo->size);
+--- a/dlls/wined3d/cs.c
++++ b/dlls/wined3d/cs.c
+@@ -3222,6 +3222,17 @@
+     }
+ }
+ 
++/* Mapping a buffer object would copy all of it into and out of low memory; a
++ * heap copy of the mapped range is uploaded with glBufferSubData instead.
++ * Buffers the application can read, or whose system memory is pinned, keep
++ * the usual path. */
++static bool wined3d_cs_upload_buffer_through_heap(const struct wined3d_device_context *context,
++        const struct wined3d_resource *resource)
++{
++    return resource->type == WINED3D_RTYPE_BUFFER && context->device->adapter->d3d_info.copied_maps
++            && !(resource->access & WINED3D_RESOURCE_ACCESS_MAP_R) && !resource->pin_sysmem;
++}
++
+ static bool wined3d_cs_map_upload_bo(struct wined3d_device_context *context, struct wined3d_resource *resource,
+         unsigned int sub_resource_idx, struct wined3d_map_desc *map_desc, const struct wined3d_box *box, uint32_t flags)
+ {
+@@ -3229,7 +3240,11 @@
+     const struct wined3d_format *format = resource->format;
+     size_t size;
+ 
+-    if (flags & (WINED3D_MAP_DISCARD | WINED3D_MAP_NOOVERWRITE))
++    if (wined3d_cs_upload_buffer_through_heap(context, resource))
++    {
++        TRACE_(d3d_perf)("Mapping buffer %p through heap memory, buffer maps are copied.\n", resource);
++    }
++    else if (flags & (WINED3D_MAP_DISCARD | WINED3D_MAP_NOOVERWRITE))
+     {
+         struct wined3d_device *device = context->device;
+         struct wined3d_bo_address addr;
