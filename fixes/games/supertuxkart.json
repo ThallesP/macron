@@ -1,0 +1,15 @@
+{
+  "id": "supertuxkart",
+  "name": "SuperTuxKart 1.5",
+  "steamAppIds": [],
+  "backend": "wined3d",
+  "args": [],
+  "env": {
+    "WINE_D3D_CONFIG": "renderer=vulkan"
+  },
+  "dllOverrides": {},
+  "files": [],
+  "registry": [],
+  "installs": [],
+  "notes": "Antarctica (STK's Irrlicht fork). In its Direct3D 9 mode (--render-driver=directx9) it runs through wined3d's Vulkan renderer, MoltenVK in the plain Wine tree; wined3d's default OpenGL renderer gets no pixel format on Macs without hardware OpenGL. Without d3dx9_43.dll it falls back to the fixed pipeline on Windows and on Wine alike ('Could not load shader function D3DXAssembleShader'). DXVK-macOS's d3d9 cannot make a device on the runner (MoltenVK lacks geometryShader and shaderCullDistance). Found by the game survey (docs/games.md)."
+}

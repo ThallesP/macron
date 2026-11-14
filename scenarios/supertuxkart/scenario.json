@@ -1,0 +1,55 @@
+{
+  "name": "supertuxkart",
+  "title": "SuperTuxKart 1.5 (Antarctica engine, Direct3D 9, 922 MB)",
+  "game": "supertuxkart",
+  "downloads": [
+    {
+      "name": "SuperTuxKart-1.5-win.zip",
+      "url": "https://github.com/supertuxkart/stk-code/releases/download/1.5/SuperTuxKart-1.5-win.zip",
+      "sha256": "9df7e2d67e8562127a3bb633030f1bd4ee77fa9e7f0ae110897473025af8acdc",
+      "sizeBytes": 922430727,
+      "unpack": "zip",
+      "into": "."
+    }
+  ],
+  "build": "",
+  "exe": "SuperTuxKart-1.5-win/stk-code/build-x86_64/bin/supertuxkart.exe",
+  "cwd": "SuperTuxKart-1.5-win/stk-code",
+  "args": [
+    "--windowed",
+    "--screensize=800x600",
+    "--render-driver=directx9"
+  ],
+  "macronEnv": {},
+  "files": [
+    {
+      "path": "{appdata}/supertuxkart/config-0.10/config.xml",
+      "content": "<?xml version=\"1.0\"?>\n<stkconfig version=\"8\" >\n    <enable_internet value=\"2\" />\n    <Video old_driver_popup=\"false\" />\n</stkconfig>\n"
+    },
+    {
+      "path": "{appdata}/supertuxkart/config-0.10/players.xml",
+      "content": "<?xml version=\"1.0\"?>\n<players version=\"1\" >\n    <current player=\"Macron\"/>\n    <player name=\"Macron\" guest=\"false\" use-frequency=\"1\"\n            icon-filename=\"\"\n            unique-id=\"1\" saved-session=\"false\"\n            saved-user=\"0\" saved-token=\"\"\n            last-online-name=\"\" last-was-online=\"false\"\n            remember-password=\"false\" default-kart-color=\"0\">\n    </player>\n</players>\n"
+    }
+  ],
+  "window": {
+    "title": "^SuperTuxKart$",
+    "width": 800,
+    "height": 600
+  },
+  "reached": {
+    "output": "",
+    "settleSeconds": 15,
+    "timeoutSeconds": 1200
+  },
+  "compare": {
+    "text": [],
+    "ignore": []
+  },
+  "reference": {
+    "image": "reference.png",
+    "source": "pending"
+  },
+  "otherGame": "openttd",
+  "windowsExtra": [],
+  "ci": false
+}
