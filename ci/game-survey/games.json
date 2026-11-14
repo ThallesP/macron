@@ -2,26 +2,51 @@
   "mesa": {
     "url": "https://github.com/pal1000/mesa-dist-win/releases/download/26.1.8/mesa3d-26.1.8-release-msvc.7z",
     "sha256": "4c6d32e653e0ff9ad07796e40c0bcfabf2764d849e3ce4f3b1590112c87e42f9",
-    "files": ["x64/opengl32.dll", "x64/libgallium_wgl.dll"]
+    "files": [
+      "x64/opengl32.dll",
+      "x64/libgallium_wgl.dll"
+    ]
   },
   "games": {
     "xonotic": {
       "downloads": [
         {
           "url": "https://dl.xonotic.org/xonotic-0.8.6.zip",
-          "sha256": "XONOTIC_SHA",
+          "sha256": "50850f8d800e7499722f6ea61e478e96464a375494b5a24da93aa0598cbe964d",
           "extract": "zip",
           "into": "."
         }
       ],
       "exe": "Xonotic/xonotic.exe",
-      "args": ["-nohome", "-condebug", "-window", "-width", "800", "-height", "600",
-               "+vid_fullscreen", "0", "+vid_width", "800", "+vid_height", "600",
-               "+_cl_name", "Macron", "+_termsofservice_accepted", "9999"],
+      "args": [
+        "-nohome",
+        "-condebug",
+        "-window",
+        "-width",
+        "800",
+        "-height",
+        "600",
+        "+vid_fullscreen",
+        "0",
+        "+vid_width",
+        "800",
+        "+vid_height",
+        "600",
+        "+_cl_name",
+        "Macron",
+        "+_termsofservice_accepted",
+        "9999"
+      ],
       "opengl": true,
       "backend": "opengl",
-      "shots": [30, 60, 120],
-      "logs": ["{game}/Xonotic/data/qconsole.log"]
+      "shots": [
+        30,
+        60,
+        120
+      ],
+      "logs": [
+        "{game}/Xonotic/data/qconsole.log"
+      ]
     },
     "openttd": {
       "downloads": [
@@ -36,14 +61,34 @@
           "sha256": "43a0c1dabf39cb865394f3a6cc36d4da5c10ecfaaf55652043104806810903be",
           "extract": "zip",
           "into": "openttd-15.3-windows-win64/baseset"
+        },
+        {
+          "url": "https://cdn.openttd.org/opensfx-releases/1.0.3/opensfx-1.0.3-all.zip",
+          "sha256": "e0a218b7dd9438e701503b0f84c25a97c1c11b7c2f025323fb19d6db16ef3759",
+          "extract": "zip",
+          "into": "openttd-15.3-windows-win64/baseset"
         }
       ],
       "exe": "openttd-15.3-windows-win64/openttd.exe",
-      "args": ["-c", "openttd.cfg", "-r", "800x600"],
-      "files": [{ "from": "openttd/openttd.cfg", "to": "{game}/openttd-15.3-windows-win64/openttd.cfg" }],
-      "opengl": true,
-      "backend": "opengl",
-      "shots": [20, 45, 90],
+      "args": [
+        "-c",
+        "openttd.cfg",
+        "-r",
+        "800x600"
+      ],
+      "files": [
+        {
+          "from": "openttd/openttd.cfg",
+          "to": "{game}/openttd-15.3-windows-win64/openttd.cfg"
+        }
+      ],
+      "opengl": false,
+      "backend": "gdi",
+      "shots": [
+        20,
+        45,
+        90
+      ],
       "logs": []
     },
     "stk": {
@@ -57,19 +102,38 @@
       ],
       "exe": "SuperTuxKart-1.5-win/stk-code/build-x86_64/bin/supertuxkart.exe",
       "cwd": "SuperTuxKart-1.5-win/stk-code",
-      "args": ["--windowed", "--screensize=800x600"],
+      "args": [
+        "--windowed",
+        "--screensize=800x600"
+      ],
       "files": [
-        { "from": "stk/config.xml", "to": "{appdata}/supertuxkart/config-0.10/config.xml" },
-        { "from": "stk/players.xml", "to": "{appdata}/supertuxkart/config-0.10/players.xml" }
+        {
+          "from": "stk/config.xml",
+          "to": "{appdata}/supertuxkart/config-0.10/config.xml"
+        },
+        {
+          "from": "stk/players.xml",
+          "to": "{appdata}/supertuxkart/config-0.10/players.xml"
+        }
       ],
       "opengl": true,
       "backend": "opengl",
-      "shots": [30, 60, 120],
-      "logs": ["{appdata}/supertuxkart/config-0.10/stdout.log"]
+      "shots": [
+        30,
+        60,
+        120
+      ],
+      "logs": [
+        "{appdata}/supertuxkart/config-0.10/stdout.log"
+      ]
     },
     "stk-d3d9": {
       "same_as": "stk",
-      "args": ["--windowed", "--screensize=800x600", "--render-driver=directx9"],
+      "args": [
+        "--windowed",
+        "--screensize=800x600",
+        "--render-driver=directx9"
+      ],
       "opengl": false,
       "backend": "wined3d"
     },
@@ -84,11 +148,23 @@
       ],
       "exe": "binaries/system/pyrogenesis.exe",
       "args": [],
-      "files": [{ "from": "0ad/user.cfg", "to": "{appdata}/0ad/config/user.cfg" }],
+      "files": [
+        {
+          "from": "0ad/user.cfg",
+          "to": "{appdata}/0ad/config/user.cfg"
+        }
+      ],
       "opengl": true,
       "backend": "opengl",
-      "shots": [45, 90, 150],
-      "logs": ["{appdata}/0ad/logs/mainlog.html", "{appdata}/0ad/logs/interestinglog.html"]
+      "shots": [
+        45,
+        90,
+        150
+      ],
+      "logs": [
+        "{appdata}/0ad/logs/mainlog.html",
+        "{appdata}/0ad/logs/interestinglog.html"
+      ]
     },
     "osu": {
       "downloads": [
@@ -102,13 +178,25 @@
       "exe": "lib/app/osu!.exe",
       "args": [],
       "files": [
-        { "from": "osu/framework.ini", "to": "{appdata}/osu/framework.ini" },
-        { "from": "osu/game.ini", "to": "{appdata}/osu/game.ini" }
+        {
+          "from": "osu/framework.ini",
+          "to": "{appdata}/osu/framework.ini"
+        },
+        {
+          "from": "osu/game.ini",
+          "to": "{appdata}/osu/game.ini"
+        }
       ],
       "opengl": false,
       "backend": "dxmt",
-      "shots": [30, 60, 120],
-      "logs": ["{appdata}/osu/logs/*.log"]
+      "shots": [
+        30,
+        60,
+        120
+      ],
+      "logs": [
+        "{appdata}/osu/logs/*.log"
+      ]
     },
     "endlesssky": {
       "downloads": [
@@ -121,11 +209,22 @@
       ],
       "exe": "Endless Sky.exe",
       "args": [],
-      "files": [{ "from": "endlesssky/preferences.txt", "to": "{appdata}/endless-sky/preferences.txt" }],
+      "files": [
+        {
+          "from": "endlesssky/preferences.txt",
+          "to": "{appdata}/endless-sky/preferences.txt"
+        }
+      ],
       "opengl": true,
       "backend": "opengl",
-      "shots": [30, 60, 120],
-      "logs": ["{appdata}/endless-sky/errors.txt"]
+      "shots": [
+        30,
+        60,
+        120
+      ],
+      "logs": [
+        "{appdata}/endless-sky/errors.txt"
+      ]
     },
     "tmnf": {
       "downloads": [
@@ -141,7 +240,11 @@
       "args": [],
       "opengl": false,
       "backend": "wined3d",
-      "shots": [30, 60, 120],
+      "shots": [
+        30,
+        60,
+        120
+      ],
       "logs": []
     }
   }
