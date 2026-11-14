@@ -68,12 +68,18 @@
     "timeoutSeconds": 1500
   },
   "compare": {
-    "text": [],
+    "text": [
+      "Singleplayer",
+      "Multiplayer",
+      "Settings",
+      "Credits",
+      "Quit"
+    ],
     "ignore": []
   },
   "reference": {
     "image": "reference.png",
-    "source": "pending"
+    "source": "windows-latest, Mesa 26.1.8 llvmpipe, https://github.com/ThallesP/macron/actions/runs/43565545718. The Multiplayer panel lists live internet servers despite the empty sv_master cvars; two Windows runs with different lists (43565128636, 43565545718) still score SSIM 0.958 against each other, so nothing is ignored"
   },
   "otherGame": "openttd",
   "windowsExtra": [
