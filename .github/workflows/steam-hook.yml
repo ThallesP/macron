@@ -2,7 +2,7 @@ name: Steam hook
 
 on:
   push:
-    branches: [main, steam-hook]
+    branches: [main]
     paths:
       - internal/steamhook/**
       - cmd/macron/steam.go
