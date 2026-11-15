@@ -1,0 +1,114 @@
+name: Steam builds
+
+on:
+  schedule:
+    - cron: "41 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: steam-builds
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      build: ${{ steps.check.outputs.build }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Compare Valve's current Mac build with KnownBuilds
+        id: check
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/pr"
+          go build -o "$RUNNER_TEMP/steam-builds" ./cmd/steam-builds
+          code=0
+          "$RUNNER_TEMP/steam-builds" --check --write internal/steamhook/builds.go > "$RUNNER_TEMP/pr/rows.txt" || code=$?
+          cat "$RUNNER_TEMP/pr/rows.txt"
+          [ "$code" = 1 ] || exit "$code"
+          build=$(sed -nE 's/^\t\tID: +"([0-9]+)",$/\1/p' "$RUNNER_TEMP/pr/rows.txt" | head -1)
+          cp internal/steamhook/builds.go "$RUNNER_TEMP/pr/builds.go"
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+          echo "::error title=KnownBuilds lacks Steam build $build::KnownBuilds has no row for at least one variant of Valve's current Mac Steam build $build (the log above names them), so macron steam enable refuses those clients. The pull-request job proposes the rows."
+          exit 1
+
+      - name: Keep the new table for the pull request
+        if: failure() && steps.check.outputs.build != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: steam-builds
+          path: ${{ runner.temp }}/pr
+          retention-days: 7
+
+  pull-request:
+    needs: check
+    if: always() && needs.check.result == 'failure' && needs.check.outputs.build != '' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    env:
+      BUILD: ${{ needs.check.outputs.build }}
+      BRANCH: steam-build-${{ needs.check.outputs.build }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: steam-builds
+          path: ${{ runner.temp }}/pr
+
+      - name: Push the rows, open or update the pull request, start the Steam hook check on it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp "$RUNNER_TEMP/pr/builds.go" internal/steamhook/builds.go
+          git switch -c "$BRANCH"
+          git add internal/steamhook/builds.go
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -q -m "Steam hook: add Mac Steam build $BUILD to KnownBuilds" \
+            -m "Rows from Valve's update manifest, made by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          git push --force origin "$BRANCH"
+
+          export ROWS RUN_URL HOOK_RUNS
+          ROWS=$(cat "$RUNNER_TEMP/pr/rows.txt")
+          RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          HOOK_RUNS="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/workflows/steam-hook.yml?query=branch%3A$BRANCH"
+          envsubst '$BUILD $BRANCH $ROWS $RUN_URL $HOOK_RUNS' > "$RUNNER_TEMP/body.md" <<'EOF'
+          Valve's update CDN serves Mac Steam build ${BUILD}, and `KnownBuilds` lacks a row for at least one of its variants, so `macron steam enable` refuses those clients with `UNKNOWN_STEAM_BUILD`.
+
+          The [Steam builds run](${RUN_URL}) read Valve's manifest (`steam_client_osx` on `client-update.akamai.steamstatic.com`), checked every package it downloaded against the manifest's `sha2`, and hashed `steamclient.dylib` and each variant's `steam_osx`. These are the build's rows; this pull request adds the ones `KnownBuilds` lacked:
+
+          ```go
+          ${ROWS}
+          ```
+
+          **Before merging, let the Steam hook workflow check the build on this branch.** This run started it for `${BRANCH}` ([its runs](${HOOK_RUNS})): it installs Steam from Valve's DMG (the `macos-signed-2` variant), applies the hook to that build and checks Steam still reaches its login window. Merge only when that run is green. Rows for the other variants rest on Valve's manifest alone (README.md, "Steam hook").
+
+          A pull request opened with the workflow's token starts no `pull_request` workflows: close and reopen it to run Test. Every run of the Steam builds workflow resets this branch to `main` plus the missing rows until it merges. Nothing here merges by itself.
+          EOF
+
+          gh workflow run steam-hook.yml --ref "$BRANCH"
+          pr=$(gh pr list --head "$BRANCH" --base main --state open --json url --jq '.[0].url // ""')
+          if [ -n "$pr" ]; then
+            gh pr edit "$pr" --body-file "$RUNNER_TEMP/body.md"
+          else
+            pr=$(gh pr create --base main --head "$BRANCH" --title "Steam hook: add Mac Steam build $BUILD" --body-file "$RUNNER_TEMP/body.md") || pr=""
+          fi
+          if [ -z "$pr" ]; then
+            echo "::error title=KnownBuilds lacks Steam build $BUILD::Branch $BRANCH has its rows, but GitHub did not open the pull request (if the log says GitHub Actions may not create pull requests, turn on Settings > Actions > General > Allow GitHub Actions to create and approve pull requests). Open it by hand: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/main...$BRANCH?expand=1"
+            exit 1
+          fi
+          echo "::error title=KnownBuilds lacks Steam build $BUILD::$pr adds its rows. Merge it once the Steam hook run on $BRANCH is green: $HOOK_RUNS"
+          exit 1
