@@ -111,5 +111,8 @@ jobs:
           (cd out && shasum -a 256 -c "Macron-$VERSION.dmg.sha256")
           source_sha=${BUILT_SHA:-$GITHUB_SHA}
           { cat docs/install.md; echo; echo "Built by $RUN_URL from $source_sha. SHA-256: \`$(cut -d ' ' -f 1 "out/Macron-$VERSION.dmg.sha256")\`"; } > notes.md
-          gh release create "$tag" --target "$source_sha" --title "Macron $VERSION" \
-            --notes-file notes.md "out/Macron-$VERSION.dmg" "out/Macron-$VERSION.dmg.sha256"
+          if ! gh release create "$tag" --target "$source_sha" --title "Macron $VERSION" \
+            --notes-file notes.md "out/Macron-$VERSION.dmg" "out/Macron-$VERSION.dmg.sha256"; then
+            echo "::error::GitHub refused the release. If it is HTTP 403 with from_run, the likely reason is that an Actions token may not create a tag at a commit whose workflow files differ from main's. Publish that run's artifact by hand: gh run download $BUILT_BY -n macron-dmg -D out && gh release create $tag --target $source_sha --title 'Macron $VERSION' --notes-file <docs/install.md plus the build line> out/Macron-$VERSION.dmg out/Macron-$VERSION.dmg.sha256"
+            exit 1
+          fi
