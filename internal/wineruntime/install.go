@@ -117,6 +117,9 @@ func Install(ctx context.Context, layout Layout, manifest Manifest, progress fun
 	if err := addDXVK(ctx, dxvkArchive, staging); err != nil {
 		return Installed{}, err
 	}
+	if err := addSteamBridge(ctx, layout, manifest.SteamBridge, staging, progress); err != nil {
+		return Installed{}, err
+	}
 
 	recorded, err := json.MarshalIndent(manifest, "", "  ")
 	if err != nil {
@@ -202,7 +205,7 @@ func addWineOverlay(ctx context.Context, archive, staging string) error {
 func copyTree(ctx context.Context, source, target string) error {
 	output, err := exec.CommandContext(ctx, "cp", "-R", source+"/.", target).CombinedOutput()
 	if err != nil {
-		return failure.Errorf(failure.CodeExtractFailed, "copying Macron's Wine patches into %s: %s: %s", target, err, output)
+		return failure.Errorf(failure.CodeExtractFailed, "copying %s into %s: %s: %s", filepath.Base(source), target, err, output)
 	}
 	return nil
 }

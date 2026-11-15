@@ -13,6 +13,7 @@ type Manifest struct {
 	WineOverlay Archive `json:"wineOverlay"`
 	DXMT        Archive `json:"dxmt"`
 	DXVK        Archive `json:"dxvk"`
+	SteamBridge Archive `json:"steamBridge"`
 }
 
 var Pinned = Manifest{
