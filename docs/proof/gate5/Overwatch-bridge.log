@@ -1,0 +1,47 @@
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.153Z]: prism: Info: GPU 0
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.154Z]: prism: Info: name: Apple Paravirtual device
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.154Z]: prism: Info: driverVersion: 65535.65535.65535.65535
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.154Z]: prism: Info: driverDate: <null>
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.154Z]: prism: Info: vendorId: Apple
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.155Z]: prism: Info: deviceId: 0x0000
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.155Z]: prism: Info: subsystemVendorId: 0x0000
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.155Z]: prism: Info: subsystemId: 0x0000
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.155Z]: prism: Info: revisionId: 0x00
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.155Z]: prism: Info: location: 0
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.155Z]: prism: Info: type: Discrete
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.155Z]: prism: Info: virtualizationMode: Unknown
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.156Z]: prism: Info: luid: 0x0000000001000000
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.156Z]: prism: Info: index: 0
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.156Z]: prism: Info: systemId: 0x0000000000000000
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.156Z]: prism: Info: Hybrid Graphics: 0
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.156Z]: prism: Info: memory: 2389 MiB
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.156Z]: prism: Info: sharedMemory: 2389 MiB
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.157Z]: prism: Info: Max queues: 1 graphics, 1 compute, 1 copy
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:20.157Z]: Apple Paravirtual device: invalid systemId
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.047Z]: prism: Error Invalid (0x80004002): pm_dx12::Instance::CreateDevice: D3D12CreateDevice Failed
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.048Z]: prism: Info: Display 0
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.049Z]: prism: Info: name: Wine Monitor
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.049Z]: prism: Info: pos: 0,0
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.050Z]: prism: Info: size: 1024x768
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.050Z]: prism: Info: refreshRate: 60000/1000
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.050Z]: prism: Info: manufacturerId: 0x0000
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.051Z]: prism: Info: productId: 0x0000
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.051Z]: prism: Info: systemId: 0x000000009629cf97
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.051Z]: prism: Info: nativeIndex: 1
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.052Z]: prism: Info: nativeSize: 1920x1080
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.052Z]: prism: Info: nativeRefreshRate: 60/1
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.052Z]: prism: Info: supports4k: 0
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.053Z]: prism: Info: supportsHdr: 0
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.053Z]: prism: Info: supports120Hz: 0
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.053Z]: prism: Info: isPrimary: 1
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.053Z]: prism: Info: hdrEnabled: 0
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.054Z]: prism: Info: isInternal: 1
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.054Z]: prism: Info: freesync: 0
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.054Z]: prism: Info: mode count: 11
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.056Z]: prism: Info: --------------------------------------------
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.056Z]: Enumerated 1 adapters.
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.057Z]: Selected GPU: Apple Paravirtual device
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.059Z]: Selected Display: Wine Monitor
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.059Z]: Selected Graphics API: Dx11
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:21.059Z]: Selected VidDeviceType: Dx11
+[316] [ALW] [Engine] [External(0)] [External()] [2026-11-15T21:44:26.794Z]: Render Thread startup time: 3.563251 secs
