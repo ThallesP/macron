@@ -96,7 +96,8 @@ check_pe build/programs/steam/x86_64-windows/steam.exe coff-x86-64 ""
 unixlib=build/dlls/lsteamclient/lsteamclient.so
 [ "$(lipo -archs "$unixlib")" = x86_64 ] || { echo "$unixlib is $(lipo -archs "$unixlib"), not x86_64" >&2; exit 1; }
 nm -gU "$gcenx_ntdll" | awk '{print $NF}' | sort -u >ntdll-exports.txt
-nm -m -u "$unixlib" | awk '/\(from ntdll\)/ {print $(NF-2)}' | sort -u >lsteamclient-ntdll-imports.txt
+nm -m -u "$unixlib" | awk '/\(from @rpath\/ntdll\.so\)/ {print $3}' | sort -u >lsteamclient-ntdll-imports.txt
+[ -s lsteamclient-ntdll-imports.txt ] || { echo "found no ntdll.so imports in $unixlib; nm's output changed" >&2; exit 1; }
 missing=$(comm -23 lsteamclient-ntdll-imports.txt ntdll-exports.txt)
 [ -z "$missing" ] || { echo "lsteamclient.so needs symbols Gcenx's ntdll.so does not export: $missing" >&2; exit 1; }
 echo "x86_64-unix/lsteamclient.so: x86_64, $(stat -f %z "$unixlib") bytes, its $(wc -l <lsteamclient-ntdll-imports.txt | tr -d ' ') ntdll.so imports are all exported by Gcenx's ntdll.so; links $(otool -L "$unixlib" | tail -n +2 | awk '{print $1}' | tr '\n' ' ')" | tee -a "$report"

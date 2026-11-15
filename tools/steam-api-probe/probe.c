@@ -1,5 +1,7 @@
 #include <windows.h>
+#include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef int(__cdecl *init_flat_fn)(char *message);
 typedef BOOL(__cdecl *init_fn)(void);
@@ -8,6 +10,31 @@ typedef unsigned int(__cdecl *app_id_fn)(void *utils);
 typedef void(__cdecl *shutdown_fn)(void);
 
 static const char *init_results[] = {"OK", "FailedGeneric", "NoSteamClient", "VersionMismatch"};
+static FILE *results;
+
+static void report(const char *format, ...)
+{
+    va_list args;
+
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+    if (!results) return;
+    va_start(args, format);
+    vfprintf(results, format, args);
+    va_end(args);
+    fflush(results);
+}
+
+static void open_results(void)
+{
+    char path[MAX_PATH], *slash;
+
+    GetModuleFileNameA(NULL, path, sizeof(path));
+    if (!(slash = strrchr(path, '\\'))) return;
+    sprintf(slash + 1, "steam-api-probe-%u.txt", (unsigned int)(sizeof(void *) * 8));
+    results = fopen(path, "w");
+}
 
 static void print_registry(const char *name)
 {
@@ -15,11 +42,11 @@ static void print_registry(const char *name)
     DWORD size = sizeof(value), number, number_size = sizeof(number);
 
     if (!RegGetValueA(HKEY_CURRENT_USER, "Software\\Valve\\Steam\\ActiveProcess", name, RRF_RT_REG_SZ, NULL, value, &size))
-        printf("RESULT registry %s: %s\n", name, value);
+        report("RESULT registry %s: %s\n", name, value);
     else if (!RegGetValueA(HKEY_CURRENT_USER, "Software\\Valve\\Steam\\ActiveProcess", name, RRF_RT_REG_DWORD, NULL, &number, &number_size))
-        printf("RESULT registry %s: %lu\n", name, number);
+        report("RESULT registry %s: %lu\n", name, number);
     else
-        printf("RESULT registry %s: (not set)\n", name);
+        report("RESULT registry %s: (not set)\n", name);
 }
 
 static void print_steamclient_modules(void)
@@ -33,7 +60,7 @@ static void print_steamclient_modules(void)
         HMODULE module = GetModuleHandleA(names[i]);
         if (!module) continue;
         GetModuleFileNameA(module, path, sizeof(path));
-        printf("RESULT module %s: loaded from %s\n", names[i], path);
+        report("RESULT module %s: loaded from %s\n", names[i], path);
     }
 }
 
@@ -44,11 +71,11 @@ static void *interface_of(HMODULE steam_api, const char *accessor)
 
     if (!get)
     {
-        printf("RESULT %s: not exported\n", accessor);
+        report("RESULT %s: not exported\n", accessor);
         return NULL;
     }
     iface = get();
-    printf("RESULT %s: %s\n", accessor, iface ? "returned an interface" : "returned NULL");
+    report("RESULT %s: %s\n", accessor, iface ? "returned an interface" : "returned NULL");
     return iface;
 }
 
@@ -62,37 +89,38 @@ int main(void)
     BOOL ok;
 
     setvbuf(stdout, NULL, _IONBF, 0);
-    printf("RESULT bits: %u\n", (unsigned int)(sizeof(void *) * 8));
-    printf("RESULT env SteamAppId: %s\n", getenv("SteamAppId") ? getenv("SteamAppId") : "(not set)");
-    printf("RESULT env SteamGameId: %s\n", getenv("SteamGameId") ? getenv("SteamGameId") : "(not set)");
+    open_results();
+    report("RESULT bits: %u\n", (unsigned int)(sizeof(void *) * 8));
+    report("RESULT env SteamAppId: %s\n", getenv("SteamAppId") ? getenv("SteamAppId") : "(not set)");
+    report("RESULT env SteamGameId: %s\n", getenv("SteamGameId") ? getenv("SteamGameId") : "(not set)");
     print_registry("pid");
     print_registry(sizeof(void *) == 8 ? "SteamClientDll64" : "SteamClientDll");
 
     if (!(steam_api = LoadLibraryA(dll)))
     {
-        printf("RESULT load %s: FAIL, error %lu\n", dll, GetLastError());
+        report("RESULT load %s: FAIL, error %lu\n", dll, GetLastError());
         return 2;
     }
-    printf("RESULT load %s: OK\n", dll);
+    report("RESULT load %s: OK\n", dll);
 
     if ((init_flat = (init_flat_fn)GetProcAddress(steam_api, "SteamAPI_InitFlat")))
     {
         int result = init_flat(message);
-        printf("RESULT SteamAPI_InitFlat: %d (%s), message \"%s\"\n", result,
+        report("RESULT SteamAPI_InitFlat: %d (%s), message \"%s\"\n", result,
                result >= 0 && result < 4 ? init_results[result] : "unknown", message);
         ok = result == 0;
     }
     else
     {
         ok = ((init_fn)GetProcAddress(steam_api, "SteamAPI_Init"))();
-        printf("RESULT SteamAPI_Init: %s\n", ok ? "true" : "false");
+        report("RESULT SteamAPI_Init: %s\n", ok ? "true" : "false");
     }
     print_steamclient_modules();
     if (!ok)
         return 1;
 
     if ((utils = interface_of(steam_api, "SteamAPI_SteamUtils_v011")))
-        printf("RESULT app id: %u\n", ((app_id_fn)GetProcAddress(steam_api, "SteamAPI_ISteamUtils_GetAppID"))(utils));
+        report("RESULT app id: %u\n", ((app_id_fn)GetProcAddress(steam_api, "SteamAPI_ISteamUtils_GetAppID"))(utils));
     interface_of(steam_api, "SteamAPI_SteamUserStats_v013");
     interface_of(steam_api, "SteamAPI_SteamRemoteStorage_v016");
     ((shutdown_fn)GetProcAddress(steam_api, "SteamAPI_Shutdown"))();

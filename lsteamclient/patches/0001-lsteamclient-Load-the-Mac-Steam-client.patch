@@ -1,3 +1,12 @@
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -1,5 +1,6 @@
+ MODULE    = lsteamclient.dll
+ UNIXLIB   = lsteamclient.so
++UNIX_LIBS = -lc++
+ IMPORTS   = user32 ws2_32
+ 
+ EXTRADEFS = -DSTEAM_API_EXPORTS -Dprivate=public -Dprotected=public
 --- a/steamclient_main.c
 +++ b/steamclient_main.c
 @@ -50,6 +50,7 @@
@@ -30,6 +39,24 @@
          if (!(nt = RtlImageNtHeader(mod)))
          {
              FIXME("Got NULL NT image headers.\n");
+@@ -372,7 +381,8 @@
+     else
+         params.ignore_child_processes = ignore_child_processes;
+ 
+-    if (STEAMCLIENT_CALL( steamclient_init, &params )) return 0;
++    /* Without a Mac Steam client this fails; SteamAPI_Init has to fail too instead of asserting. */
++    if (steamclient_call( unix_steamclient_init, &params, "steamclient_init" )) return 0;
+     if (!wsa_initialized)
+     {
+         /* Some games depend on winsocks being initialized after initializing Steam API. */
+@@ -629,6 +639,6 @@
+ 
+ void steamclient_init_registry(void)
+ {
+-    load_steamclient();
++    if (!load_steamclient()) return;
+     STEAMCLIENT_CALL( steamclient_init_registry, NULL );
+ }
 --- a/unixlib.cpp
 +++ b/unixlib.cpp
 @@ -1,3 +1,5 @@
