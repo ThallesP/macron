@@ -8,6 +8,9 @@ on:
       - cmd/macron/steam.go
       - ci/steam-hook/**
       - .github/workflows/steam-hook.yml
+  pull_request:
+    paths:
+      - internal/steamhook/builds.go
   workflow_dispatch:
 
 permissions:

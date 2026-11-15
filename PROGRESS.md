@@ -30,7 +30,8 @@ Phase 1 (loop day 1) for reference: gates 1 to 4 are green in CI on main ([Scena
 
 - `cmd/macron`, `internal/{wineruntime,launch,failure}`, `fixes/`: the launcher. README.md documents it.
 - `cmd/macron-check`, `internal/{check,imagecheck,scenario}`, `scenarios/`, `ci/build-bundle.sh`: the scenario checks. docs/checks.md defines the measure; it was committed before any Macron output was compared.
-- `.github/workflows/`: `test.yml` (Go tests, Linux), `scenarios.yml` (scenarios on macos-26), `reference.yml` (references on windows-latest), `sandbox.yml` (sbx).
+- `cmd/steam-builds`, `internal/steamhook/{cdn,table}.go`: the Steam build table kept current from Valve's update manifest. README.md "Steam hook".
+- `.github/workflows/`: `test.yml` (Go tests, Linux), `scenarios.yml` (scenarios on macos-26), `reference.yml` (references on windows-latest), `sandbox.yml` (sbx), `steam-hook.yml` (the hook against a real Steam on macos-26), `steam-builds.yml` (daily: Valve's current build against `KnownBuilds`).
 
 ## From the MacBook, 2026-11-14
 
@@ -140,7 +141,8 @@ From the client packages on Valve's public update CDN (no account; `client-updat
   - Pin the dylib to builds in `KnownBuilds`. On an unknown build it changes nothing and logs why, as the hook already does.
   - Mac-native games keep their Mac depot, because the switch only fires for apps whose platform list lacks macOS.
   - Still unchecked: whether the inner `steam_osx` (`Steam.AppBundle/.../steam_osx`, which `Steam.app` starts) accepts `DYLD_INSERT_LIBRARIES`. It depends on the signature flags and entitlements of both binaries, and has to be checked on a Mac, which is the next step.
-- **The `steam_osx` package changed.** `steam_osx.zip` on the CDN today hashes to `c15565c6...`, not the `99cc0889...` in `KnownBuilds`. The hook identifies a build by the inner `steam_osx`, so either the CDN package differs from what a running client unpacks, or the identity file needs another look. To check on a Mac.
+- **The `steam_osx` package changed.** `steam_osx.zip` on the CDN today hashes to `c15565c6...`, not the `99cc0889...` in `KnownBuilds`. The hook identifies a build by the inner `steam_osx`, so either the CDN package differs from what a running client unpacks, or the identity file needs another look. Answered on 2026-11-15, next bullet.
+- **2026-11-15: the build table follows Valve's manifest.** The manifest lists three `steam_osx` packages per build. `99cc0889...` is the one in `steam_osx_macos-signed-2.zip` (what the runner and the MacBook ran); the plain `steam_osx.zip` holds another binary (`c15565c6...`) for the same build; `steam_osx_steamchina.zip` holds `steamchina_osx` and no `steam_osx` (the earlier empty hash). `cmd/steam-builds` downloads `bins_client_osx` and every variant, checks each zip against the manifest's `sha2`, and prints one `KnownBuilds` row per variant that has a `steam_osx`; its output for 1794536281 matches the table's signed row. The plain row was added from it, with the reason in README.md "Steam hook". Rows now carry their variant and the CDN package each hash came from. The `Steam builds` workflow runs it daily on `main`; when a row is missing it fails, pushes `steam-build-<id>`, opens or updates a pull request, and dispatches `Steam hook` on that branch. Nothing merges by itself. `steam-hook.yml` also runs on pull requests that change `builds.go` (read-only, no secrets), which makes it the first Mac workflow a fork's pull request can start. Not yet run on GitHub: a new workflow can only be dispatched once it is on the default branch.
 
 ## What is known
 
@@ -208,4 +210,5 @@ Existing projects worth reading (see the licence rule in GOAL.md): NotProton (`N
 - **Trying the release on his own Mac.** The sandboxes have a virtual GPU, so the frame rate on a real Apple GPU, and Overwatch past its sign-in screen (it needs his Blizzard account and about 100 GB of disk), are his to try once a release exists.
 - **A licence for Macron.** Until one is picked, no code is copied from GPL projects. Phase 2 writes its own Steam Play switch and ports the Steam bridge from Valve's Proton source.
 - **An Apple Developer ID** (99 USD a year) if the installer should open without a Gatekeeper warning. Without it the DMG is unsigned and the release notes say how to open it.
-- **Fork pull requests.** The repo only asks approval for first-time contributors. "Require approval for all external contributors" in the Actions settings stops a fork from using the Mac runner slots.
+- **Fork pull requests.** The repo only asks approval for first-time contributors. "Require approval for all external contributors" in the Actions settings stops a fork from using the Mac runner slots. Since 2026-11-15 a pull request that changes `internal/steamhook/builds.go` starts `Steam hook` on a Mac runner.
+- **Let the `Steam builds` workflow open its pull requests.** Settings > Actions > General > Workflow permissions > "Allow GitHub Actions to create and approve pull requests" is off (`can_approve_pull_request_reviews: false`), so GitHub refuses the workflow's `gh pr create`. While it stays off, the run still pushes `steam-build-<id>`, starts `Steam hook` on it, and fails with a link that opens the pull request in one click. Turning it on also lets workflows approve pull requests; none of this repo's workflows do.

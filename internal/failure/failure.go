@@ -23,6 +23,7 @@ const (
 	CodeHookNotEnabled   Code = "STEAM_HOOK_NOT_ENABLED"
 	CodeInvalidVDF       Code = "INVALID_VDF"
 	CodeFileFailed       Code = "FILE_FAILED"
+	CodeBadSteamManifest Code = "BAD_STEAM_MANIFEST"
 )
 
 type Error struct {

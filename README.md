@@ -76,13 +76,31 @@ All three take `--steam-dir <dir>` (default `~/Library/Application Support/Steam
 
 `enable` only runs on a Steam build it knows: the SHA-256 of `steamclient.dylib` and `steam_osx` in `Steam.AppBundle/Steam/Contents/MacOS/` must match a row of `KnownBuilds` in `internal/steamhook/builds.go`. Anything else exits 125 with `UNKNOWN_STEAM_BUILD`, the observed build id and hashes, and changes nothing. `disable` works on any build, so it still undoes the hook after Steam updates itself.
 
-Steam updates itself, so the known build goes stale. When the `Steam hook` workflow fails with "Steam build not in the table", add the new build:
+Steam updates itself, so the table has to follow Valve's builds. `cmd/steam-builds` makes the rows from Valve's own update manifest, with no Mac and no account:
 
-1. Take the build id and the two hashes from the failed run's log (or run `macron steam status` on a Mac with the new Steam).
-2. Add a row to `KnownBuilds` with that id and those hashes. Keep the old rows: people who have not updated yet still run them.
-3. Push; the workflow applies the hook to the new build, restarts Steam and checks it reaches its login window again.
+```sh
+go run ./cmd/steam-builds           # print the KnownBuilds rows of Valve's current Mac build
+go run ./cmd/steam-builds --check --write internal/steamhook/builds.go
+                                    # exit 1 when a row is missing, and add the missing rows to the table
+```
 
-Known builds: `1794536281` (stable, 2026-11-13).
+It reads `steam_client_osx` on Valve's update CDN (`client-update.akamai.steamstatic.com`), the manifest Mac clients update from. It downloads `bins_client_osx` and every `steam_osx` package listed there, refuses a zip whose SHA-256 differs from the manifest's `sha2`, and hashes `steamclient.dylib` and each package's `steam_osx`: one row per variant. Each row names its variant and the package file each hash came from, so anyone can download `https://client-update.akamai.steamstatic.com/<package>` and check it. Only the stable manifest is read; beta clients (`steam_client_publicbeta_osx`) are not covered.
+
+How a new build gets supported:
+
+1. The `Steam builds` workflow runs the tool every day, and on demand. When Valve's current build has a row missing, the run fails, pushes branch `steam-build-<id>` (`main` plus the new rows), opens or updates its pull request, and starts the `Steam hook` workflow on that branch. GitHub lets a workflow open pull requests only while Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests" is on; while it is off, the run still pushes the branch and its error links to the page that opens the pull request in one click.
+2. The `Steam hook` run installs Steam from Valve's DMG, applies the hook to the new build, restarts Steam and checks it reaches its login window. It also runs on any pull request that changes `builds.go`.
+3. Merge the pull request when that run is green. Nothing merges by itself. Old rows stay: people who have not updated yet still run them.
+
+A build Valve no longer lists can still be added by hand: `macron steam status` on a Mac running it prints its build id and hashes.
+
+Valve's manifest lists three `steam_osx` packages for each build, and which one a client runs depends on how it was installed:
+
+- `macos-signed-2` (`steam_osx_macos-signed-2.zip`): what a Steam started from the notarised `/Applications/Steam.app` runs, which is how Valve's DMG installs it. GitHub's runner and Thalles's Mac both had it. The `Steam hook` workflow checks this row on a running client.
+- `plain` (`steam_osx.zip`): a different binary for the same build (`c15565c6...` at 1794536281, against `99cc0889...` for the signed one). Its row is in the table, because the evidence is the same as for the signed row short of a running client: Valve's manifest for that build id names it as the build's `steam_osx`, the zip matches the manifest's `sha2`, and it ships with the same `steamclient.dylib`, which holds the compatibility-tool code the hook registers with. What `enable` does (it writes `compatibilitytools.d/macron` and config.vdf's mapping, nothing in Steam's bundle) does not depend on which `steam_osx` runs, so refusing a client on this variant protected nothing. CI cannot check it on a client, because the runner always gets the signed variant, so this row rests on Valve's manifest alone. Which clients run it is not established. Anything Macron later does to the running `steam_osx` itself has to decide again per variant.
+- `steamchina` (`steam_osx_steamchina.zip`): holds `steamchina_osx` and no `steam_osx`, so it gets no row. A client on it would have no `steam_osx` for the hook to hash, so `enable` stops at `STEAM_NOT_FOUND` and changes nothing (inferred from the package, not seen on a client).
+
+Known builds: `1794536281` (stable, 2026-11-13), variants `macos-signed-2` and `plain`.
 
 ## Games
 
