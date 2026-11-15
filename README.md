@@ -27,6 +27,7 @@ macron runtime install                       # Wine 11.21 + Macron's Wine patche
 macron launch --game d3d11-probe -- probe.exe # start a program with its profile from fixes/games/
 macron kill --game d3d11-probe               # stop everything in that game's Windows environment
 macron waitforexitandrun <exe> [args]        # what Steam calls; the profile comes from SteamAppId
+macron uninstall                             # undo the Steam hook, remove runtimes, prefixes and logs
 ```
 
 `MACRON_BACKEND=dxmt|dxvk|wined3d` overrides the profile's graphics backend for one launch, like Proton's `PROTON_USE_WINED3D`; it is how backends are compared on a game without changing its profile. Macron starts Wine with `WINEDEBUG=-all` unless `WINEDEBUG` is already set, so `WINEDEBUG=fps` prints wined3d's frame rate into the launch log.
@@ -36,6 +37,10 @@ To see a game's frame rate, create the file `~/Library/Application Support/Macro
 `MACRON_OPENGL=llvmpipe` draws OpenGL in software with Mesa (downloaded on first use), for Macs without a hardware OpenGL renderer such as virtual machines and GitHub's runners. Like Proton's `PROTON_USE_WINED3D`, it is a user switch, not part of any game's profile. `MACRON_OPENGL=apple-software` is the other choice there: it sets the Mac driver's `AllowSoftwareRendering`, so Wine's own OpenGL falls back to Apple's software renderer (with Macron's Wine patch 0002, DXMT tree only). Unlike llvmpipe it keeps the path a game takes on a real Mac, including Wine's 32-on-64 OpenGL, which is what the frame-rate check needs.
 
 Everything lives in `~/Library/Application Support/Macron` (or `$MACRON_HOME`): `runtimes/<version>/` holds two Wine trees, plain and with DXMT (an APFS clone, so it costs almost no disk), `prefixes/<game>/` one private Windows environment per game (its user folders are not linked to the Mac's), `logs/<game>/` a log per launch. A profile (`fixes/games/<id>.json`) picks the graphics backend (`dxmt` for Direct3D 10/11 through Metal, `wined3d` for Wine's Direct3D-to-OpenGL), and can add environment variables, DLL overrides, registry values (applied again whenever they change), extra installs (`vcrun2022`, pinned in `fixes/installers.go`, run once per prefix), launch arguments and files to write before the first start (`{game}/…`, `{appdata}/…`, `{documents}/…`). Failures inside macron exit 125 with a stable error code; otherwise macron exits with the game's exit code.
+
+## The installer
+
+`ci/package/build.sh <version> <out-dir>` builds `Macron-<version>.dmg` on a Mac: `macron` as a universal binary, in a pkg that installs it and `macron-uninstall` to `/usr/local/bin`. The pkg's postinstall runs as the logged-in user: `macron runtime install`, then `macron steam enable` if Steam is installed and closed (if Steam is running it skips that and says so). It logs to `/Library/Logs/Macron-install.log`, and when a step fails it undoes what it added. `sudo macron-uninstall` runs `macron uninstall` as that user, then deletes the two programs. `macron uninstall` removes only the paths macron creates (`runtimes`, `prefixes`, `logs`, `downloads`, `show-fps`) and names anything else it finds in the folder. The `Release` workflow (manual) builds the DMG on a macOS 26 runner and uploads it as an artifact; it publishes a release only on `main` with its `publish` input set. The pkg is unsigned: docs/install.md has the Gatekeeper steps.
 
 ## Scenario checks (`macron-check`)
 

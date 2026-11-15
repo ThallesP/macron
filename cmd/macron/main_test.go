@@ -17,6 +17,7 @@ func TestUsageErrorsExitTwo(t *testing.T) {
 		{"kill"},
 		{"runtime"},
 		{"waitforexitandrun"},
+		{"uninstall", "now"},
 	}
 	for _, args := range cases {
 		var stdout, stderr bytes.Buffer
