@@ -1,0 +1,19 @@
+#!/bin/bash
+# Removes Macron for the logged-in user: unregisters it from Steam, deletes its
+# runtimes, prefixes and logs (macron uninstall), then the program itself.
+# Steam must be closed. Usage: sudo macron-uninstall
+set -euo pipefail
+if [ "$(id -u)" != 0 ]; then
+  exec sudo "$0" "$@"
+fi
+
+user=${SUDO_USER:-$(stat -f %Su /dev/console)}
+if [ "$user" = root ]; then
+  echo "macron-uninstall: run it with sudo from your own account, so it knows whose Steam and home folder to clean" >&2
+  exit 1
+fi
+
+sudo -u "$user" -H /usr/local/bin/macron uninstall
+rm -f /usr/local/bin/macron /usr/local/bin/macron-uninstall /Library/Logs/Macron-install.log
+pkgutil --forget io.github.thallesp.macron > /dev/null 2>&1 || true
+echo "removed /usr/local/bin/macron, /usr/local/bin/macron-uninstall and /Library/Logs/Macron-install.log"

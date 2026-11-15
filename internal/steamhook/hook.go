@@ -183,15 +183,18 @@ func (h Hook) Disable() (Status, error) {
 		return Status{}, failure.Errorf(failure.CodeSteamRunning, "Steam is running; quit it first, it rewrites config.vdf when it exits")
 	}
 
+	isHooked, err := h.IsHooked()
+	if err != nil {
+		return Status{}, err
+	}
+	if !isHooked {
+		return Status{}, failure.Errorf(failure.CodeHookNotEnabled, "the Steam hook is not enabled in %s", h.SteamDir)
+	}
+
 	config, err := h.readConfig(h.configPath())
 	if err != nil {
 		return Status{}, err
 	}
-	isRegistered := fileExists(h.toolDir())
-	if !isRegistered && !isMacronMapping(config) {
-		return Status{}, failure.Errorf(failure.CodeHookNotEnabled, "the Steam hook is not enabled in %s", h.SteamDir)
-	}
-
 	if isMacronMapping(config) {
 		if err := h.restoreMapping(config); err != nil {
 			return Status{}, err
@@ -208,6 +211,14 @@ func (h Hook) Disable() (Status, error) {
 		return Status{}, failure.Errorf(failure.CodeFileFailed, "could not remove %s: %v", h.backupPath(), err)
 	}
 	return h.Status()
+}
+
+func (h Hook) IsHooked() (bool, error) {
+	config, err := h.readConfig(h.configPath())
+	if err != nil {
+		return false, err
+	}
+	return fileExists(h.toolDir()) || isMacronMapping(config), nil
 }
 
 func (h Hook) restoreMapping(config *Node) error {

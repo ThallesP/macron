@@ -1,0 +1,69 @@
+#!/bin/bash
+# Runs as root after the installer copied macron to /usr/local/bin. Does the
+# rest as the logged-in user: installs the runtime into their home and, when
+# Steam is installed and closed, registers macron with it. Any failure undoes
+# what this install added, so there is never half an install.
+set -u
+log=/Library/Logs/Macron-install.log
+exec > >(tee -a "$log") 2>&1
+echo "== Macron install, $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+cd /
+
+macron=/usr/local/bin/macron
+user=$(stat -f %Su /dev/console)
+home=$(dscl . -read "/Users/$user" NFSHomeDirectory 2>/dev/null | sed 's/^NFSHomeDirectory: //')
+macron_home="$home/Library/Application Support/Macron"
+steam_dir="$home/Library/Application Support/Steam"
+is_fresh=0
+[ -e "$macron_home" ] || is_fresh=1
+was_hooked=0
+[ -e "$steam_dir/compatibilitytools.d/macron" ] && was_hooked=1
+did_try_enable=0
+
+as_user() {
+  sudo -u "$user" -H "$@"
+}
+
+undo() {
+  echo "Install failed: $1"
+  if [ "$did_try_enable" = 1 ] && [ "$was_hooked" = 0 ]; then
+    as_user "$macron" steam disable
+  fi
+  if [ "$is_fresh" = 0 ]; then
+    echo "Kept $macron_home and Steam's registration from the earlier install."
+    exit 1
+  fi
+  [ -n "$home" ] && rm -rf "$macron_home"
+  rm -f "$macron" /usr/local/bin/macron-uninstall
+  pkgutil --forget io.github.thallesp.macron > /dev/null 2>&1
+  echo "Removed everything this install added; Steam is as it was."
+  exit 1
+}
+
+if [ -z "$home" ] || [ "$user" = root ] || [ "$user" = loginwindow ]; then
+  undo "nobody is logged in to the desktop; log in and run the installer again"
+fi
+echo "user: $user ($home)"
+
+if ! as_user "$macron" runtime install; then
+  undo "the runtime did not install (the lines above say why)"
+fi
+
+if [ ! -e "$steam_dir/Steam.AppBundle/Steam/Contents/MacOS/steamclient.dylib" ]; then
+  echo "Steam is not installed, or has not been started yet, so Macron is not registered with it."
+  echo "Install Steam, start it once, quit it, then run in Terminal: macron steam enable"
+  echo "== Done (without Steam)"
+  exit 0
+fi
+if pgrep -x steam_osx > /dev/null; then
+  echo "NOTE: Steam is running, so Macron did not register itself with Steam (Steam rewrites its settings when it quits)."
+  echo "NOTE: quit Steam, then run in Terminal: macron steam enable"
+  echo "== Done (Steam still to enable)"
+  exit 0
+fi
+
+did_try_enable=1
+if ! as_user "$macron" steam enable; then
+  undo "macron steam enable failed (the lines above say why)"
+fi
+echo "== Done: Macron is registered with Steam"

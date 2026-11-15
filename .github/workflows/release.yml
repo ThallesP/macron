@@ -1,0 +1,87 @@
+# Builds Macron's installer DMG (ci/package) on a GitHub macOS runner and
+# uploads it as an artifact. Publishing it as a GitHub release is a separate,
+# deliberate step: it runs only on main and only when the publish input is set.
+#
+# Manual trigger only. Never add a pull_request, push or schedule trigger here.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version, x.y.z
+        required: true
+        default: 0.1.0
+      publish:
+        description: Publish the DMG as release v<version> (main only)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - name: Build the DMG
+        env:
+          VERSION: ${{ inputs.version }}
+        run: ci/package/build.sh "$VERSION" out
+      - name: Summary
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          hdiutil attach -nobrowse -readonly -mountpoint "$RUNNER_TEMP/dmg" "out/Macron-$VERSION.dmg"
+          pkgutil --expand "$RUNNER_TEMP/dmg/Macron.pkg" "$RUNNER_TEMP/pkg"
+          {
+            echo '```'
+            cat "out/Macron-$VERSION.dmg.sha256"
+            ls -l "$RUNNER_TEMP/dmg"
+            pkgutil --payload-files "$RUNNER_TEMP/dmg/Macron.pkg"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          mkdir "$RUNNER_TEMP/payload"
+          tar -xf "$RUNNER_TEMP/pkg/macron.pkg/Payload" -C "$RUNNER_TEMP/payload"
+          lipo -info "$RUNNER_TEMP/payload/usr/local/bin/macron" | tee -a "$GITHUB_STEP_SUMMARY"
+          hdiutil detach "$RUNNER_TEMP/dmg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macron-dmg
+          path: out/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: macron-dmg
+          path: out
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          tag="v$VERSION"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "$tag is already published; pick a new version" >&2
+            exit 1
+          fi
+          { cat docs/install.md; echo; echo "Built by $RUN_URL from $GITHUB_SHA. SHA-256: \`$(cut -d ' ' -f 1 "out/Macron-$VERSION.dmg.sha256")\`"; } > notes.md
+          gh release create "$tag" --target "$GITHUB_SHA" --title "Macron $VERSION" \
+            --notes-file notes.md "out/Macron-$VERSION.dmg" "out/Macron-$VERSION.dmg.sha256"

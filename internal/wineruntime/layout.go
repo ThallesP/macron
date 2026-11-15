@@ -43,3 +43,13 @@ func (l Layout) LogsDir() string {
 func (l Layout) ShowFPSFile() string {
 	return filepath.Join(l.Home, "show-fps")
 }
+
+func (l Layout) CreatedPaths() []string {
+	return []string{
+		filepath.Join(l.Home, "runtimes"),
+		filepath.Join(l.Home, "prefixes"),
+		l.LogsDir(),
+		l.DownloadsDir(),
+		l.ShowFPSFile(),
+	}
+}

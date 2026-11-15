@@ -18,6 +18,8 @@ const usage = `macron runs Windows games on macOS.
   macron kill --game <id>           stop everything running in a game's Windows environment
   macron steam status|enable|disable [--steam-dir <dir>] [--json]
                                     register macron as Steam's compatibility tool (Steam must be closed)
+  macron uninstall [--steam-dir <dir>]
+                                    unregister macron from Steam and remove its runtimes, prefixes and logs
   macron waitforexitandrun <exe> [args]
   macron run <exe> [args]           what Steam calls; the profile comes from SteamAppId
 
@@ -45,6 +47,7 @@ func commands() map[string]command {
 		"waitforexitandrun": steamVerb(true),
 		"run":               steamVerb(false),
 		"steam":             steamCommand,
+		"uninstall":         uninstallCommand,
 	}
 }
 
