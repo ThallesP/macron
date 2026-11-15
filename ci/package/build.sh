@@ -3,7 +3,10 @@
 # x86_64), the Steam Play switch library (steamplay/), a component package that
 # puts macron and macron-uninstall in /usr/local/bin and the library in
 # /usr/local/lib/macron, a product archive around it, and a DMG holding that
-# archive and the install notes. Usage: ci/package/build.sh <version x.y.z> <out-dir>
+# archive and the install notes. The programs macron diagnose times calls with
+# (tools/wow64-cost) go to /usr/local/lib/macron/diagnose, the Windows ones
+# built with the llvm-mingw that runtime/wine/release.env pins.
+# Usage: ci/package/build.sh <version x.y.z> <out-dir>
 set -euo pipefail
 umask 022
 version=$1
@@ -23,13 +26,25 @@ payload="$work/payload/usr/local/bin"
 library="$work/payload/usr/local/lib/macron"
 mkdir -p "$payload" "$library" "$work/dmg" "$out"
 for arch in arm64 amd64; do
-  (cd "$root" && GOOS=darwin GOARCH=$arch CGO_ENABLED=0 go build -trimpath -o "$work/macron-$arch" ./cmd/macron)
+  (cd "$root" && GOOS=darwin GOARCH=$arch CGO_ENABLED=0 go build -trimpath -ldflags "-X main.version=$version" -o "$work/macron-$arch" ./cmd/macron)
 done
 lipo -create -output "$payload/macron" "$work/macron-arm64" "$work/macron-amd64"
 lipo "$payload/macron" -verify_arch arm64 x86_64
 "$root/steamplay/build.sh" "$library/macron-steamplay.dylib"
 chmod 644 "$library/macron-steamplay.dylib"
 install -m 755 "$here/macron-uninstall" "$payload/macron-uninstall"
+
+diagnose="$library/diagnose"
+mkdir -p "$diagnose"
+clang -O2 -arch arm64 -arch x86_64 -o "$diagnose/transition-cost" "$root/tools/wow64-cost/native.c"
+. "$root/runtime/wine/release.env"
+curl -fsSL --retry 3 -o "$work/llvm-mingw.tar.xz" "$LLVM_MINGW_URL"
+echo "$LLVM_MINGW_SHA256  $work/llvm-mingw.tar.xz" | shasum -a 256 -c
+tar -xJf "$work/llvm-mingw.tar.xz" -C "$work"
+mingw=$(ls -d "$work"/llvm-mingw-*/bin)
+"$mingw/i686-w64-mingw32-clang" -O2 -msse2 -mfpmath=sse -mconsole "$root/tools/wow64-cost/cost.c" -o "$diagnose/cost32.exe"
+"$mingw/x86_64-w64-mingw32-clang" -O2 -mconsole "$root/tools/wow64-cost/cost.c" -o "$diagnose/cost64.exe"
+chmod 755 "$diagnose"/*
 chmod 755 "$payload/macron" "$here/scripts/postinstall"
 
 pkgbuild --root "$work/payload" --install-location / --scripts "$here/scripts" \

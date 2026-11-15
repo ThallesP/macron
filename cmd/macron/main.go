@@ -18,6 +18,8 @@ const usage = `macron runs Windows games on macOS.
   macron kill --game <id>           stop everything running in a game's Windows environment
   macron steam status|enable|disable [--steam-dir <dir>] [--json]
                                     register macron as Steam's compatibility tool (Steam must be closed)
+  macron diagnose                   write a report on this Mac, Steam, the runtime, what a call into
+                                    Wine costs and the frame rates show-fps logged; nothing is sent
   macron uninstall [--steam-dir <dir>]
                                     unregister macron from Steam and remove its runtimes, prefixes and logs
   macron waitforexitandrun <exe> [args]
@@ -48,6 +50,7 @@ func commands() map[string]command {
 		"run":               steamVerb(false),
 		"steam":             steamCommand,
 		"uninstall":         uninstallCommand,
+		"diagnose":          diagnoseCommand,
 	}
 }
 
