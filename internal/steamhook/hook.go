@@ -101,15 +101,6 @@ func (h Hook) Identify() (Build, error) {
 	return build, nil
 }
 
-func (k KnownBuild) matches(hashes map[string]string) bool {
-	for _, file := range k.Files {
-		if hashes[file.Path] != file.SHA256 {
-			return false
-		}
-	}
-	return len(k.Files) > 0
-}
-
 // A Steam started from the notarised Steam.app keeps its manifest under a
 // "signed" name (steam_client_signed_osx.manifest, steam_client_signed-2_osx.manifest);
 // the client the installer DMG downloads on a fresh machine uses the plain name.
