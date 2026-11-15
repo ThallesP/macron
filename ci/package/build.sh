@@ -4,6 +4,7 @@
 # /usr/local/bin, a product archive around it, and a DMG holding that archive
 # and the install notes. Usage: ci/package/build.sh <version x.y.z> <out-dir>
 set -euo pipefail
+umask 022
 version=$1
 out=$2
 if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -32,7 +33,7 @@ pkgbuild --root "$work/payload" --install-location / --scripts "$here/scripts" \
 sed "s/@VERSION@/$version/" "$here/distribution.xml" > "$work/distribution.xml"
 productbuild --distribution "$work/distribution.xml" --resources "$here/resources" \
   --package-path "$work" "$work/dmg/Macron.pkg"
-cp "$root/docs/install.md" "$work/dmg/Read me.txt"
+install -m 644 "$root/docs/install.md" "$work/dmg/Read me.txt"
 
 dmg="$out/Macron-$version.dmg"
 hdiutil create -volname "Macron $version" -srcfolder "$work/dmg" -format UDZO -ov "$dmg"

@@ -9,7 +9,7 @@ Macron comes as `Macron-<version>.dmg`. It holds `Macron.pkg`, which installs th
 
 ## The package is not notarised
 
-Macron has no Apple Developer ID yet, so the package is unsigned and cannot be notarised: Apple only notarises software signed with a Developer ID. macOS 26 therefore refuses to open it with a double-click and says Apple could not verify it is free of malware. Pick one of these ways past that:
+Macron has no Apple Developer ID yet, so the package is unsigned and cannot be notarised: Apple only notarises software signed with a Developer ID. macOS 26 therefore refuses to open it with a double-click: "“Macron.pkg” Not Opened. Apple could not verify “Macron.pkg” is free of malware that may harm your Mac or compromise your privacy." Pick one of these ways past that:
 
 - **System Settings.** Double-click `Macron.pkg` and press Done on the warning. Open System Settings > Privacy & Security, scroll to Security, where it says "Macron.pkg" was blocked, and press Open Anyway, then confirm with your password or Touch ID. The installer opens.
 - **Terminal, removing the quarantine.** Before opening the DMG, run `xattr -dr com.apple.quarantine ~/Downloads/Macron-<version>.dmg`, then open the DMG and double-click `Macron.pkg`.
@@ -20,10 +20,10 @@ Control-click > Open, which used to skip the check, no longer does since macOS 1
 ## What the install does
 
 1. Copies `macron` (one universal binary, Apple silicon and Intel) and `macron-uninstall` to `/usr/local/bin`.
-2. As you, not as root, runs `macron runtime install`: downloads Wine, DXMT and DXVK at pinned versions into `~/Library/Application Support/Macron` (about 1 GB, a few minutes).
+2. As you, not as root, runs `macron runtime install`: downloads Wine, DXMT and DXVK at pinned versions (about 260 MB) and unpacks them into `~/Library/Application Support/Macron` (about 2 GB as Finder counts it, less on disk because the second Wine tree is an APFS clone).
 3. If Steam is installed and closed, runs `macron steam enable`: adds Macron to `~/Library/Application Support/Steam/compatibilitytools.d` and makes it the compatibility tool for every app in Steam's `config.vdf`, after backing that file up. Nothing inside Steam's app is changed.
 
-If Steam was running, step 3 is skipped and the log says so: quit Steam and run `macron steam enable` in Terminal. If Steam is a build Macron does not know yet (Steam updates itself), or any step fails, the install undoes itself and the log says why.
+If Steam was running, step 3 is skipped and the log says so: quit Steam and run `macron steam enable` in Terminal. If Steam is a build Macron does not know yet (Steam updates itself), or any step fails, the install undoes itself (the program, its folder and Steam's settings go back to how they were) and the log says why.
 
 Everything the install does is written to `/Library/Logs/Macron-install.log` (open it with Console or `cat`).
 
