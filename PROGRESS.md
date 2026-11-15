@@ -8,7 +8,7 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 
 | Gate | State |
 |---|---|
-| 1. Fast (Ultimate Custom Night at its own frame rate on a sandbox, cause measured, a frame-rate check in CI) | in progress. Main cause found and measured: 32-bit Direct3D 9 copies the whole 512 KB streaming buffer twice per draw (see "Gate 1 findings"); a first fix (Wine patch 0003) removes it for `DrawPrimitiveUP`; not yet in the runtime, and other paths still stall |
+| 1. Fast (Ultimate Custom Night at its own frame rate on a sandbox, cause measured, a frame-rate check in CI) | in progress. Cause measured: 32-bit Direct3D 9 on Apple's OpenGL copies the whole 512 KB streaming buffer twice per draw (about 410 MB a frame). Wine patches 0003 and 0004 are in the runtime (`runtime-wine-11.21-macron.3`, pinned). On the runner's software renderer the 32-bit probe now runs at 8.4 to 8.7 fps, against 10.1 to 11.0 for the same scene in a native Mac OpenGL program, where stock Wine mostly never finished warm-up. Still open: an intermittent crash while the 32-bit device is created; the frame-rate check in CI; the real game (it needs the test account) |
 | 2. Steam's own Install and Play buttons, in a sandbox with the test account | in progress; registration alone is proven not enough |
 | 3. A DMG release Thalles can install, tested from the release on a fresh sandbox | not started |
 | 4. The Steam bridge (`SteamAPI_Init`, achievements, cloud) | not started |
@@ -149,7 +149,10 @@ Existing projects worth reading (see the licence rule in GOAL.md): NotProton (`N
 ## Next
 
 0. The Steam test account (GOAL.md, "The Steam test account"): gates 2, 4 and 5 and the real game in gate 1 wait on it.
-1. Gate 1, on a fresh sandbox: find why long 32-bit runs degrade to near zero (check the low-memory exhaustion suspect with `vmmap`, and the runs that exit right after their window); extend patch 0003 to d3d9's dynamic vertex buffers (they are created CPU-readable) and to `LockRect` on dynamic textures, or find a general fix in `opengl32`'s copied maps; then publish the overlay (`runtime-wine-11.21-macron.2`, the Wine build workflow on main), pin it, and make it the default path. A frame-rate check in CI on the real path needs a user switch for Apple's software renderer (`MACRON_OPENGL=apple-software`, setting winemac's `AllowSoftwareRendering`), and a measure that does not depend on the software renderer's shader compiles (a long warm-up, or Wine's copy count per frame). Then Ultimate Custom Night itself, once the test account exists.
+1. Gate 1:
+   - Get the frame-rate check (`scenarios/d3d9-fps-probe`: Apple's software renderer, the 64-bit probe as baseline at 0.8, up to 3 starts) passing in sandboxes, then set `"ci": true`.
+   - Find the 32-bit start-up crash: `opengl32.dll` returns into 32-bit code with a 64-bit address, in about 1 run in 5 without the command stream thread. Read Wine 11.21's wow64 thunks in `dlls/opengl32` and `dlls/wow64`, and check whether a 32-bit OpenGL program of ours, without wined3d, crashes the same way.
+   - Then Ultimate Custom Night itself, once the test account exists.
 2. Gate 2: parked; see "Needs Thalles".
 3. Gate 3 as soon as gate 2 works once.
 4. Left from phase 1: the scenario for the probe still uses DXVK; with the patched `winemac.so` pinned it can run through DXMT. The hardware OpenGL path (Xonotic without `MACRON_OPENGL`) is still unchecked on a real Mac.
