@@ -17,7 +17,7 @@ type Manifest struct {
 }
 
 var Pinned = Manifest{
-	Version: "wine-11.21-macron.5-dxmt-0.80-dxvk-1.10.3-20230507",
+	Version: "wine-11.21-macron.5-dxmt-0.80-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1",
 	Wine: Archive{
 		Name:      "wine-devel-11.21-osx64.tar.xz",
 		URL:       "https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.21/wine-devel-11.21-osx64.tar.xz",
@@ -41,5 +41,11 @@ var Pinned = Manifest{
 		URL:       "https://github.com/Gcenx/DXVK-macOS/releases/download/v1.10.3-20230507/dxvk-macOS-async-v1.10.3-20230507.tar.gz",
 		SHA256:    "f67d99d0a8eeedd7d406b283a3df9f939b5965acb00efcb33d0c6235c195a516",
 		SizeBytes: 7077450,
+	},
+	SteamBridge: Archive{
+		Name:      "macron-steam-bridge-proton-11.0-2e-macron.1-osx64.tar.xz",
+		URL:       "https://github.com/ThallesP/macron/releases/download/steam-bridge-proton-11.0-2e-macron.1/macron-steam-bridge-proton-11.0-2e-macron.1-osx64.tar.xz",
+		SHA256:    "9dbd3bc99b4bc247ca60ff4f6d6c35c29515f4938926f61fdba92ac72411983e",
+		SizeBytes: 3285144,
 	},
 }

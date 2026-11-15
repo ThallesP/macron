@@ -1,0 +1,70 @@
+[2026-11-15 21:21:46] AppID 2357570 adding PID 37830 as a tracked process "'/Users/runner/Library/Application Support/Steam/compatibilitytools.d/macron/.'/macron waitforexitandrun  '/Users/runner/Library/Application Support/Steam/steamapps/common/Overwatch/Overwatch.exe'"
+[2026-11-15 21:21:47] SSGL: change [2357570] LCT 573332829->0
+[2026-11-15 21:21:49] AppID 2357570 adding PID 37836 as a tracked process
+[2026-11-15 21:21:50] AppID 2357570 adding PID 37856 as a tracked process
+[2026-11-15 21:21:50] AppID 2357570 adding PID 37863 as a tracked process
+[2026-11-15 21:21:51] AppID 2357570 adding PID 37865 as a tracked process
+[2026-11-15 21:21:53] AppID 2357570 adding PID 38192 as a tracked process
+[2026-11-15 21:21:53] AppID 2357570 adding PID 38194 as a tracked process
+[2026-11-15 21:21:56] AppID 2357570 adding PID 38213 as a tracked process
+[2026-11-15 21:21:57] AppID 2357570 adding PID 38220 as a tracked process
+[2026-11-15 21:22:17] AppID 2357570 adding PID 39055 as a tracked process
+[2026-11-15 21:22:18] AppID 2357570 adding PID 39074 as a tracked process
+[2026-11-15 21:22:18] AppID 2357570 no longer tracking PID 39055, exit code -1
+[2026-11-15 21:22:18] AppID 2357570 no longer tracking PID 38192, exit code -1
+[2026-11-15 21:22:18] AppID 2357570 no longer tracking PID 37865, exit code -1
+[2026-11-15 21:22:19] AppID 2357570 adding PID 39076 as a tracked process
+[2026-11-15 21:22:20] AppID 2357570 adding PID 39083 as a tracked process
+[2026-11-15 21:22:30] AppID 2357570 adding PID 39465 as a tracked process
+[2026-11-15 21:22:30] AppID 2357570 no longer tracking PID 38220, exit code -1
+[2026-11-15 21:22:32] AppID 2357570 adding PID 39479 as a tracked process
+[2026-11-15 21:22:32] AppID 2357570 no longer tracking PID 39465, exit code -1
+[2026-11-15 21:22:32] AppID 2357570 no longer tracking PID 39083, exit code -1
+[2026-11-15 21:22:34] AppID 2357570 adding PID 39487 as a tracked process
+[2026-11-15 21:22:34] AppID 2357570 adding PID 39490 as a tracked process
+[2026-11-15 21:22:34] AppID 2357570 no longer tracking PID 37856, exit code -1
+[2026-11-15 21:22:35] AppID 2357570 adding PID 39499 as a tracked process
+[2026-11-15 21:22:35] AppID 2357570 no longer tracking PID 39490, exit code -1
+[2026-11-15 21:22:45] AppID 2357570 adding PID 39880 as a tracked process
+[2026-11-15 21:22:46] AppID 2357570 no longer tracking PID 39880, exit code -1
+[2026-11-15 21:22:47] AppID 2357570 adding PID 39891 as a tracked process
+[2026-11-15 21:22:47] AppID 2357570 no longer tracking PID 39499, exit code -1
+[2026-11-15 21:22:57] AppID 2357570 adding PID 40354 as a tracked process
+[2026-11-15 21:22:58] AppID 2357570 no longer tracking PID 40354, exit code -1
+[2026-11-15 21:22:58] AppID 2357570 no longer tracking PID 39891, exit code -1
+[2026-11-15 21:22:59] AppID 2357570 adding PID 40365 as a tracked process
+[2026-11-15 21:23:03] AppID 2357570 adding PID 40382 as a tracked process
+[2026-11-15 21:23:03] AppID 2357570 no longer tracking PID 40365, exit code -1
+[2026-11-15 21:23:03] AppID 2357570 no longer tracking PID 39487, exit code -1
+[2026-11-15 21:23:03] AppID 2357570 no longer tracking PID 39479, exit code -1
+[2026-11-15 21:23:03] AppID 2357570 no longer tracking PID 39076, exit code -1
+[2026-11-15 21:23:03] AppID 2357570 no longer tracking PID 39074, exit code -1
+[2026-11-15 21:23:03] AppID 2357570 no longer tracking PID 38213, exit code -1
+[2026-11-15 21:23:03] AppID 2357570 no longer tracking PID 38194, exit code -1
+[2026-11-15 21:23:03] AppID 2357570 no longer tracking PID 37863, exit code -1
+[2026-11-15 21:23:03] AppID 2357570 no longer tracking PID 37836, exit code -1
+[2026-11-15 21:23:03] AppID 2357570 adding PID 40386 as a tracked process
+[2026-11-15 21:23:04] AppID 2357570 adding PID 40390 as a tracked process
+[2026-11-15 21:23:04] AppID 2357570 adding PID 40392 as a tracked process
+[2026-11-15 21:23:04] AppID 2357570 adding PID 40394 as a tracked process
+[2026-11-15 21:23:05] AppID 2357570 adding PID 40443 as a tracked process
+[2026-11-15 21:23:05] AppID 2357570 adding PID 40559 as a tracked process
+[2026-11-15 21:23:06] AppID 2357570 adding PID 40645 as a tracked process
+[2026-11-15 21:23:21] AppID 2357570 adding PID 41135 as a tracked process
+[2026-11-15 21:23:29] AppID 2357570 adding PID 41307 as a tracked process
+[2026-11-15 21:23:29] AppID 2357570 no longer tracking PID 40390, exit code -1
+[2026-11-15 21:23:29] AppID 2357570 no longer tracking PID 40386, exit code -1
+[2026-11-15 21:23:30] AppID 2357570 adding PID 41493 as a tracked process
+[2026-11-15 21:23:31] AppID 2357570 adding PID 41512 as a tracked process
+[2026-11-15 21:26:30] AppID 2357570 no longer tracking PID 41512, exit code -1
+[2026-11-15 21:26:30] AppID 2357570 no longer tracking PID 40382, exit code -1
+[2026-11-15 21:26:33] AppID 2357570 no longer tracking PID 41493, exit code -1
+[2026-11-15 21:26:33] AppID 2357570 no longer tracking PID 41307, exit code -1
+[2026-11-15 21:26:33] AppID 2357570 no longer tracking PID 41135, exit code -1
+[2026-11-15 21:26:33] AppID 2357570 no longer tracking PID 40645, exit code -1
+[2026-11-15 21:26:33] AppID 2357570 no longer tracking PID 40559, exit code -1
+[2026-11-15 21:26:33] AppID 2357570 no longer tracking PID 40443, exit code -1
+[2026-11-15 21:26:33] AppID 2357570 no longer tracking PID 40394, exit code -1
+[2026-11-15 21:26:33] AppID 2357570 no longer tracking PID 40392, exit code -1
+[2026-11-15 21:26:33] AppID 2357570 no longer tracking PID 37830, exit code 130
+[2026-11-15 21:26:33] Remove 2357570 from running list

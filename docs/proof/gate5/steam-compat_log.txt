@@ -1,0 +1,3 @@
+[2026-11-15 21:21:46] StartSession: appID 2357570 session 371d5bb122565d02
+[2026-11-15 21:21:46] Command prefix for tool 0 "Macron" set to: "'/Users/runner/Library/Application Support/Steam/compatibilitytools.d/macron/.'/macron waitforexitandrun ".
+[2026-11-15 21:26:33] OnAppLifetimeNotification: release session(s) for appID 2357570
