@@ -1,0 +1,100 @@
+steam.sh: signed in to the test account
+
+== The installer under test
+aec923a83255a043c2e6c3eb74b63fcc443f890cd026f47eae386bb14fb3ec98  ~/work/Macron-0.3.0.dmg
+
+== Steam, signed in to the test account
+steam.sh: already signed in
+steam.sh: app 871720 is already in the library
+steam.sh: app 404410 is already in the library
+
+== Before Macron: the Windows-only game cannot be installed, the Mac game installs and runs
+steam.sh: stock Steam: 871720 is AVAILABLE FOR another platform, Install is greyed out
+[2026-11-15 23:07:36] AppID 404410 state changed : Fully Installed,Update Queued,
+[2026-11-15 23:07:36] AppID 404410 state changed : Fully Installed,
+[2026-11-15 23:07:36] AppID 404410 scheduler finished : removed from schedule (result No Error, state 0xc) 
+steam.sh: Steam installed 404410 into its library; the page shows PLAY
+steam.sh: 404410 is running: its window is open and Steam shows STOP
+steam.sh: 404410 stopped from Steam; Steam is back at PLAY
+
+== Done with the stock Steam
+
+== Install Macron.pkg from the DMG, with Steam open
+total 21504
+-rw-r--r--  1 runner  staff  10996354 Nov 15 22:56 Macron.pkg
+-rw-r--r--  1 runner  staff      9836 Nov 15 22:56 Read me.txt
+installer: Package name is Macron
+installer: Installing at base path /
+installer: The install was successful.
+backup:          true
+steam app:       /Applications/Steam.app
+steam play:      on
+Opened Steam again.
+== Done: Steam Play is on with Macron as its tool
+steam dir:       ~/Library/Application Support/Steam
+build:           1794536281 (known: true)
+steamclient:     sha256 55a9341f7e411f52bae049193a98071ae666b0fddb90ab3cae6aa527d9d84335
+steam_osx:       sha256 99cc08899ce366b9518c0a3782d1ae5954762894d2bf54cc2069c41df86162af
+tool registered: true
+default tool:    true
+backup:          true
+steam app:       /Applications/Steam.app
+steam play:      on
+steam.sh: Steam is at its main window
+
+== Steam Play is on in the running client
+[2026-11-15 23:09:16] pid 13486: Steam Play is on (build 1794536281, steamclient.dylib 221faa3a6a2c36c99130b0a45028af1b)
+
+== Install the Windows-only game with Steam's Install button
+[2026-11-15 23:10:08] AppID 871720 state changed : Fully Installed,Update Queued,
+[2026-11-15 23:10:08] AppID 871720 state changed : Fully Installed,
+[2026-11-15 23:10:08] AppID 871720 scheduler finished : removed from schedule (result No Error, state 0xc) 
+steam.sh: Steam installed 871720 into its library; the page shows PLAY
+Ultimate Custom Night.exe
+
+== Play starts it through macron
+steam.sh: 871720 is running: its window is open and Steam shows STOP
+[2026-11-15 23:10:25] StartSession: appID 871720 session 1ceb3beea93d1e60
+[2026-11-15 23:10:25] Command prefix for tool 0 "Macron" set to: "'~/Library/Application Support/Steam/compatibilitytools.d/macron/.'/macron waitforexitandrun ".
+macron: game steam-871720, log ~/Library/Application Support/Macron/logs/steam-871720/20261115T231026Z.log
+macron: preparing the Windows environment at ~/Library/Application Support/Steam/steamapps/compatdata/871720/pfx
+macron: starting Ultimate Custom Night.exe with the dxmt backend
+macron: writing the registry keys games read to find Steam
+macron: starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+
+== Quitting the game returns Steam to Play
+steam.sh: 871720 quit; Steam is back at PLAY
+
+== Steam's Stop button stops it too
+steam.sh: 871720 is running: its window is open and Steam shows STOP
+steam.sh: 871720 stopped from Steam; Steam is back at PLAY
+
+== The Mac-native game still runs as before, not through macron
+steam.sh: 404410 is running: its window is open and Steam shows STOP
+[2026-11-15 23:13:21] AppID 404410 adding PID 22105 as a tracked process "'~/Library/Application Support/Steam/steamapps/common/Endless Sky/Endless Sky.app/Contents/MacOS/Endless Sky'"
+steam.sh: 404410 stopped from Steam; Steam is back at PLAY
+
+== Done with Steam's buttons
+
+== sudo macron-uninstall, with Steam open
+Steam is open; asking it to quit.
+Steam: removed macron's compatibility tool and put config.vdf's old mapping back (~/Library/Application Support/Steam)
+Steam.app:       Valve's files are back, byte for byte
+removing ~/Library/Application Support/Macron/runtimes
+removing ~/Library/Application Support/Macron/logs
+removing ~/Library/Application Support/Macron/downloads
+removed ~/Library/Application Support/Macron
+The program itself is still at /usr/local/bin/macron: sudo /usr/local/bin/macron-uninstall removes it.
+removed /usr/local/bin/macron, /usr/local/bin/macron-uninstall, /usr/local/lib/macron and /Library/Logs/Macron-install.log
+
+== Steam is as it was
+/Applications/Steam.app: accepted
+source=Notarized Developer ID
+origin=Developer ID Application: Valve Corporation (MXGJJ98X76)
+config-before.vdf.private:0
+config.vdf:0
+steam.sh: Steam is at its main window
+steam.sh: stock Steam: 871720 is AVAILABLE FOR another platform, Install is greyed out
+
+== Gate 3 flow passed
+GATE3-EXIT 0

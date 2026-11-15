@@ -1,0 +1,17 @@
+RESULT bits: 64
+RESULT env SteamAppId: 480
+RESULT env SteamGameId: 480
+RESULT registry pid: 32
+RESULT registry SteamClientDll64: C:\Program Files (x86)\Steam\steamclient64.dll
+RESULT load steam_api64.dll: OK
+RESULT SteamAPI_InitFlat: 0 (OK), message ""
+RESULT module steamclient64.dll: loaded from C:\Program Files (x86)\Steam\steamclient64.dll
+RESULT SteamAPI_SteamUtils_v011: returned an interface
+RESULT app id: 480
+RESULT SteamAPI_SteamUserStats_v013: returned an interface
+RESULT SteamAPI_SteamRemoteStorage_v016: returned an interface
+RESULT stats received: -1
+RESULT achievements: 5
+RESULT achievement ACH_TRAVEL_FAR_ACCUM before: achieved
+RESULT achievement ACH_TRAVEL_FAR_ACCUM clear: stored, result 1, now not achieved
+RESULT exit: 0

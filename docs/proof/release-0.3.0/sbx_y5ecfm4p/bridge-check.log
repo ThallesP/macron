@@ -1,0 +1,81 @@
+installer: Package name is Macron
+installer: Installing at base path /
+installer: The install was successful.
+Opened Steam again.
+== Done: Steam Play is on with Macron as its tool
+total 400
+drwxr-xr-x  5 root  wheel    160 Nov 15 22:56 .
+drwxr-xr-x  4 root  wheel    128 Nov 15 22:56 ..
+-rwxr-xr-x  1 root  wheel  61952 Nov 15 22:56 cost32.exe
+-rwxr-xr-x  1 root  wheel  67072 Nov 15 22:56 cost64.exe
+-rwxr-xr-x  1 root  wheel  66448 Nov 15 22:56 transition-cost
+== read back, 64-bit
+exit 1
+RESULT bits: 64
+RESULT env SteamAppId: 480
+RESULT env SteamGameId: 480
+RESULT registry pid: 32
+RESULT registry SteamClientDll64: C:\Program Files (x86)\Steam\steamclient64.dll
+RESULT load steam_api64.dll: OK
+RESULT SteamAPI_InitFlat: 0 (OK), message ""
+RESULT module steamclient64.dll: loaded from C:\Program Files (x86)\Steam\steamclient64.dll
+RESULT SteamAPI_SteamUtils_v011: returned an interface
+RESULT app id: 480
+RESULT SteamAPI_SteamUserStats_v013: returned an interface
+RESULT SteamAPI_SteamRemoteStorage_v016: returned an interface
+RESULT stats received: -1
+RESULT achievements: 5
+RESULT achievement ACH_TRAVEL_FAR_ACCUM before: achieved
+RESULT cloud enabled for account: yes, for app: yes
+RESULT cloud read macron-steam-api-probe.txt: no such file
+RESULT exit: 1
+== read back, 32-bit
+exit 0
+RESULT bits: 32
+RESULT env SteamAppId: 480
+RESULT env SteamGameId: 480
+RESULT registry pid: 32
+RESULT registry SteamClientDll: C:\Program Files (x86)\Steam\steamclient.dll
+RESULT load steam_api.dll: OK
+RESULT SteamAPI_InitFlat: 0 (OK), message ""
+RESULT module steamclient.dll: loaded from C:\Program Files (x86)\Steam\steamclient.dll
+RESULT SteamAPI_SteamUtils_v011: returned an interface
+RESULT app id: 480
+RESULT SteamAPI_SteamUserStats_v013: returned an interface
+RESULT SteamAPI_SteamRemoteStorage_v016: returned an interface
+RESULT stats received: -1
+RESULT achievements: 5
+RESULT achievement ACH_TRAVEL_FAR_ACCUM before: achieved
+RESULT cloud enabled for account: yes, for app: yes
+RESULT cloud read macron-steam-api-probe.txt: 16 bytes, "macron-32-214043"
+RESULT exit: 0
+== clear the achievement
+exit 0
+RESULT bits: 64
+RESULT env SteamAppId: 480
+RESULT env SteamGameId: 480
+RESULT registry pid: 32
+RESULT registry SteamClientDll64: C:\Program Files (x86)\Steam\steamclient64.dll
+RESULT load steam_api64.dll: OK
+RESULT SteamAPI_InitFlat: 0 (OK), message ""
+RESULT module steamclient64.dll: loaded from C:\Program Files (x86)\Steam\steamclient64.dll
+RESULT SteamAPI_SteamUtils_v011: returned an interface
+RESULT app id: 480
+RESULT SteamAPI_SteamUserStats_v013: returned an interface
+RESULT SteamAPI_SteamRemoteStorage_v016: returned an interface
+RESULT stats received: -1
+RESULT achievements: 5
+RESULT achievement ACH_TRAVEL_FAR_ACCUM before: achieved
+RESULT achievement ACH_TRAVEL_FAR_ACCUM clear: stored, result 1, now not achieved
+RESULT exit: 0
+== diagnose
+diagnose exit 0
+== uninstall again
+removed ~/Library/Application Support/Macron
+The program itself is still at /usr/local/bin/macron: sudo /usr/local/bin/macron-uninstall removes it.
+removed /usr/local/bin/macron, /usr/local/bin/macron-uninstall, /usr/local/lib/macron and /Library/Logs/Macron-install.log
+Steam.app signature valid
+Notarized Developer ID
+ls: /usr/local/bin/macron: No such file or directory
+ls: /usr/local/lib/macron: No such file or directory
+BRIDGE-EXIT 0
