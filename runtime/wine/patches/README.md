@@ -35,6 +35,23 @@ It lowers the failure rate but does not remove the crash. In a second batch with
 
 `wined3d.dll` is a Windows module, built for i386 and x86_64. `../check-pe-exports.sh` checks on every build that an unpatched build and the patched one export exactly what Gcenx's does.
 
+## 0005: don't retain an OpenGL context that is being freed
+
+When the last reference to an OpenGL context goes away off the main thread, the Mac driver hands the context to the main thread in a block while it is being freed, and the main thread releases it after the memory is gone. In detail: `-[NSOpenGLContext dealloc]` calls `-clearDrawable`; Wine's `WineOpenGLContext` overrides it to run `[super clearDrawable]` on the main thread with `OnMainThread(^{ ... })`, and copying that block retains `self`. `OnMainThread` wakes the waiting thread before the main thread releases the block, so the waiting thread finishes `dealloc` and frees the context, and the main thread's release then runs `objc_release` on freed memory. The process dies with `c0000005 in system thread at 0x7ff81ad7a5e2` (`objc_release + 0x22`, read by resolving the address in an x86_64 process on the same runner). This happens in `wglDeleteContext` or thread cleanup when no main-thread block still holds the context, which is what wined3d does while it creates its adapter: a context on a hidden window, then deleted.
+
+How it was found, on GitHub's runner with Apple's software renderer (`MACRON_OPENGL=apple-software`):
+
+- `tools/wow64-gl-probe/glprobe.c` does what wined3d does to set up OpenGL (a hidden window, a legacy context, `wglCreateContextAttribsARB` for a 3.2 core context, `glGetString`, `glGetStringi`, `glGetIntegerv`), 20 rounds per start. Started through `macron launch` (profile `wow64-gl-probe`), its 32-bit build crashed in 23 of 30 starts, every one before it finished.
+- `+seh` put every traced crash (7 of 7, then 6 of 6) on the thread without a TEB, which on macOS is the Cocoa main thread, inside `objc_release`. With `NSZombieEnabled=YES` the message names the object: `-[WineOpenGLContext release]: message sent to deallocated instance`.
+- A diagnostic build that logged every retain and release of a `WineOpenGLContext` with its backtrace showed, in every one of 10 starts, two contexts retained at a count of 0: `-[WineOpenGLContext dealloc]` → `-[NSOpenGLContext dealloc]` → `-[WineOpenGLContext clearDrawable]` → `OnMainThread`.
+- The 64-bit build of the same program exited 0 in 20 of 20 starts, yet 11 of them logged the same fault while the process was exiting. So the bug is not specific to WoW64; a 32-bit program under Rosetta hits it while still running.
+
+The patch marks the context as deallocating and, in that state, reaches the main thread through a `__block` variable, which a block does not retain under manual reference counting. Measured with starts alternating between the shipped `winemac.so` (0001 and 0002) and one built the same way with 0005: the 32-bit program crashed in 23 of 30 starts before and 0 of 30 after; with the trace, contexts retained at a count of 0 went from 2 per start to 0 in 3 starts.
+
+0005 does not fix the crash described under 0004, which is the main failure of the Direct3D 9 frame-rate probe: in the same alternating batch the 32-bit probe failed 14 of 30 starts before and 12 of 30 after. That crash is a mode switch between 32-bit and 64-bit code that does not take effect: the 32-bit thread enters Wine's 64-bit `unix_call_32to64` (`wow64cpu.dll + 0x1239`) still in 32-bit mode, or comes back to 32-bit `opengl32.dll` still in 64-bit mode. PROGRESS.md ("The 32-bit OpenGL crashes") has the evidence.
+
+Like 0001 and 0002, 0005 changes only `winemac.so`, which `../check-abi.sh` checks. The runtime puts the patched `winemac.so` in its DXMT tree only, so profiles on the plain tree (`backend: wined3d`) keep Gcenx's.
+
 ## Building
 
 `.github/workflows/wine-build.yml` runs `../build-overlay.sh` on a macos-26 runner: it builds `winemac.so` (x86_64) and `wined3d.dll` (i386 and x86_64) from the source above, unpatched and patched, compares them with Gcenx's, and packs the patched ones as an overlay (`lib/wine/x86_64-unix/winemac.so`, `lib/wine/{i386,x86_64}-windows/wined3d.dll`, plus this folder and Wine's licence under `share/doc/macron-wine/`). Run from `main`, it publishes the overlay as a release; `internal/wineruntime` pins it by URL and SHA-256, copies all of it into the DXMT Wine tree, and copies `wined3d.dll` into the plain tree too, which keeps Gcenx's `winemac.so`.

@@ -1,0 +1,13 @@
+{
+  "id": "wow64-gl-probe",
+  "name": "Macron WoW64 OpenGL probe",
+  "steamAppIds": [],
+  "backend": "dxmt",
+  "args": [],
+  "env": {},
+  "dllOverrides": {},
+  "files": [],
+  "registry": [],
+  "installs": [],
+  "notes": "A small OpenGL program from tools/wow64-gl-probe that creates contexts the way wined3d does, without Direct3D, to reproduce Wine's 32-on-64 OpenGL crash on Apple's OpenGL (MACRON_OPENGL=apple-software on a runner). Its profile is the default one, like d3d9-fps-probe's."
+}
