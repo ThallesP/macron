@@ -49,3 +49,12 @@ sudo macron-uninstall
 It closes Steam, then runs `macron uninstall` as you: Valve's three files in Steam.app go back byte for byte (Steam.app is notarised again, `codesign --verify --strict /Applications/Steam.app` passes), Macron's library leaves Steam.app, Steam's `config.vdf` mapping goes back, Macron's folder leaves Steam's `compatibilitytools.d`, and Macron's runtimes, Windows environments and logs are deleted from `~/Library/Application Support/Macron`, each path listed first. It never deletes anything Macron did not create. Then it deletes `/usr/local/bin/macron`, `/usr/local/bin/macron-uninstall`, `/usr/local/lib/macron` and the install log. macOS will again ask for Steam's Accessibility permission when Steam next wants it.
 
 Games you installed stay in Steam's library, with their Windows environments next to their saves (`steamapps/compatdata/<app id>/pfx`); uninstall them from Steam like any other game.
+
+## What was checked, and what was not
+
+Checked on GitHub's Mac machines (macOS 26, Apple silicon, a virtual GPU) with a Steam test account, through Steam's real window (`ci/steam-play/gate3.sh`): Steam from Valve's DMG, signed in; this installer; Ultimate Custom Night (Windows-only, free) installed with Steam's Install button and started with Play; Stop and quitting return Steam to Play; a Mac-native game runs as before; `sudo macron-uninstall` leaves Steam.app byte for byte as Valve shipped it.
+
+Not checked, because those machines cannot show it:
+
+- **A Mac with System Integrity Protection on**, which is every normal Mac. The test machines have it off, where macOS is more lenient about loading a library into an app. Macron does what Apple's rules ask for on a normal Mac (the ad hoc signature), but the first install on one is yours. If Windows-only games still show a greyed Install afterwards, `~/Library/Application Support/Macron/logs/steamplay.log` and `/Library/Logs/Macron-install.log` say why.
+- **Speed on a real Apple GPU.** The test machines have no hardware OpenGL, which is what Ultimate Custom Night's Direct3D 9 goes through, so its frame rate there says little about your Mac. The frame counter above shows it.

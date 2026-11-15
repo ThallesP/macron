@@ -1,6 +1,9 @@
 # Builds Macron's installer DMG (ci/package) on a GitHub macOS runner and
 # uploads it as an artifact. Publishing it as a GitHub release is a separate,
 # deliberate step: it runs only on main and only when the publish input is set.
+# With from_run it publishes the DMG an earlier run of this workflow built on
+# main, without building again, so the file that was tested on a sandbox
+# (ci/steam-play/gate3.sh) is the file that is released, byte for byte.
 #
 # Manual trigger only. Never add a pull_request, push or schedule trigger here.
 name: Release
@@ -16,12 +19,17 @@ on:
         description: Publish the DMG as release v<version> (main only)
         type: boolean
         default: false
+      from_run:
+        description: Publish the DMG this earlier Release run built (run id) instead of building again
+        required: false
+        default: ""
 
 permissions:
   contents: read
 
 jobs:
   build:
+    if: inputs.from_run == ''
     runs-on: macos-26
     timeout-minutes: 30
     steps:
@@ -59,22 +67,39 @@ jobs:
 
   publish:
     needs: build
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.publish
+    if: always() && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.publish && (needs.build.result == 'success' || (needs.build.result == 'skipped' && inputs.from_run != ''))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ inputs.version }}
+      BUILT_BY: ${{ inputs.from_run || github.run_id }}
     steps:
       - uses: actions/checkout@v4
+      - name: The run that built the DMG is a successful Release run on main
+        run: |
+          set -euo pipefail
+          [[ $BUILT_BY =~ ^[0-9]+$ ]] || { echo "::error::from_run must be a run id, got '$BUILT_BY'"; exit 1; }
+          [ "$BUILT_BY" = "$GITHUB_RUN_ID" ] && exit 0
+          run=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILT_BY" --jq '[.path, .head_branch, .conclusion, .head_sha] | @tsv')
+          IFS=$'\t' read -r path branch conclusion sha <<< "$run"
+          if [ "$path" != .github/workflows/release.yml ] || [ "$branch" != main ] || [ "$conclusion" != success ]; then
+            echo "::error::run $BUILT_BY is $path on $branch ($conclusion); want a successful Release run on main"
+            exit 1
+          fi
+          echo "BUILT_SHA=$sha" >> "$GITHUB_ENV"
       - uses: actions/download-artifact@v4
         with:
           name: macron-dmg
           path: out
+          run-id: ${{ inputs.from_run || github.run_id }}
+          github-token: ${{ github.token }}
       - name: Publish the release
         env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ inputs.from_run || github.run_id }}
         run: |
           set -euo pipefail
           tag="v$VERSION"
@@ -82,6 +107,9 @@ jobs:
             echo "$tag is already published; pick a new version" >&2
             exit 1
           fi
-          { cat docs/install.md; echo; echo "Built by $RUN_URL from $GITHUB_SHA. SHA-256: \`$(cut -d ' ' -f 1 "out/Macron-$VERSION.dmg.sha256")\`"; } > notes.md
-          gh release create "$tag" --target "$GITHUB_SHA" --title "Macron $VERSION" \
+          [ -f "out/Macron-$VERSION.dmg" ] || { echo "::error::that run built no Macron-$VERSION.dmg"; ls out; exit 1; }
+          (cd out && shasum -a 256 -c "Macron-$VERSION.dmg.sha256")
+          source_sha=${BUILT_SHA:-$GITHUB_SHA}
+          { cat docs/install.md; echo; echo "Built by $RUN_URL from $source_sha. SHA-256: \`$(cut -d ' ' -f 1 "out/Macron-$VERSION.dmg.sha256")\`"; } > notes.md
+          gh release create "$tag" --target "$source_sha" --title "Macron $VERSION" \
             --notes-file notes.md "out/Macron-$VERSION.dmg" "out/Macron-$VERSION.dmg.sha256"

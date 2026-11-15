@@ -17,6 +17,8 @@ const (
 	insertVariable    = "LSEnvironment.DYLD_INSERT_LIBRARIES"
 	toolsPathVariable = "LSEnvironment.STEAM_EXTRA_COMPAT_TOOLS_PATHS"
 	launchServices    = "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
+
+	appManagementHint = "If macOS blocked the change (\"Operation not permitted\"), allow the program you ran this from (Terminal, or Installer) under System Settings > Privacy & Security > App Management, then try again. Steam.app was left as it was"
 )
 
 type SwitchUndo string
@@ -100,19 +102,19 @@ func (h Hook) switchOn() error {
 
 func (h Hook) changeApp() error {
 	if err := copyFile(h.SwitchLibrary, h.appLibrary()); err != nil {
-		return failure.Errorf(failure.CodeSwitchFailed, "could not copy the switch library into %s: %v. If macOS blocked it, allow your terminal under System Settings > Privacy & Security > App Management and try again", h.SteamApp, err)
+		return failure.Errorf(failure.CodeSwitchFailed, "could not copy the switch library into %s: %v. %s", h.SteamApp, err, appManagementHint)
 	}
 
 	plist := h.appFile("Contents/Info.plist")
 	if _, err := h.Run("plutil", "-extract", "LSEnvironment", "xml1", "-o", "-", plist); err != nil {
 		if output, err := h.Run("plutil", "-insert", "LSEnvironment", "-dictionary", plist); err != nil {
-			return failure.Errorf(failure.CodeSwitchFailed, "could not change %s: %s", plist, output)
+			return failure.Errorf(failure.CodeSwitchFailed, "could not change %s: %s. %s", plist, strings.TrimSpace(output), appManagementHint)
 		}
 	}
 	variables := map[string]string{insertVariable: h.appLibrary(), toolsPathVariable: filepath.Dir(h.toolDir())}
 	for name, value := range variables {
 		if output, err := h.Run("plutil", "-replace", name, "-string", value, plist); err != nil {
-			return failure.Errorf(failure.CodeSwitchFailed, "could not change %s: %s", plist, output)
+			return failure.Errorf(failure.CodeSwitchFailed, "could not change %s: %s. %s", plist, strings.TrimSpace(output), appManagementHint)
 		}
 	}
 
@@ -134,7 +136,7 @@ func (h Hook) signAdHoc(path string) error {
 		output, err = h.Run("codesign", "-f", "-s", "-", path)
 	}
 	if err != nil {
-		return failure.Errorf(failure.CodeSwitchFailed, "could not sign %s: %s", path, strings.TrimSpace(output))
+		return failure.Errorf(failure.CodeSwitchFailed, "could not sign %s: %s. %s", path, strings.TrimSpace(output), appManagementHint)
 	}
 	return nil
 }
