@@ -1,6 +1,17 @@
 # Progress
 
-**Release to try: [Macron 0.2.0](https://github.com/ThallesP/macron/releases/tag/v0.2.0)** (2026-11-15). Download `Macron-0.2.0.dmg`, open it, and run `sudo installer -pkg "/Volumes/Macron 0.2.0/Macron.pkg" -target /` (the package is unsigned; the release notes have the other ways). Then open Steam: Windows-only games have a working Install button and Play starts them through Macron. `sudo macron-uninstall` puts Steam back as it was. It was taken through that on fresh sandboxes ("Gate 3, 2026-11-15"); what a sandbox cannot show is under "Needs Thalles": a Mac with SIP on, and speed on a real GPU. The Steam bridge (gate 4) is not in it yet.
+**Release to try: [Macron 0.3.0](https://github.com/ThallesP/macron/releases/tag/v0.3.0)** (2026-11-15), `Macron-0.3.0.dmg`, SHA-256 `aec923a83255a043c2e6c3eb74b63fcc443f890cd026f47eae386bb14fb3ec98`. Download it, open it, and run `sudo installer -pkg "/Volumes/Macron 0.3.0/Macron.pkg" -target /` (the package is unsigned; the release notes have the other ways). `sudo macron-uninstall` puts Steam back as it was.
+
+After installing:
+1. Open Steam, Install a Windows-only game and press Play (the first start takes about a minute longer). Games that talk to Steam (Overwatch, achievements, Steam Cloud through the Steamworks API) now reach it through the Steam bridge.
+2. Frame counter: `touch ~/Library/Application\ Support/Macron/show-fps` before pressing Play, `rm ~/Library/Application\ Support/Macron/show-fps` to turn it off.
+3. With the game closed, run `macron diagnose` (a few minutes) and paste back what it prints. It is also kept in `~/Library/Application Support/Macron/logs/`. It sends nothing, reads nothing from the Steam account, and games run the same without it.
+
+Still expected to be slow: Ultimate Custom Night and other games that make many small Direct3D 9 or OpenGL draws a frame. Each OpenGL call crosses from the game into macOS through Wine and Rosetta, about 14 µs a call on the test machines (virtual Macs), and a night makes about 32,000 calls a frame. `macron diagnose` measures that cost on a real Mac; the fix that sends the calls in batches (Wine patch 0007, branch `gl-batch`) comes in the next release. Overwatch goes as far as its Battle.net sign-in; past that needs a Blizzard account. Windows games that keep their saves in Steam Auto-Cloud (Fallout Shelter) do not sync them yet ("For Mythos").
+
+Tested before publishing on a fresh sandbox with the Steam test account (sbx_y5ecfm4p): `ci/steam-play/gate3.sh` passed end to end, then the reinstalled package's bridge read back from Steam's servers an achievement and a Steam Cloud file set on another machine, and `macron diagnose` produced its report. The published file, downloaded from the release onto a second fresh sandbox (sbx_rmck3lm6): running.
+
+The previous release, [v0.2.0](https://github.com/ThallesP/macron/releases/tag/v0.2.0), has no Steam bridge and no `macron diagnose`.
 
 The loop's memory. Read it first, update it last. GOAL.md has the gates and the rules.
 
