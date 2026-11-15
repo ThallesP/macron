@@ -7,14 +7,14 @@ Mac + Proton. Press Play on a Windows-only game in the Mac Steam client and have
 What is in it: the launcher (`macron`) with its pinned runtime (Wine 11.21 with Macron's six Wine patches, DXMT and DXVK), the Steam Play switch (`steamplay/`), the fixes database, an installer (a DMG with a pkg, and `macron uninstall`), and the scenario checks (`macron-check`): three real games and three programs of ours pass in CI on GitHub's macOS runners, checked against the originals on Windows, including a frame-rate check of the 32-bit Direct3D 9 path.
 
 Not working yet:
-- **The Steam bridge:** games that talk to Steam (`SteamAPI_Init`, achievements, cloud saves) do not find it yet.
+- **The Steam bridge:** built (`lsteamclient/`, `steam_helper/`) and checked on sandboxes without a signed-in Steam (`SteamAPI_Init` reaches the Mac client and fails cleanly), but not released yet, so games that talk to Steam (`SteamAPI_Init`, achievements, cloud saves) do not find it yet (docs/steam-bridge.md).
 - **Speed on a real Mac is unmeasured since the fixes.** The sandboxes have a virtual GPU. On an M3, before Macron's Wine patches, Ultimate Custom Night ran at 5 fps.
 
 ## How it works
 
 1. **Steam hook**: switches on the Steam Play code that already ships (disabled) in Steam for Mac (`steamplay/README.md`) and registers Macron as a compatibility tool.
 2. **Launcher**: the headless program Steam calls on Play. It prepares a private Windows environment for the game and starts it under Wine.
-3. **Steam bridge**: a Mac port of Proton's `lsteamclient`, so games reach the native Steam client for ownership, achievements and cloud saves. On hold: `lsteamclient` is under the Steamworks SDK License, which does not let this repository publish it (see Licences).
+3. **Steam bridge**: a Mac port of Proton's `lsteamclient` and its `steam.exe` helper, so games reach the native Steam client for ownership, achievements and cloud saves. It stays under Valve's licences in its own folders (see Licences).
 4. **Runtime**: Wine 11.21 with Macron's patches (runtime/wine/patches), DXMT (Direct3D 10/11) and DXVK; D3DMetal (Direct3D 12) later. Rosetta 2 first, FEX later.
 5. **Fixes database**: per-game settings keyed by Steam app ID.
 6. **Installer**: one package that sets everything up. The only UI.
@@ -47,6 +47,10 @@ Everything lives in `~/Library/Application Support/Macron` (or `$MACRON_HOME`): 
 ## The installer
 
 `ci/package/build.sh <version> <out-dir>` builds `Macron-<version>.dmg` on a Mac: `macron` as a universal binary and the Steam Play switch library, in a pkg that installs `macron` and `macron-uninstall` to `/usr/local/bin` and the library to `/usr/local/lib/macron`. The pkg's postinstall runs as the logged-in user: `macron runtime install`, then, when Steam is installed, it closes Steam, runs `macron steam enable` and opens Steam again if it was open. It logs to `/Library/Logs/Macron-install.log`, and when a step fails it undoes what it added. `sudo macron-uninstall` closes Steam, runs `macron uninstall` as that user, then deletes the programs and the library. `macron uninstall` removes only the paths macron creates (`runtimes`, `prefixes`, `logs`, `downloads`, `show-fps`, `steam-app-backup`) and names anything else it finds in the folder. The `Release` workflow (manual) builds the DMG on a macOS 26 runner and uploads it as an artifact; it publishes a release only on `main` with its `publish` input set. The pkg is unsigned: docs/install.md has the Gatekeeper steps, and is the text of the release notes.
+
+## The Steam bridge
+
+When Steam starts a game (`macron waitforexitandrun` or `run`), macron starts it through `C:\windows\system32\steam.exe`, Proton's `steam_helper` (`steam_helper/`), after putting the bridge into the prefix: `lsteamclient.dll` from the runtime's Wine tree is copied to `C:\Program Files (x86)\Steam\steamclient.dll` (i386) and `steamclient64.dll` (x86_64), and `HKCU\Software\Valve\Steam\ActiveProcess` names them, the way Proton's prefix does. A game's `steam_api(64).dll` then loads that copy, Wine loads it as its builtin `lsteamclient.dll`, and its Unix side loads the Mac client's `steamclient.dylib` (from `STEAM_COMPAT_CLIENT_INSTALL_PATH`, else `~/Library/Application Support/Steam`, in `Steam.AppBundle/Steam/Contents/MacOS/`). `lsteamclient/build.sh` builds it on a Mac from Valve's source, which `lsteamclient/fetch.sh` downloads and checks; the `Steam bridge build` workflow publishes it, and `internal/wineruntime` installs it into both Wine trees once `Manifest.SteamBridge` pins a release. A runtime without it starts the game directly, as before. docs/steam-bridge.md has what was built and checked.
 
 ## Scenario checks (`macron-check`)
 
@@ -141,7 +145,9 @@ Every game tried. The first three are scenarios that pass in CI; the next five c
 | Go standard library | BSD 3-Clause | built into macron and macron-check |
 | Steam for Mac (Valve) | proprietary | installed by the `Steam hook` and `Steam Play` workflows to test against; never redistributed, the repo keeps only file hashes, build ids and the addresses of two instructions |
 | NotProton (NotProtonNot/NotProton) | GPL-3.0 | read as the reference for how Steam Play is switched on in Steam for Mac; none of its source is in this repository (`steamplay/` is Macron's own code) |
-| Proton's `lsteamclient` (ValveSoftware/Proton, tag `proton-11.0-2e`, commit `bc896217ffcd67f892f952b010f898fe7bd0f0a1`) | Steamworks SDK License (`lsteamclient/LICENSE`), not the BSD 3-Clause of Proton's top level (`LICENSE.proton`). It grants local copies of the source, only to develop software that uses Steamworks, and redistribution of the SDK's `redistributable_bin` folder only; all other rights are reserved. It covers the whole folder: Valve's Wine glue, the generated wrappers and the 91 Steamworks SDK header sets (`cxx.h` alone is Wine's, LGPL 2.1+). Proton's README: "If you distribute a built version of Proton to other users, you must adhere to the terms of these licenses" | not used. Its source, a patch made of its lines, and a build of it (a public artifact or a release) would all be redistribution, which the licence does not grant. PROGRESS.md, "Needs Thalles" |
+| Proton's `lsteamclient` (ValveSoftware/Proton, tag `proton-11.0-2e`, commit `bc896217ffcd67f892f952b010f898fe7bd0f0a1`), ported in `lsteamclient/` | Steamworks SDK License (`lsteamclient/LICENSE`, Valve's file), not the BSD 3-Clause of Proton's top level. The `lsteamclient/` folder and everything built from it stay under Valve's licence, not Macron's. As NotProton does, the repository keeps only Macron's patches and the scripts that fetch Valve's source and the Steamworks SDK headers it carries at build time, checked by digest; Valve's source is never committed. Valve has not confirmed that redistribution is allowed: ValveSoftware/Proton issue #7801 asks and is open | built from source at build time; the built DLLs and Unix library are to ship as their own release asset (`steam-bridge-*`), not in the LGPL Wine overlay |
+| Proton's `steam_helper` (same commit), ported in `steam_helper/` | BSD 3-Clause (`steam_helper/LICENSE`, Proton's `LICENSE.proton`) | fetched and patched at build time like `lsteamclient`; `steam.exe` ships in the same asset |
+| Steamworks SDK 1.65 `steam_api.dll` and `steam_api64.dll` (Valve's `redistributable_bin`, taken from Steamworks.NET at commit `ea51b029`) | Steamworks SDK License, which allows redistributing `redistributable_bin` | downloaded by `tools/steam-api-probe/build.sh` to test the bridge, checked by SHA-256; never committed |
 
 Macron itself has no licence yet (see PROGRESS.md, "Needs Thalles").
 
