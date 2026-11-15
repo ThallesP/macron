@@ -1,0 +1,23 @@
+== Macron install, 2026-11-15T20:41:56Z
+user: runner (/Users/runner)
+macron: downloading wine-devel-11.21-osx64.tar.xz
+macron: downloading wine-11.21-macron.5-overlay-osx64.tar.xz
+macron: downloading dxmt-v0.80-builtin.tar.gz
+macron: downloading dxvk-macOS-async-v1.10.3-20230507.tar.gz
+macron: unpacking Wine
+macron: adding DXMT
+macron: adding Macron's Wine patches
+macron: adding DXVK
+runtime wine-11.21-macron.5-dxmt-0.80-dxvk-1.10.3-20230507 is at /Users/runner/Library/Application Support/Macron/runtimes/wine-11.21-macron.5-dxmt-0.80-dxvk-1.10.3-20230507
+Steam is open; asking it to quit (it rewrites its settings when it quits).
+steam dir:       /Users/runner/Library/Application Support/Steam
+build:           1794536281 (known: true)
+steamclient:     sha256 55a9341f7e411f52bae049193a98071ae666b0fddb90ab3cae6aa527d9d84335
+steam_osx:       sha256 99cc08899ce366b9518c0a3782d1ae5954762894d2bf54cc2069c41df86162af
+tool registered: true
+default tool:    true
+backup:          true
+steam app:       /Applications/Steam.app
+steam play:      on
+Opened Steam again.
+== Done: Steam Play is on with Macron as its tool

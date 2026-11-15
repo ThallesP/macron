@@ -70,9 +70,7 @@ if [ "$phase" != after ]; then
   if [ -n "$macron" ]; then
     "$macron" steam status | grep -q '^steam play:      off$' || fail "Steam Play is already on; this run starts from a stock Steam"
   fi
-  steam page "$windows_game" "1-before-macron-windows-game"
-  sees "AVAILABLE FOR" || fail "a stock Steam should show the Windows-only game as AVAILABLE FOR Windows"
-  sees "SPACE REQUIRED" && fail "a stock Steam offers to install the Windows-only game; nothing left to switch on"
+  steam stock "$windows_game" "1-before-macron-windows-game"
   [ -f "$steam_dir/steamapps/appmanifest_$native_game.acf" ] || EVIDENCE="$evidence/before-macron" steam install "$native_game" 1200
   EVIDENCE="$evidence/before-macron" steam play "$native_game" "${native_game_window[@]}" 180
   EVIDENCE="$evidence/before-macron" steam stop "$native_game" "${native_game_window[@]}"
@@ -147,8 +145,7 @@ if [ -n "${STEAMPLAY_SOURCE:-}" ]; then
   steam start
   since "$switch_log" "$switch_lines" | tee "$evidence/unknown-build.txt"
   grep -q 'UNKNOWN_STEAM_BUILD' "$evidence/unknown-build.txt" || fail "the switch did not refuse a build it does not know"
-  steam page "$windows_game" "unknown-build-windows-game"
-  sees "SPACE REQUIRED" && fail "Steam Play is on although the switch refused the build"
+  steam stock "$windows_game" "unknown-build-windows-game"
   steam quit
 else
   echo "skipped: STEAMPLAY_SOURCE is not set"
@@ -163,6 +160,5 @@ codesign --verify --strict --deep "$steam_app" || fail "Steam.app's signature is
 spctl -a -vv "$steam_app" 2>&1 | tee "$evidence/gatekeeper-after.txt"
 [ -e "$steam_dir/compatibilitytools.d/macron" ] && fail "macron's tool folder is still in Steam"
 steam start
-steam page "$windows_game" "9-after-disable-windows-game"
-sees "AVAILABLE FOR" || fail "after the disable Steam should be stock again"
+steam stock "$windows_game" "9-after-disable-windows-game"
 say "Gate 2 flow passed"

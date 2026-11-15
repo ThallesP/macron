@@ -2,7 +2,7 @@
 
 Mac + Proton. Press Play on a Windows-only game in the Mac Steam client and have it run.
 
-**Status:** early. On a Mac sandbox, with Steam signed in to a test account: a Windows-only game (Ultimate Custom Night) gets a working Install button, Steam downloads it into its normal library, Play starts it through `macron`, Steam shows it running, and quitting it or pressing Stop returns Steam to Play; a Mac-native game still installs and runs as before; `macron uninstall` puts Steam back byte for byte. docs/install.md says how to install it; PROGRESS.md has the evidence and the table below has every game tried.
+**Status:** early; [release 0.2.0](https://github.com/ThallesP/macron/releases/tag/v0.2.0) is the first to try. On a Mac sandbox, with Steam signed in to a test account: a Windows-only game (Ultimate Custom Night) gets a working Install button, Steam downloads it into its normal library, Play starts it through `macron`, Steam shows it running, and quitting it or pressing Stop returns Steam to Play; a Mac-native game still installs and runs as before; `macron uninstall` puts Steam back byte for byte. docs/install.md says how to install it; PROGRESS.md has the evidence and the table below has every game tried.
 
 What is in it: the launcher (`macron`) with its pinned runtime (Wine 11.21 with Macron's six Wine patches, DXMT and DXVK), the Steam Play switch (`steamplay/`), the fixes database, an installer (a DMG with a pkg, and `macron uninstall`), and the scenario checks (`macron-check`): three real games and three programs of ours pass in CI on GitHub's macOS runners, checked against the originals on Windows, including a frame-rate check of the 32-bit Direct3D 9 path.
 

@@ -218,12 +218,28 @@ step_page() {
   shot_main "$name" "${library_masks[@]}"
 }
 
+# When another machine signed in to the account has the game, Steam's button
+# offers to stream from it (STREAM, or CONNECT while it runs there) and Install
+# is behind the arrow beside the button, as "This device". The arrow sits just
+# left of the SPACE REQUIRED caption.
+choose_this_device() {
+  local place
+  button_says INSTALL && return 0
+  place=$("$drive" find "$helper" Steam "SPACE REQUIRED" 2> /dev/null) || return 1
+  "$drive" click $((${place%% *} - 92)) $((${place##* } + 8))
+  sleep 2
+  click_text "This device" || return 1
+  say "another machine of the account has this game; chose This device"
+  wait_button INSTALL 20
+}
+
 # Presses Install on the game's library page and Install in Steam's dialog,
 # then waits for Steam to report the app fully installed.
 step_install() {
   local app_id=$1 seconds=${2:-1800} content_lines
   step_page "$app_id" "install-$app_id-1-page"
   sees "SPACE REQUIRED" || fail "the Install button of $app_id is not active (the page does not show the space it needs)"
+  choose_this_device || fail "the button of $app_id does not offer Install on this machine"
   content_lines=$(log_lines content_log.txt)
   click_text INSTALL || fail "no INSTALL button on the page of $app_id"
   wait_text "INSTALL TO:" 30 || fail "Steam's install dialog did not open for $app_id"
@@ -241,6 +257,25 @@ step_install() {
   wait_button PLAY 60 || fail "the page of $app_id shows no PLAY button after the install"
   shot_main "install-$app_id-3-installed" "${library_masks[@]}"
   say "Steam installed $app_id into its library; the page shows PLAY"
+}
+
+# A Steam without Steam Play offers neither Play nor a local install for a
+# Windows-only game: its page says AVAILABLE FOR Windows, or, when another
+# machine of the account has the game, offers to stream from there.
+step_stock() {
+  local app_id=$1 name=$2
+  step_page "$app_id" "$name"
+  button_says PLAY && fail "Steam offers to play $app_id on this machine"
+  sees "SPACE REQUIRED" && fail "Steam offers to install $app_id on this machine"
+  if sees "AVAILABLE FOR"; then
+    say "stock Steam: $app_id is AVAILABLE FOR another platform, Install is greyed out"
+    return 0
+  fi
+  if button_says STREAM || button_says CONNECT; then
+    say "stock Steam: $app_id cannot be installed here; Steam only offers to stream it from another machine of the account"
+    return 0
+  fi
+  fail "the page of $app_id shows neither AVAILABLE FOR nor a stream from another machine"
 }
 
 # Presses Play and waits for the game's window. Steam then says Running and
@@ -289,9 +324,9 @@ step_stop() {
 step=${1:-}
 [ $# -gt 0 ] && shift
 case "$step" in
-  start | quit | login | add | page | install | play | quit_game | stop) "step_$step" "$@" ;;
+  start | quit | login | add | page | stock | install | play | quit_game | stop) "step_$step" "$@" ;;
   *)
-    echo "usage: steam.sh start | quit | login | add <app> | page <app> <name> | install <app> [seconds] | play <app> <owner> <title> [seconds] | quit_game <app> <owner> <title> | stop <app> <owner> <title>" >&2
+    echo "usage: steam.sh start | quit | login | add <app> | page <app> <name> | stock <app> <name> | install <app> [seconds] | play <app> <owner> <title> [seconds] | quit_game <app> <owner> <title> | stop <app> <owner> <title>" >&2
     exit 2
     ;;
 esac

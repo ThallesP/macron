@@ -1,0 +1,3 @@
+/Applications/Steam.app: accepted
+source=Notarized Developer ID
+origin=Developer ID Application: Valve Corporation (MXGJJ98X76)
