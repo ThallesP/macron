@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -99,6 +100,10 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 	if err != nil {
 		return fail(output, err)
 	}
+	if _, err := os.Stat(layout.ShowFPSFile()); err == nil {
+		profile = withFrameCounter(profile)
+		progress(fmt.Sprintf("logging the frame rate (%s exists)", layout.ShowFPSFile()))
+	}
 	if openGL == "apple-software" {
 		profile = withAppleSoftwareRenderer(profile)
 		progress("OpenGL may use Apple's software renderer when there is no hardware one (MACRON_OPENGL=apple-software)")
@@ -140,6 +145,18 @@ func withBackendFromEnv(profile fixes.Profile, value string) (fixes.Profile, err
 	}
 	profile.Backend = backend
 	return profile, nil
+}
+
+func withFrameCounter(profile fixes.Profile) fixes.Profile {
+	env := maps.Clone(profile.Env)
+	if env == nil {
+		env = map[string]string{}
+	}
+	env["WINEDEBUG"] = "-all,+fps"
+	env["DXVK_HUD"] = "fps"
+	env["MTL_HUD_ENABLED"] = "1"
+	profile.Env = env
+	return profile
 }
 
 func withAppleSoftwareRenderer(profile fixes.Profile) fixes.Profile {

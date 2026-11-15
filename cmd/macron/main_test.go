@@ -77,3 +77,19 @@ func TestAppleSoftwareRendererAddsTheMacDriverSetting(t *testing.T) {
 		t.Errorf("registry = %v", got.Registry)
 	}
 }
+
+func TestFrameCounterLogsTheFrameRateWithoutTouchingTheProfile(t *testing.T) {
+	profile := fixes.Default("steam-1")
+	profile.Env = map[string]string{"DXMT_LOG_LEVEL": "info"}
+
+	got := withFrameCounter(profile)
+
+	if len(profile.Env) != 1 {
+		t.Fatalf("the profile's own env changed: %v", profile.Env)
+	}
+	for name, want := range map[string]string{"WINEDEBUG": "-all,+fps", "DXVK_HUD": "fps", "MTL_HUD_ENABLED": "1", "DXMT_LOG_LEVEL": "info"} {
+		if got.Env[name] != want {
+			t.Errorf("%s = %q, want %q", name, got.Env[name], want)
+		}
+	}
+}

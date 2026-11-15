@@ -39,3 +39,7 @@ func (l Layout) PrefixDir(gameID string) string {
 func (l Layout) LogsDir() string {
 	return filepath.Join(l.Home, "logs")
 }
+
+func (l Layout) ShowFPSFile() string {
+	return filepath.Join(l.Home, "show-fps")
+}
