@@ -30,7 +30,7 @@ const installLog = "/Library/Logs/Macron-install.log"
 var (
 	steamAccountID = regexp.MustCompile(`\[U:1:\d+\]`)
 	steamID64      = regexp.MustCompile(`7656119\d{10}`)
-	frameRateLine  = regexp.MustCompile(`@ approx ([0-9.]+)fps`)
+	frameRateLine  = regexp.MustCompile(`trace:fps:(\w+).*@ approx ([0-9.]+)fps`)
 	startLine      = regexp.MustCompile(`starting (.+) with the (\w+) backend`)
 )
 
@@ -58,7 +58,7 @@ func diagnoseCommand(ctx context.Context, args []string, stdout, stderr io.Write
 	writeSystem(&report)
 	writeSteam(&report, layout)
 	writeRuntime(&report, layout)
-	progress("timing what a game pays to call into Wine and macOS (about two minutes)")
+	progress("timing what a game pays to call into Wine and macOS (a few minutes)")
 	writeTransitions(ctx, &report, *tools)
 	writeGames(&report, layout)
 
@@ -208,11 +208,16 @@ func readFrameRateLog(name string, text string) (frameRateLog, bool) {
 	if match := startLine.FindStringSubmatch(text); match != nil {
 		log.Exe, log.Backend = match[1], match[2]
 	}
+	ratesBySource := map[string][]float64{}
 	for _, match := range frameRateLine.FindAllStringSubmatch(text, -1) {
-		rate, err := strconv.ParseFloat(match[1], 64)
+		rate, err := strconv.ParseFloat(match[2], 64)
 		if err == nil {
-			log.Rates = append(log.Rates, rate)
+			ratesBySource[match[1]] = append(ratesBySource[match[1]], rate)
 		}
+	}
+	log.Rates = ratesBySource["wined3d_cs_exec_present"]
+	if len(log.Rates) == 0 {
+		log.Rates = ratesBySource["wglSwapBuffers"]
 	}
 	return log, true
 }

@@ -14,7 +14,7 @@ Macron makes Steam's own Install and Play buttons work for Windows-only games in
    ```sh
    macron diagnose
    ```
-   It takes about two minutes, prints the report and keeps it in `~/Library/Application Support/Macron/logs/diagnose-<time>.txt`. It sends nothing anywhere, and games run exactly the same whether you ever run it or not. What it holds: the macOS version and chip, whether SIP is on, the Steam build and whether Macron knows it, whether Steam Play came on (the end of `steamplay.log` and of the install log), the runtime and Steam bridge versions, what one call from a game into Wine and macOS costs on this Mac (it runs small timing programs that come with Macron), and, for each game started with the frame counter on, its backend and frame rates. It leaves out your Steam account (no account name, Steam ID, library or Steam settings) and writes `~` and `<user>` instead of your home folder and user name.
+   It takes a few minutes, prints the report and keeps it in `~/Library/Application Support/Macron/logs/diagnose-<time>.txt`. It sends nothing anywhere, and games run exactly the same whether you ever run it or not. What it holds: the macOS version and chip, whether SIP is on, the Steam build and whether Macron knows it, whether Steam Play came on (the end of `steamplay.log` and of the install log), the runtime and Steam bridge versions, what one call from a game into Wine and macOS costs on this Mac (it runs small timing programs that come with Macron), and, for each game started with the frame counter on, its backend and frame rates. It leaves out your Steam account (no account name, Steam ID, library or Steam settings) and writes `~` and `<user>` instead of your home folder and user name.
 
 ## What is still expected to be slow
 
