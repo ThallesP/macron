@@ -2,14 +2,19 @@
 
 Mac + Proton. Press Play on a Windows-only game in the Mac Steam client and have it run.
 
-**Status:** early. The launcher (`macron`), its pinned runtime, the fixes database and the scenario checks (`macron-check`) exist, and three real games reach their menus through it on GitHub's macOS runners, checked against the originals on Windows. Steam integration is not done: registering Macron as a compatibility tool is not enough, the Mac client still refuses to install a Windows-only game ("Invalid platform"). PROGRESS.md has the details, the table below has every game tried.
+**Status:** early, not released. Working: the launcher (`macron`) with its pinned runtime, which is Wine 11.21 with Macron's five Wine patches, DXMT and DXVK. Also the fixes database, and the scenario checks (`macron-check`): three real games and two programs of ours pass in CI on GitHub's macOS runners, checked against the originals on Windows. That includes a frame-rate check of the 32-bit Direct3D 9 path. On Apple's OpenGL, Wine 11.21 copied the whole streaming vertex buffer twice for every draw a 32-bit Direct3D game made (Ultimate Custom Night ran at 5 fps on an M3), and Macron's patches remove that. There is also an installer (a DMG with a pkg, and `macron uninstall`). Not working yet:
+- **Steam's own Install and Play buttons:** registering Macron as a compatibility tool is not enough; the Mac client still refuses Windows-only games with "Invalid platform". How the Steam Play switch goes ahead is Thalles's decision.
+- **The Steam bridge:** on hold for its licence.
+- **Tests with a logged-in Steam:** they need a test account.
+
+PROGRESS.md has the details and the table below has every game tried.
 
 ## How it will work
 
 1. **Steam hook**: switches on the Steam Play code that already ships (disabled) in Steam for Mac and registers Macron as a compatibility tool.
 2. **Launcher**: the headless program Steam calls on Play. It prepares a private Windows environment for the game and starts it under Wine.
 3. **Steam bridge**: a Mac port of Proton's `lsteamclient`, so games reach the native Steam client for ownership, achievements and cloud saves. On hold: `lsteamclient` is under the Steamworks SDK License, which does not let this repository publish it (see Licences).
-4. **Runtime**: Wine with DXMT (DirectX 11) and D3DMetal (DirectX 12). Rosetta 2 first, FEX later.
+4. **Runtime**: Wine 11.21 with Macron's patches (runtime/wine/patches), DXMT (Direct3D 10/11) and DXVK; D3DMetal (Direct3D 12) later. Rosetta 2 first, FEX later.
 5. **Fixes database**: per-game settings keyed by Steam app ID.
 6. **Installer**: one package that sets everything up. The only UI.
 
@@ -95,7 +100,7 @@ Every game tried. The first three are scenarios that pass in CI; the next five c
 | osu!(lazer) 2026.1005.0 | osu-framework (.NET) | Direct3D 11 | DXVK | crash before the menu | runner | its auth module crashes: `Unhandled exception code c0000005`, exit 5 |
 | Ultimate Custom Night (Steam 871720, 262 MB) | Clickteam Fusion 2.5 (32-bit) | Direct3D 9 | wined3d on OpenGL (default profile, DXMT tree) | title screen, but far too slow to play | MacBook | checked by hand, not a scenario; files fetched with Steam's `+download_depot` because Steam's Install button refuses Windows-only games |
 | Direct3D 9 frame-rate probe (ours, not a game) | none: 400 alpha-blended sprites, one draw each, like a Clickteam Fusion scene | Direct3D 9, 32-bit and 64-bit | wined3d with Mesa llvmpipe (`MACRON_OPENGL=llvmpipe`); wined3d's Vulkan renderer for 64-bit only | draws its picture, matches Windows (SSIM 1.000); frame rate measured, threshold not set yet (`ci: false`) | runner | 32-bit through wined3d's Vulkan renderer exits 3 after MoltenVK's `vkCreateBuffer(): Only external memory handle type VK_EXTERNAL_MEMORY_HANDLE_TYPE_MTLBUFFER_BIT_EXT and ..._MTLHEAP_BIT_EXT are supported`; DXVK cannot make a device (no geometryShader, shaderCullDistance); wined3d's OpenGL renderer gets no pixel format on the runner. docs/checks.md, "How a frame rate is checked" |
-| Direct3D 11 probe (ours, not a game) | none | Direct3D 11 | DXVK in CI; DXMT on the MacBook | draws its picture, matches Windows (SSIM 0.996 in CI; by eye on the MacBook, 60 frames in 529 ms) | runner, MacBook | DXMT presents with Macron's patched `winemac.so`, which the runtime now puts in its DXMT tree |
+| Direct3D 11 probe (ours, not a game) | none | Direct3D 11 | DXVK and DXMT (Macron's default) in CI; DXMT on the MacBook | draws its picture, matches Windows (SSIM 0.996 in CI; by eye on the MacBook, 60 frames in 529 ms) | runner, MacBook | DXMT presents with Macron's patched `winemac.so`, which the runtime now puts in its DXMT tree |
 
 ## Licences
 

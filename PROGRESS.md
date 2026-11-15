@@ -114,6 +114,10 @@ Branch `wow64-gl-crash`, one sandbox (sbx_ojvgsegl), runtime macron.3, `MACRON_O
 - **Wrong leads, for the record.** The `iretq` variant was measured only against the small program (16 of 30 crashed), whose crashes all turned out to be the winemac bug, so it says nothing about the mode switch. The first fix tried for the winemac crash (reading the view on the main thread in `-setView:` and `-clearDrawable`) was dropped: the zombie output named the context, not the view.
 - **What Macron can do now.** `MACRON_OPENGL=llvmpipe` avoids both crashes (Mesa inside the 32-bit process never calls Wine's 64-bit OpenGL); the frame-rate check keeps `startAttempts: 3`. 0005 was released as [runtime-wine-11.21-macron.4](https://github.com/ThallesP/macron/releases/tag/runtime-wine-11.21-macron.4) and is pinned. `runtime/wine/build-overlay.sh` with 0001 to 0005 passed every check on the sandbox (the patched `winemac.so` is a drop-in for Gcenx's; `wined3d.dll` exports the same 377 symbols).
 
+## The default backend in CI, 2026-11-15
+
+Until now no CI scenario ran DXMT, the backend every Direct3D 10/11 game without a profile gets. `scenarios/d3d11-probe-dxmt` is the Direct3D 11 probe with `MACRON_BACKEND=dxmt`: the same program, the same Windows reference. It passed on sbx_dwe76soy, with SSIM 0.996, colour distance 0.000 and all six image controls rejected. The log shows `starting probe.exe with the dxmt backend` on the `Apple Paravirtual device`, through Macron's patched `winemac.so`. It now runs in CI next to the DXVK one.
+
 ## SuperTuxKart's broken frames, sandbox, 2026-11-14
 
 The SuperTuxKart scenario failed now and then in CI (runs on f4f6132 and fb001cf, 2 of 19 runs): the captured menu was STK's clear colour (100,101,140) with the menu missing or squashed into long slivers, SSIM about 0.09.
@@ -186,7 +190,7 @@ Existing projects worth reading (see the licence rule in GOAL.md): NotProton (`N
    - Then Ultimate Custom Night itself, once the test account exists.
 2. Gate 2: parked; see "Needs Thalles".
 3. Gate 3 as soon as gate 2 works once.
-4. Left from phase 1: the scenario for the probe still uses DXVK; with the patched `winemac.so` pinned it can run through DXMT. The hardware OpenGL path (Xonotic without `MACRON_OPENGL`) is still unchecked on a real Mac.
+4. Left from phase 1: the hardware OpenGL path (Xonotic without `MACRON_OPENGL`) is still unchecked on a real Mac.
 
 ## Needs Thalles
 
