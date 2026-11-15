@@ -1,0 +1,110 @@
+--- a/steam.c
++++ b/steam.c
+@@ -181,28 +181,6 @@
+     return n;
+ }
+ 
+-static void setup_vr_registry(void)
+-{
+-    BOOL (CDECL *init)(void);
+-    HMODULE vrclient;
+-
+-#ifdef _WIN64
+-    if (!(vrclient = LoadLibraryW( L"vrclient_x64" )))
+-#else
+-    if (!(vrclient = LoadLibraryW( L"vrclient" )))
+-#endif
+-    {
+-        ERR( "Failed to load vrclient module, skipping initialization\n" );
+-        return;
+-    }
+-
+-    if ((init = (void *)GetProcAddress( vrclient, "vrclient_init_registry" ))) init();
+-    else ERR( "Failed to find vrclient_init_registry export\n" );
+-
+-    TRACE( "Queued VR info initialization.\n" );
+-    FreeLibrary(vrclient);
+-}
+-
+ static void setup_steam_registry(void)
+ {
+     BOOL (CDECL *init)(void);
+@@ -659,12 +637,10 @@
+     HMODULE module;
+     const char *sgi;
+     int i, j;
+-    static char *unix_steam[] =
+-    {
+-        (char *)"steam-runtime-steam-remote",
+-        (char *)"steam",
+-        NULL,
+-    };
++    static char *open_url[] = {(char *)"/usr/bin/open"};
++    static char *open_steam[] = {(char *)"/usr/bin/open", (char *)"-a", (char *)"Steam", (char *)"--args"};
++    char **unix_steam;
++    int unix_steam_count;
+ 
+     /* If there are command line options, only forward steam:// and options start with - */
+     if (argc > 1 && StrStrIA(argv[1], "steam://") != argv[1] && argv[1][0] != '-')
+@@ -708,29 +684,36 @@
+         }
+     }
+ 
+-    if (!(unix_argv = malloc((argc + 1) * sizeof(*unix_argv))))
++    /* The Mac client takes steam:// URLs through Launch Services and options as arguments to Steam.app. */
++    if (argc > 1 && argv[1][0] == '-')
++    {
++        unix_steam = open_steam;
++        unix_steam_count = ARRAY_SIZE(open_steam);
++    }
++    else
++    {
++        unix_steam = open_url;
++        unix_steam_count = ARRAY_SIZE(open_url);
++    }
++
++    if (!(unix_argv = malloc((unix_steam_count + argc) * sizeof(*unix_argv))))
+     {
+         WINE_ERR("Out of memory.\n");
+         return FALSE;
+     }
+ 
++    for (i = 0; i < unix_steam_count; ++i)
++        unix_argv[i] = unix_steam[i];
+     for (i = 1; i < argc; ++i)
+-        unix_argv[i] = argv[i];
+-    unix_argv[argc] = NULL;
++        unix_argv[unix_steam_count + i - 1] = argv[i];
++    unix_argv[unix_steam_count + argc - 1] = NULL;
+ 
+-    for (i = 0; i < ARRAY_SIZE(unix_steam); ++i)
+-    {
+-        unix_argv[0] = unix_steam[i];
+-
+-        WINE_TRACE("Trying");
+-        for (j = 0; j < argc; ++j)
+-            WINE_TRACE(" %s", wine_dbgstr_a(unix_argv[j]));
+-        WINE_TRACE("\n");
++    WINE_TRACE("Trying");
++    for (j = 0; unix_argv[j]; ++j)
++        WINE_TRACE(" %s", wine_dbgstr_a(unix_argv[j]));
++    WINE_TRACE("\n");
+ 
+-        status = p__wine_unix_spawnvp(unix_argv, TRUE);
+-        if (status == STATUS_SUCCESS)
+-            break;
+-    }
++    status = p__wine_unix_spawnvp(unix_argv, TRUE);
+     free(unix_argv);
+ 
+     if (status == STATUS_SUCCESS)
+@@ -983,9 +966,6 @@
+     {
+         BOOL should_await;
+ 
+-        if (game_process)
+-            setup_vr_registry();
+-
+         child = run_process(&should_await, game_process);
+ 
+         if (should_await)

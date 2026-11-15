@@ -1,0 +1,74 @@
+# Builds Macron's Steam bridge (lsteamclient/, steam_helper/) on a GitHub macOS
+# runner from Valve's Proton source, fetched and checked at build time, and,
+# when started on main, publishes it as a release asset that
+# internal/wineruntime pins by URL and SHA-256 (Manifest.SteamBridge). The
+# bridge stays under Valve's licences (lsteamclient: Steamworks SDK License,
+# steam_helper: BSD 3-Clause); the archive carries both.
+#
+# Manual trigger only. Never add a pull_request, push or schedule trigger here.
+name: Steam bridge build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the bridge from Valve's source with Macron's patches
+        run: lsteamclient/build.sh "$RUNNER_TEMP/work" out
+      - name: Summary
+        if: always()
+        run: |
+          { echo '```'; cat out/bridge-check.txt; cat out/*.sha256; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: steam-bridge
+          path: out/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: steam-bridge
+          path: out
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          . lsteamclient/release.env
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "$RELEASE_TAG is already published; bump RELEASE_TAG in lsteamclient/release.env" >&2
+            exit 1
+          fi
+          sha=$(cut -d ' ' -f 1 "out/$ASSET_NAME.sha256")
+          {
+            echo "Macron's Steam bridge: Proton's \`lsteamclient\` (i386 and x86_64 \`lsteamclient.dll\`, x86_64 \`lsteamclient.so\`) and \`steam_helper\` (\`steam.exe\`), ported to macOS and built for Wine 11.21, so a Windows game started by Macron reaches the Mac Steam client. Unpack it over both Wine trees of Macron's runtime."
+            echo
+            echo "- \`$ASSET_NAME\`: SHA-256 \`$sha\`"
+            echo "- Source: ValveSoftware/Proton \`$PROTON_TAG\` (commit \`$PROTON_COMMIT\`), checked by digest at build time, with Macron's patches: [lsteamclient/patches]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/tree/$GITHUB_SHA/lsteamclient/patches) and [steam_helper/patches]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/tree/$GITHUB_SHA/steam_helper/patches)."
+            echo "- Built by $RUN_URL from $GITHUB_SHA."
+            echo
+            echo "Licences: \`lsteamclient\` is under Valve's Steamworks SDK License, \`steam_helper\` under Valve's BSD 3-Clause licence, and the DLLs link Wine's LGPL 2.1+ startup code; all three texts are in the archive under \`share/doc/macron-steam-bridge/\`. Macron's own licence does not cover this asset. Valve has not confirmed that redistributing builds of \`lsteamclient\` is allowed (ValveSoftware/Proton issue #7801 asks and is open)."
+            echo
+            echo "Checks:"
+            echo '```'
+            cat out/bridge-check.txt
+            echo '```'
+          } > notes.md
+          gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --title "Steam bridge for Macron (${RELEASE_TAG#steam-bridge-})" \
+            --notes-file notes.md "out/$ASSET_NAME" "out/$ASSET_NAME.sha256"
