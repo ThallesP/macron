@@ -19,7 +19,7 @@ Control-click > Open, which used to skip the check, no longer does since macOS 1
 ## What the install does
 
 1. Copies `macron` and `macron-uninstall` to `/usr/local/bin` and the Steam Play switch library to `/usr/local/lib/macron`.
-2. As you, not as root, runs `macron runtime install`: downloads Wine, DXMT and DXVK at pinned versions (about 260 MB) and unpacks them into `~/Library/Application Support/Macron` (about 2 GB as Finder counts it, less on disk because the second Wine tree is an APFS clone).
+2. As you, not as root, runs `macron runtime install`: downloads Wine, DXMT, DXVK and the Steam bridge at pinned versions (about 265 MB) and unpacks them into `~/Library/Application Support/Macron` (about 2 GB as Finder counts it, less on disk because the second Wine tree is an APFS clone).
 3. Closes Steam if it is open, then runs `macron steam enable`:
    - adds Macron to `~/Library/Application Support/Steam/compatibilitytools.d` and makes it the compatibility tool for every app in Steam's `config.vdf`, after backing that file up;
    - switches on the Steam Play code that ships, switched off, in Steam for Mac. For that it puts its library into `/Applications/Steam.app`, names it in the app's `Info.plist`, and signs Steam.app again ad hoc, because macOS only loads a library into an app whose signature allows it. Valve's three files that this changes (`Info.plist`, `steam_osx`, `CodeResources`) are kept in `~/Library/Application Support/Macron/steam-app-backup` and go back byte for byte on uninstall. `steamplay/README.md` in the repository has the details.
@@ -36,7 +36,7 @@ Open Steam. A Windows-only game in your library now has a working Install button
 - **A log of every start** is in `~/Library/Application Support/Macron/logs/steam-<app id>/`.
 - **Frame rate:** create the file `~/Library/Application Support/Macron/show-fps` (`touch` it) and start the game. Direct3D 8 and 9 games then log their frame rate into that log (`trace:fps:… @ approx 59.9fps`); Direct3D 10 and 11 games show Apple's Metal HUD over the game. Delete the file to turn it off.
 - **When Steam updates itself** to a build this Macron does not know, Steam Play goes off (Windows-only games show a greyed Install again) and nothing else changes; `~/Library/Application Support/Macron/logs/steamplay.log` says `UNKNOWN_STEAM_BUILD`. Install the newest Macron. If an update replaces Steam.app itself, run `macron steam enable` once with Steam closed.
-- **Not yet:** games that need to talk to Steam (they check ownership, achievements, cloud saves through `SteamAPI_Init`) may refuse to start or run without those; the Steam bridge is the next piece.
+- **Games that talk to Steam** (ownership, achievements, Steam Cloud, the Steam profile, through `SteamAPI_Init`) reach your running Mac Steam through the Steam bridge, a Mac port of Proton's `lsteamclient`: macron starts them through a small `steam.exe` in their Windows environment, and the launch log says `starting it through steam.exe`. Steam must be running and signed in, as for any game. The bridge stays under Valve's licences (Steamworks SDK License, BSD); Valve has not confirmed that redistributing it is allowed (ValveSoftware/Proton issue #7801).
 
 ## Uninstalling
 

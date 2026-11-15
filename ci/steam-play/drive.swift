@@ -314,7 +314,25 @@ case "activate":
     guard let name = rest.first else { fail("want <app name>") }
     let apps = NSWorkspace.shared.runningApplications.filter { $0.localizedName == name }
     guard !apps.isEmpty else { fail("no running app named \(name)") }
-    for app in apps { app.activate(options: [.activateAllWindows]) }
+    // Several processes can share a name (a Windows game under Wine and the
+    // steam.exe that started it are both "wine"); activating one without a
+    // window would take the keys away from the game, so prefer the ones that
+    // own a window on screen.
+    let info = CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID) as? [[String: Any]] ?? []
+    let owners = Set(info.compactMap { $0[kCGWindowOwnerPID as String] as? Int32 })
+    let withWindows = apps.filter { owners.contains($0.processIdentifier) }
+    let targets = withWindows.isEmpty ? apps : withWindows
+    for app in targets { app.activate(options: [.activateAllWindows]) }
+    // macOS may ignore activate() from a process that is not active itself
+    // (Steam stays in front); System Events makes the process frontmost then.
+    Thread.sleep(forTimeInterval: 0.5)
+    let front = NSWorkspace.shared.frontmostApplication?.processIdentifier
+    if let target = targets.last, front != target.processIdentifier {
+        let script = "tell application \"System Events\" to set frontmost of (first process whose unix id is \(target.processIdentifier)) to true"
+        var error: NSDictionary?
+        NSAppleScript(source: script)?.executeAndReturnError(&error)
+        if let error { fail("could not bring \(name) to the front: \(error)") }
+    }
 case "click": click(at: point(rest))
 case "doubleclick": click(at: point(rest), count: 2)
 case "rightclick": rightClick(at: point(rest))
