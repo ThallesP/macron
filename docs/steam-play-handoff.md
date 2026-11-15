@@ -18,7 +18,7 @@ Thalles owns this project and wants the Proton experience on his own Mac: open t
 - NotProton is the reference. Read it freely. Prefer Macron's own code; if taking NotProton's code is the practical way, it goes in its own folder (`steamplay/`) as its own binary under GPL-3.0 with their notices, as GOAL.md's licence rule says. Nothing GPL goes into `macron` itself.
 - The Steam test account exists: `~/.config/macron/steam-test-account` on the dev machine (mode 600, `source`-able: `STEAM_TEST_USER`, `STEAM_TEST_PASSWORD`, `STEAM_TEST_EMAIL`). Never print it, never put it on a command line a workflow logs, in the repo, an artifact or a screenshot. If a login asks for a Steam Guard code or shows a CAPTCHA, stop that login, do not retry in a loop, and put it under "Needs Thalles"; keep going on everything that works against Steam's login window.
 - His MacBook is off limits. Everything runs on the sbx sandboxes and in CI.
-- Gate 4 (the Steam bridge) stays parked until he answers its licence question.
+- Gate 4 (the Steam bridge) is unparked since 2026-11-15: do what NotProton does (GOAL.md, licence rule). It comes after gates 2 and 3. The port does not change the Steam client, so an Opus 5.5 subagent in its own worktree may take it.
 
 ## What done looks like
 
