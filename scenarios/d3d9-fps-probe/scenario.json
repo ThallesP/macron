@@ -36,5 +36,5 @@
   "startAttempts": 3,
   "otherGame": "d3d11-probe",
   "windowsExtra": [],
-  "ci": false
+  "ci": true
 }

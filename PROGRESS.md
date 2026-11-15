@@ -83,6 +83,23 @@ Checked by hand on Thalles's MacBook Air (M3, macOS 26.5, Steam build 1794536281
 - **Correction:** commit fb001cf says SuperTuxKart's failing frame was its loading screen. It was not: the failing frames show the main menu drawn with corrupt geometry (wined3d's Vulkan renderer, 64-bit). Waiting for the menu's log line is harmless but does not fix that, and a subagent is investigating it on branch `stk-flaky`. Scenarios passed on ddc040e with the pinned overlay.
 - **Wine build.** `runtime/wine/build-overlay.sh` (renamed from `build-winemac.sh`) now builds `winemac.so` and `wined3d.dll` (i386 and x86_64) with patches 0001 to 0003. `check-pe-exports.sh` checks that `wined3d.dll` exports what Gcenx's does: it passed on the sandbox, 377 symbols for both architectures, and the `winemac.so` ABI check passed too. `internal/wineruntime` copies the overlay's `wined3d.dll` into both Wine trees and keeps `winemac.so` in the DXMT tree only. The Wine build workflow published it as [runtime-wine-11.21-macron.2](https://github.com/ThallesP/macron/releases/tag/runtime-wine-11.21-macron.2) (run 43648292454; the archive's `wined3d.dll` has the heap path of 0003 and not its dropped first version), and the runtime pins it.
 
+## The frame-rate check, 2026-11-15
+
+`macron-check sandbox d3d9-fps-probe` passed on sbx_kqnhl6xq with the macron.3 runtime:
+- **Probe (32-bit, `mix`):** 7.2 fps (p50 136 ms, 73 frames).
+- **Baseline (64-bit):** 3.8 fps, so the threshold was 3.1 (0.8 of the baseline).
+- **Throttled control:** 1.2 fps at 652 ms a frame, rejected.
+- **Picture:** SSIM 0.995 against the Windows reference, and all six image controls rejected.
+
+The scenario now runs in CI (`"ci": true`). Its share, 0.8, comes from the Windows runner, where the 32-bit probe runs at 0.88 to 0.91 of the 64-bit one; it is not set from Macron's numbers.
+
+**What it catches, and what it does not.**
+- It catches the 32-bit path stalling or crashing, which is what stock Wine 11.21 mostly did: 6 of 9 stock 32-bit runs never finished, and the `mix` runs crashed.
+- It does not reliably catch a 32-bit-only slowdown. In one of three clean runs, stock 32-bit `mix` ran at 2.75 fps against 3.40 for 64-bit (0.81), which would pass. With 0003 and 0004 the 32-bit probe runs at about 1.9 times the 64-bit one on this renderer.
+- A tighter measure must not come from Macron's own output. Wine's copy count per frame (zero on Windows, which copies nothing) is the candidate.
+- Exit codes: 0003 and 0004 keep the 32-bit probe from crashing in most runs. A run that still crashes during device creation is restarted (`startAttempts: 3`, each restart noted in the report).
+- macron now disables `winedbg.exe`, so a crash exits instead of waiting behind Wine's crash dialog. Without that, a crashing game would leave Steam showing it as running.
+
 ## SuperTuxKart's broken frames, sandbox, 2026-11-14
 
 The SuperTuxKart scenario failed now and then in CI (runs on f4f6132 and fb001cf, 2 of 19 runs): the captured menu was STK's clear colour (100,101,140) with the menu missing or squashed into long slivers, SSIM about 0.09.
