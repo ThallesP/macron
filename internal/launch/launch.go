@@ -45,7 +45,7 @@ var backendDLLOverrides = map[fixes.Backend]map[string]string{
 	fixes.BackendWineD3D: {},
 }
 
-var alwaysDisabledDLLs = map[string]string{"mscoree": "", "mshtml": ""}
+var alwaysDisabledDLLs = map[string]string{"mscoree": "", "mshtml": "", "winedbg.exe": ""}
 
 func Run(ctx context.Context, in Input) (int, error) {
 	exe, err := filepath.Abs(in.Exe)
