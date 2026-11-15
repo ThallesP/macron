@@ -1,0 +1,13 @@
+{
+  "id": "tomaze",
+  "name": "TOMAZE",
+  "steamAppIds": [],
+  "backend": "dxmt",
+  "args": [],
+  "env": {},
+  "dllOverrides": {},
+  "files": [],
+  "registry": [],
+  "installs": [],
+  "notes": "A free, open-source maze game made with Clickteam Fusion 2.5 (myonegameisopensourced.itch.io/tomaze): a 32-bit exe that unpacks Fusion's runtime into %TEMP% and draws through mmf2d3d9.dll, the Direct3D 9 renderer Ultimate Custom Night uses. Its profile is the default one (dxmt tree: Wine's builtin d3d9 on wined3d's OpenGL renderer), the path a Fusion game without a profile takes."
+}
