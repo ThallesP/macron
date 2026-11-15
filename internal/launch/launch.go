@@ -47,6 +47,11 @@ var backendDLLOverrides = map[fixes.Backend]map[string]string{
 
 var alwaysDisabledDLLs = map[string]string{"mscoree": "", "mshtml": "", "winedbg.exe": ""}
 
+const ExitStopped = 130
+
+// When ctx is cancelled (Steam's Stop button reaches macron as SIGINT or
+// SIGTERM), the Wine server is told to end every program first: the game is
+// not the process macron started, and it holds macron's output pipe open.
 func Run(ctx context.Context, in Input) (int, error) {
 	exe, err := filepath.Abs(in.Exe)
 	if err != nil {
@@ -92,7 +97,18 @@ func Run(ctx context.Context, in Input) (int, error) {
 	game.Env = env
 	game.Stdout = in.Output
 	game.Stderr = in.Output
+	game.Cancel = func() error {
+		in.Progress("asked to stop: ending every program in this Windows environment")
+		stopping, release := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+		defer release()
+		Kill(stopping, in.Runtime, in.Prefix)
+		return game.Process.Kill()
+	}
+	game.WaitDelay = 10 * time.Second
 	exitCode, err := exitCodeOf(game.Run())
+	if ctx.Err() != nil {
+		return ExitStopped, nil
+	}
 	if err != nil {
 		return 0, failure.Errorf(failure.CodeLaunchFailed, "starting Wine: %s", err)
 	}

@@ -14,13 +14,17 @@ import (
 )
 
 const usage = `steam-builds reads Valve's update manifest for the Mac Steam client, hashes
-steamclient.dylib and the steam_osx of every variant of the current build, and
-prints their rows for KnownBuilds (internal/steamhook/builds.go).
+steamclient.dylib and the steam_osx of every variant of the current build,
+finds the instructions the Steam Play switch changes in that steamclient.dylib,
+and prints their rows for KnownBuilds (internal/steamhook/builds.go).
 
-  steam-builds [--check] [--write <builds.go>]
+  steam-builds [--check] [--write <builds.go>] [--header <builds.h>]
+  steam-builds --header-only <builds.h>
 
-  --check    exit 1 when KnownBuilds lacks a row of the current build
-  --write    rewrite that builds.go with the missing rows added
+  --check        exit 1 when KnownBuilds lacks a row of the current build
+  --write        rewrite that builds.go with the missing rows added
+  --header       rewrite the switch library's table (steamplay/builds.h) to match
+  --header-only  write that table from KnownBuilds as compiled in, without the network
 
 A missing row with --check exits 1, wrong usage 2, any other failure 125.
 `
@@ -42,9 +46,14 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	flags.SetOutput(io.Discard)
 	isCheck := flags.Bool("check", false, "")
 	writePath := flags.String("write", "", "")
+	headerPath := flags.String("header", "", "")
+	headerOnlyPath := flags.String("header-only", "", "")
 	if err := flags.Parse(args); err != nil || flags.NArg() != 0 {
 		fmt.Fprint(stderr, usage)
 		return exitUsage
+	}
+	if *headerOnlyPath != "" {
+		return writeHeader(*headerOnlyPath, steamhook.KnownBuilds, stderr)
 	}
 
 	cacheDir, err := os.MkdirTemp("", "steam-builds-")
@@ -92,8 +101,27 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		}
 		fmt.Fprintf(stderr, "steam-builds: added the missing rows to %s\n", *writePath)
 	}
+	if *headerPath != "" {
+		if code := writeHeader(*headerPath, slices.Concat(steamhook.KnownBuilds, missing), stderr); code != 0 {
+			return code
+		}
+	}
 	if *isCheck && len(missing) > 0 {
 		return exitMissingRows
 	}
+	return 0
+}
+
+func writeHeader(path string, builds []steamhook.KnownBuild, stderr io.Writer) int {
+	header, err := steamhook.RenderHeader(builds)
+	if err != nil {
+		fmt.Fprintf(stderr, "steam-builds: %s\n", err)
+		return exitFailed
+	}
+	if err := os.WriteFile(path, []byte(header), 0o644); err != nil {
+		fmt.Fprintf(stderr, "steam-builds: %s\n", err)
+		return exitFailed
+	}
+	fmt.Fprintf(stderr, "steam-builds: wrote %s\n", path)
 	return 0
 }

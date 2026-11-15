@@ -13,12 +13,13 @@ import (
 	"github.com/ThallesP/macron/internal/wineruntime"
 )
 
-const uninstallUsage = "usage: macron uninstall [--steam-dir <dir>]\n"
+const uninstallUsage = "usage: macron uninstall [--steam-dir <dir>] [--steam-app <Steam.app>]\n"
 
 func uninstallCommand(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	flags := flag.NewFlagSet("uninstall", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	steamDir := flags.String("steam-dir", defaultSteamDir(), "")
+	steamApp := flags.String("steam-app", defaultSteamApp, "")
 	if err := flags.Parse(args); err != nil || flags.NArg() != 0 {
 		fmt.Fprint(stderr, uninstallUsage)
 		return exitUsage
@@ -31,15 +32,15 @@ func uninstallCommand(ctx context.Context, args []string, stdout, stderr io.Writ
 	if err != nil {
 		return fail(stderr, err)
 	}
-	hook := steamhook.Hook{SteamDir: *steamDir, IsSteamRunning: isSteamRunning}
+	hook, err := newHook(*steamDir, *steamApp)
+	if err != nil {
+		return fail(stderr, err)
+	}
 	if err := uninstall(hook, layout, stdout); err != nil {
 		return fail(stderr, err)
 	}
 
-	macronPath, err := currentExecutable()
-	if err != nil {
-		return fail(stderr, err)
-	}
+	macronPath := hook.MacronPath
 	uninstaller := filepath.Join(filepath.Dir(macronPath), "macron-uninstall")
 	if _, err := os.Stat(uninstaller); err == nil {
 		fmt.Fprintf(stdout, "The program itself is still at %s: sudo %s removes it.\n", macronPath, uninstaller)
@@ -55,10 +56,12 @@ func uninstall(hook steamhook.Hook, layout wineruntime.Layout, stdout io.Writer)
 		return err
 	}
 	if isHooked {
-		if _, err := hook.Disable(); err != nil {
+		status, err := hook.Disable()
+		if err != nil {
 			return err
 		}
 		fmt.Fprintf(stdout, "Steam: removed macron's compatibility tool and put config.vdf's old mapping back (%s)\n", hook.SteamDir)
+		fmt.Fprintln(stdout, switchUndoLines[status.SwitchUndo])
 	}
 	if !isHooked {
 		fmt.Fprintf(stdout, "Steam: macron is not registered (%s)\n", hook.SteamDir)

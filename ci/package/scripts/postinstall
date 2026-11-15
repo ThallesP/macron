@@ -1,8 +1,9 @@
 #!/bin/bash
 # Runs as root after the installer copied macron to /usr/local/bin. Does the
 # rest as the logged-in user: installs the runtime into their home and, when
-# Steam is installed and closed, registers macron with it. Any failure undoes
-# what this install added, so there is never half an install.
+# Steam is installed, closes it, switches Steam Play on with macron as its
+# tool (macron steam enable), and opens Steam again if it was open. Any
+# failure undoes what this install added, so there is never half an install.
 set -u
 log=/Library/Logs/Macron-install.log
 exec > >(tee -a "$log") 2>&1
@@ -16,9 +17,11 @@ macron_home="$home/Library/Application Support/Macron"
 steam_dir="$home/Library/Application Support/Steam"
 is_fresh=0
 [ -e "$macron_home" ] || is_fresh=1
+steam_client="$steam_dir/Steam.AppBundle/Steam/Contents/MacOS/steam_osx"
 was_hooked=0
 [ -e "$steam_dir/compatibilitytools.d/macron" ] && was_hooked=1
 did_try_enable=0
+was_steam_open=0
 
 as_user() {
   sudo -u "$user" -H "$@"
@@ -35,6 +38,7 @@ undo() {
   fi
   [ -n "$home" ] && rm -rf "$macron_home"
   rm -f "$macron" /usr/local/bin/macron-uninstall
+  rm -rf /usr/local/lib/macron
   pkgutil --forget io.github.thallesp.macron > /dev/null 2>&1
   echo "Removed everything this install added; Steam is as it was."
   exit 1
@@ -56,7 +60,16 @@ if [ ! -e "$steam_dir/Steam.AppBundle/Steam/Contents/MacOS/steamclient.dylib" ];
   exit 0
 fi
 if pgrep -x steam_osx > /dev/null; then
-  echo "NOTE: Steam is running, so Macron did not register itself with Steam (Steam rewrites its settings when it quits)."
+  was_steam_open=1
+  echo "Steam is open; asking it to quit (it rewrites its settings when it quits)."
+  as_user "$steam_client" -shutdown > /dev/null 2>&1 &
+  for _ in $(seq 1 90); do
+    pgrep -x steam_osx > /dev/null || break
+    sleep 1
+  done
+fi
+if pgrep -x steam_osx > /dev/null; then
+  echo "NOTE: Steam did not quit, so Macron did not switch Steam Play on."
   echo "NOTE: quit Steam, then run in Terminal: macron steam enable"
   echo "== Done (Steam still to enable)"
   exit 0
@@ -66,4 +79,8 @@ did_try_enable=1
 if ! as_user "$macron" steam enable; then
   undo "macron steam enable failed (the lines above say why)"
 fi
-echo "== Done: Macron is registered with Steam"
+if [ "$was_steam_open" = 1 ]; then
+  as_user open -a /Applications/Steam.app
+  echo "Opened Steam again."
+fi
+echo "== Done: Steam Play is on with Macron as its tool"

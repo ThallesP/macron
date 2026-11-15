@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,10 @@ import (
 	"github.com/ThallesP/macron/internal/steamhook"
 	"github.com/ThallesP/macron/internal/wineruntime"
 )
+
+func noTools(name string, args ...string) (string, error) {
+	return "", errors.New(name + " is not on this machine")
+}
 
 const configBeforeMacron = `"InstallConfigStore"
 {
@@ -77,7 +82,7 @@ func hookedSteam(t *testing.T) steamhook.Hook {
 	writeTestFile(t, filepath.Join(steamDir, "config", "config.vdf"), configWithMacron)
 	writeTestFile(t, filepath.Join(steamDir, "config", "config.vdf.before-macron"), configBeforeMacron)
 	writeTestFile(t, filepath.Join(steamDir, "compatibilitytools.d", "macron", "compatibilitytool.vdf"), "tool")
-	return steamhook.Hook{SteamDir: steamDir, IsSteamRunning: func() bool { return false }}
+	return steamhook.Hook{SteamDir: steamDir, SteamApp: filepath.Join(steamDir, "Steam.app"), BackupDir: filepath.Join(steamDir, "backup"), IsSteamRunning: func() bool { return false }, Run: noTools}
 }
 
 func macronHome(t *testing.T) wineruntime.Layout {
@@ -169,7 +174,7 @@ func TestUninstallRefusesWhileSteamRunsAndRemovesNothing(t *testing.T) {
 }
 
 func TestUninstallWithoutSteamHookIgnoresRunningSteam(t *testing.T) {
-	hook := steamhook.Hook{SteamDir: t.TempDir(), IsSteamRunning: func() bool { return true }}
+	hook := steamhook.Hook{SteamDir: t.TempDir(), IsSteamRunning: func() bool { return true }, Run: noTools}
 	layout := macronHome(t)
 	var stdout bytes.Buffer
 
@@ -186,7 +191,7 @@ func TestUninstallWithoutSteamHookIgnoresRunningSteam(t *testing.T) {
 }
 
 func TestUninstallWhenNothingIsInstalled(t *testing.T) {
-	hook := steamhook.Hook{SteamDir: t.TempDir(), IsSteamRunning: func() bool { return false }}
+	hook := steamhook.Hook{SteamDir: t.TempDir(), IsSteamRunning: func() bool { return false }, Run: noTools}
 	layout := wineruntime.Layout{Home: filepath.Join(t.TempDir(), "Macron")}
 	var stdout bytes.Buffer
 

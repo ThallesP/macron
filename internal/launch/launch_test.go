@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ThallesP/macron/fixes"
 	"github.com/ThallesP/macron/internal/failure"
@@ -31,6 +32,59 @@ pwd > "$WINEPREFIX/../game-cwd.txt"
 echo "game output"
 exit 3
 `
+
+func TestRunEndsTheWindowsEnvironmentWhenAskedToStop(t *testing.T) {
+	g := newGame(t)
+	runtime := fakeRuntime(t)
+	gameInAnotherProcess := "sleep 60 &\necho $! > \"$WINEPREFIX/../game.pid\"\ntouch \"$WINEPREFIX/../game-started\"\nexec sleep 60"
+	waitingGame := strings.Replace(fakeWine, "echo \"game output\"\nexit 3", gameInAnotherProcess, 1)
+	recordingServer := "#!/bin/sh\necho \"$*\" >> \"$WINEPREFIX/../wineserver-calls.txt\"\n[ \"$1\" = -k ] && kill \"$(cat \"$WINEPREFIX/../game.pid\")\"\nexit 0\n"
+	for _, tree := range []wineruntime.Tree{wineruntime.TreePlain, wineruntime.TreeDXMT} {
+		bin := filepath.Join(runtime.Root(tree), "bin")
+		if err := os.WriteFile(filepath.Join(bin, "wine"), []byte(waitingGame), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(bin, "wineserver"), []byte(recordingServer), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ctx, stop := context.WithCancel(context.Background())
+	go func() {
+		for !fileExists(filepath.Join(g.root, "game-started")) {
+			time.Sleep(10 * time.Millisecond)
+		}
+		stop()
+	}()
+	started := time.Now()
+
+	exitCode, err := Run(ctx, Input{
+		Runtime:     runtime,
+		Profile:     fixes.Profile{ID: "some-game", Backend: fixes.BackendWineD3D},
+		Prefix:      g.prefix,
+		Exe:         g.exe,
+		Output:      &bytes.Buffer{},
+		Progress:    func(string) {},
+		WaitForWine: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if exitCode != ExitStopped {
+		t.Errorf("exit code %d, want %d for a game that was stopped", exitCode, ExitStopped)
+	}
+	if calls := g.read(t, "wineserver-calls.txt"); !strings.Contains(calls, "-k\n") {
+		t.Errorf("the Wine server was not told to end its programs; calls:\n%s", calls)
+	}
+	if took := time.Since(started); took > 5*time.Second {
+		t.Errorf("stopping took %s: macron waited for the game's output instead of ending it", took)
+	}
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
 
 func fakeRuntime(t *testing.T) wineruntime.Installed {
 	t.Helper()

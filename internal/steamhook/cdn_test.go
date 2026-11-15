@@ -55,7 +55,7 @@ type fakeCDN struct {
 func fakePackages(t *testing.T) map[string][]byte {
 	t.Helper()
 	return map[string][]byte{
-		"bins_client_osx.zip.1":          zipped(t, "steamclient.dylib", "fake steamclient"),
+		"bins_client_osx.zip.1":          zipped(t, "steamclient.dylib", string(wholeFakeClient.build())),
 		"steam_osx.zip.2":                zipped(t, "steam_osx", "plain steam_osx"),
 		"steam_osx_macos-signed-2.zip.3": zipped(t, "steam_osx", "signed steam_osx"),
 		"steam_osx_steamchina.zip.4":     zipped(t, "steamchina_osx", "china steam"),
@@ -115,15 +115,19 @@ func TestFetchReleaseGivesARowPerVariantWithASteamOSX(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	client := KnownFile{Path: "steamclient.dylib", SHA256: sha256Text("fake steamclient"), Package: "bins_client_osx.zip.1"}
+	client := KnownFile{Path: "steamclient.dylib", SHA256: sha256Text(string(wholeFakeClient.build())), Package: "bins_client_osx.zip.1"}
+	code, err := FindClientCode(wholeFakeClient.build())
+	if err != nil {
+		t.Fatal(err)
+	}
 	want := Release{
 		ID: "1700000002",
 		Builds: []KnownBuild{
-			{ID: "1700000002", Variant: "macos-signed-2", Files: []KnownFile{
+			{ID: "1700000002", Variant: "macos-signed-2", Client: code, Files: []KnownFile{
 				client,
 				{Path: "steam_osx", SHA256: sha256Text("signed steam_osx"), Package: "steam_osx_macos-signed-2.zip.3"},
 			}},
-			{ID: "1700000002", Variant: "plain", Files: []KnownFile{
+			{ID: "1700000002", Variant: "plain", Client: code, Files: []KnownFile{
 				client,
 				{Path: "steam_osx", SHA256: sha256Text("plain steam_osx"), Package: "steam_osx.zip.2"},
 			}},

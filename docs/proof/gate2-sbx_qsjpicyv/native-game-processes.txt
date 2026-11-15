@@ -1,0 +1,1 @@
+[2026-11-15 19:54:09] AppID 404410 adding PID 7738 as a tracked process "'/Users/runner/Library/Application Support/Steam/steamapps/common/Endless Sky/Endless Sky.app/Contents/MacOS/Endless Sky'"

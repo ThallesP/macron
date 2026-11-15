@@ -1,0 +1,1 @@
+[2026-11-15 19:55:06] pid 10010: UNKNOWN_STEAM_BUILD: steamclient.dylib 221faa3a6a2c36c99130b0a45028af1b is not a build this Macron knows; Steam Play stays off and nothing was changed. Steam has probably updated itself: install the newest Macron

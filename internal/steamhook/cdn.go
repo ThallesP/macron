@@ -54,17 +54,21 @@ func FetchRelease(ctx context.Context, cdn string, cacheDir string) (Release, er
 		return Release{}, err
 	}
 
-	clientSHA256, hasClient, err := hashPackageFile(ctx, cdn, cacheDir, client, "steamclient.dylib")
+	steamclient, hasClient, err := readPackageFile(ctx, cdn, cacheDir, client, "steamclient.dylib")
 	if err != nil {
 		return Release{}, err
 	}
 	if !hasClient {
 		return Release{}, failure.Errorf(failure.CodeBadSteamManifest, "%s has no steamclient.dylib", client.File)
 	}
+	clientCode, err := FindClientCode(steamclient)
+	if err != nil {
+		return Release{}, err
+	}
 
 	release := Release{ID: version.Value}
 	for _, variant := range variants {
-		steamSHA256, hasSteam, err := hashPackageFile(ctx, cdn, cacheDir, variant, "steam_osx")
+		steam, hasSteam, err := readPackageFile(ctx, cdn, cacheDir, variant, "steam_osx")
 		if err != nil {
 			return Release{}, err
 		}
@@ -72,9 +76,9 @@ func FetchRelease(ctx context.Context, cdn string, cacheDir string) (Release, er
 			release.SkippedVariants = append(release.SkippedVariants, variant.Name)
 			continue
 		}
-		release.Builds = append(release.Builds, KnownBuild{ID: version.Value, Variant: variant.Name, Files: []KnownFile{
-			{Path: "steamclient.dylib", SHA256: clientSHA256, Package: client.File},
-			{Path: "steam_osx", SHA256: steamSHA256, Package: variant.File},
+		release.Builds = append(release.Builds, KnownBuild{ID: version.Value, Variant: variant.Name, Client: clientCode, Files: []KnownFile{
+			{Path: "steamclient.dylib", SHA256: sha256Hex(steamclient), Package: client.File},
+			{Path: "steam_osx", SHA256: sha256Hex(steam), Package: variant.File},
 		}})
 	}
 	if len(release.Builds) == 0 {
@@ -148,24 +152,28 @@ func readPackage(node *Node, name string) (cdnPackage, error) {
 	return cdnPackage{Name: name, File: file.Value, SHA256: sha2.Value}, nil
 }
 
-func hashPackageFile(ctx context.Context, cdn string, cacheDir string, pkg cdnPackage, name string) (string, bool, error) {
+func readPackageFile(ctx context.Context, cdn string, cacheDir string, pkg cdnPackage, name string) ([]byte, bool, error) {
 	path, err := wineruntime.Download(ctx, cacheDir, wineruntime.Archive{Name: pkg.File, URL: cdn + "/" + pkg.File, SHA256: pkg.SHA256})
 	if err != nil {
-		return "", false, err
+		return nil, false, err
 	}
 	archive, err := zip.OpenReader(path)
 	if err != nil {
-		return "", false, failure.Errorf(failure.CodeExtractFailed, "could not open %s: %v", pkg.File, err)
+		return nil, false, failure.Errorf(failure.CodeExtractFailed, "could not open %s: %v", pkg.File, err)
 	}
 	defer archive.Close()
 
 	data, err := fs.ReadFile(archive, name)
 	if errors.Is(err, fs.ErrNotExist) {
-		return "", false, nil
+		return nil, false, nil
 	}
 	if err != nil {
-		return "", false, failure.Errorf(failure.CodeExtractFailed, "could not read %s from %s: %v", name, pkg.File, err)
+		return nil, false, failure.Errorf(failure.CodeExtractFailed, "could not read %s from %s: %v", name, pkg.File, err)
 	}
+	return data, true, nil
+}
+
+func sha256Hex(data []byte) string {
 	sum := sha256.Sum256(data)
-	return hex.EncodeToString(sum[:]), true, nil
+	return hex.EncodeToString(sum[:])
 }

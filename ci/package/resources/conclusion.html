@@ -2,7 +2,8 @@
 <html>
 <body style="font-family: -apple-system, sans-serif; font-size: 13px">
 <p>Macron is installed: the program is <code>/usr/local/bin/macron</code> and its Windows runtime is in <code>~/Library/Application Support/Macron</code>.</p>
-<p>If Steam was open during the install, Macron could not register itself with Steam. Quit Steam, then run <code>macron steam enable</code> in Terminal. <code>/Library/Logs/Macron-install.log</code> says what the install did.</p>
-<p>To remove Macron, run <code>sudo macron-uninstall</code> in Terminal with Steam closed.</p>
+<p>Open Steam: Windows-only games now have a working Install button, and Play starts them through Macron. If Steam was open, the installer closed it and opened it again.</p>
+<p><code>/Library/Logs/Macron-install.log</code> says what the install did. If it says Steam Play is not on, quit Steam and run <code>macron steam enable</code> in Terminal.</p>
+<p>To remove Macron and put Steam back exactly as it was, run <code>sudo macron-uninstall</code> in Terminal.</p>
 </body>
 </html>

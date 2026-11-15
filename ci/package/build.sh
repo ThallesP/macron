@@ -1,8 +1,9 @@
 #!/bin/bash
 # Builds Macron's installer on a Mac: macron as a universal binary (arm64 and
-# x86_64), a component package that puts it and macron-uninstall in
-# /usr/local/bin, a product archive around it, and a DMG holding that archive
-# and the install notes. Usage: ci/package/build.sh <version x.y.z> <out-dir>
+# x86_64), the Steam Play switch library (steamplay/), a component package that
+# puts macron and macron-uninstall in /usr/local/bin and the library in
+# /usr/local/lib/macron, a product archive around it, and a DMG holding that
+# archive and the install notes. Usage: ci/package/build.sh <version x.y.z> <out-dir>
 set -euo pipefail
 umask 022
 version=$1
@@ -19,12 +20,15 @@ trap 'rm -rf "$work"' EXIT
 [ -d "$HOME/.local/go/bin" ] && PATH=$PATH:$HOME/.local/go/bin
 
 payload="$work/payload/usr/local/bin"
-mkdir -p "$payload" "$work/dmg" "$out"
+library="$work/payload/usr/local/lib/macron"
+mkdir -p "$payload" "$library" "$work/dmg" "$out"
 for arch in arm64 amd64; do
   (cd "$root" && GOOS=darwin GOARCH=$arch CGO_ENABLED=0 go build -trimpath -o "$work/macron-$arch" ./cmd/macron)
 done
 lipo -create -output "$payload/macron" "$work/macron-arm64" "$work/macron-amd64"
 lipo "$payload/macron" -verify_arch arm64 x86_64
+"$root/steamplay/build.sh" "$library/macron-steamplay.dylib"
+chmod 644 "$library/macron-steamplay.dylib"
 install -m 755 "$here/macron-uninstall" "$payload/macron-uninstall"
 chmod 755 "$payload/macron" "$here/scripts/postinstall"
 

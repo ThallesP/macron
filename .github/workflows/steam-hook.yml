@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - internal/steamhook/**
+      - steamplay/**
       - cmd/macron/steam.go
       - ci/steam-hook/**
       - .github/workflows/steam-hook.yml
@@ -19,7 +20,7 @@ permissions:
 jobs:
   steam:
     runs-on: macos-26
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       EVIDENCE: ${{ github.workspace }}/evidence
       WINDOWS_BIN: ${{ github.workspace }}/bin/windows
@@ -30,11 +31,12 @@ jobs:
         with:
           go-version: "1.24"
 
-      - name: Build macron and the window lister
+      - name: Build macron, the Steam Play switch library and the window lister
         run: |
           set -euo pipefail
           mkdir -p bin "$EVIDENCE"
           go build -o bin/macron ./cmd/macron
+          steamplay/build.sh bin/macron-steamplay.dylib
           swiftc -O ci/steam-hook/windows.swift -o bin/windows
 
       - name: Install the current Steam and wait for its login window
@@ -52,6 +54,8 @@ jobs:
         run: |
           set -euo pipefail
           ci/steam-hook/steam.sh shutdown
+          codesign --verify --strict --deep /Applications/Steam.app
+          (cd /Applications/Steam.app && find . -type f -print0 | xargs -0 shasum -a 256 | sort -k 2) > "$EVIDENCE/steam-app-before.sha256"
           bin/macron steam status | tee "$EVIDENCE/status-before.txt"
           if ! bin/macron steam enable > "$EVIDENCE/enable.txt" 2> "$EVIDENCE/enable.err"; then
             cat "$EVIDENCE/enable.err"
@@ -62,7 +66,15 @@ jobs:
           cat "$EVIDENCE/enable.txt"
           grep -q '^tool registered: true$' "$EVIDENCE/enable.txt"
           grep -q '^default tool:    true$' "$EVIDENCE/enable.txt"
+          grep -q '^steam play:      on$' "$EVIDENCE/enable.txt"
           ls -la "$STEAM_DIR/compatibilitytools.d/macron"
+          (cd /Applications/Steam.app && find . -type f -print0 | xargs -0 shasum -a 256 | sort -k 2) > "$EVIDENCE/steam-app-enabled.sha256"
+          echo "What enable changed in Steam.app:"
+          diff "$EVIDENCE/steam-app-before.sha256" "$EVIDENCE/steam-app-enabled.sha256" | tee "$EVIDENCE/steam-app-changes.txt" || true
+          changed=$(grep -c '^[<>]' "$EVIDENCE/steam-app-changes.txt")
+          [ "$changed" = 7 ] || { echo "::error::enable changed $changed lines of Steam.app's listing; want Info.plist, steam_osx and CodeResources changed and the library added (7)"; exit 1; }
+          codesign --verify --strict /Applications/Steam.app
+          plutil -extract LSEnvironment xml1 -o - /Applications/Steam.app/Contents/Info.plist
 
       - name: Restart Steam and wait for its login window
         run: |
@@ -77,11 +89,40 @@ jobs:
           cat "$STEAM_DIR/logs/compat_log.txt"
           grep -q 'Mapping AppID 0 to tool "macron"' "$STEAM_DIR/logs/compat_log.txt" \
             || { echo "::error::Steam did not read the macron mapping"; exit 1; }
+          grep -q 'Registering tool macron' "$STEAM_DIR/logs/compat_log.txt" \
+            || { echo "::error::Steam did not register the macron tool from compatibilitytools.d"; exit 1; }
+          echo "The switch library's log:"
+          cat "$HOME/Library/Application Support/Macron/logs/steamplay.log"
+          tail -1 "$HOME/Library/Application Support/Macron/logs/steamplay.log" | grep -q 'Steam Play is on' \
+            || { echo "::error::the switch library did not switch Steam Play on in the running client"; exit 1; }
 
-      - name: Steam keeps the mapping when it quits, and disable restores the config
+      - name: A Steam build the switch library does not know stays stock
         run: |
           set -euo pipefail
           ci/steam-hook/steam.sh shutdown
+          unknown="$RUNNER_TEMP/unknown-build"
+          mkdir -p "$unknown"
+          cp steamplay/steamplay.c steamplay/build.sh "$unknown/"
+          sed -E 's/"[0-9a-f]{32}"/"00000000000000000000000000000000"/' steamplay/builds.h > "$unknown/builds.h"
+          "$unknown/build.sh" "$unknown/macron-steamplay.dylib"
+          MACRON_STEAMPLAY_LIBRARY="$unknown/macron-steamplay.dylib" bin/macron steam enable > /dev/null
+          switch_lines=$(wc -l < "$HOME/Library/Application Support/Macron/logs/steamplay.log")
+          login_lines=$(wc -l < "$STEAM_DIR/logs/steamui_login.txt")
+          open -a /Applications/Steam.app
+          ci/steam-hook/steam.sh wait-login "$login_lines" 600
+          tail -n +"$((switch_lines + 1))" "$HOME/Library/Application Support/Macron/logs/steamplay.log" | tee "$EVIDENCE/unknown-build.txt"
+          grep -q 'UNKNOWN_STEAM_BUILD' "$EVIDENCE/unknown-build.txt" \
+            || { echo "::error::the switch library did not refuse a steamclient.dylib it does not know"; exit 1; }
+          if grep -q 'Steam Play is on' "$EVIDENCE/unknown-build.txt"; then
+            echo "::error::the switch library switched Steam Play on in a build it does not know"
+            exit 1
+          fi
+          ci/steam-hook/steam.sh shutdown
+          bin/macron steam enable > /dev/null
+
+      - name: Steam keeps the mapping when it quits, and disable restores the config and Steam.app
+        run: |
+          set -euo pipefail
           grep -A3 '"CompatToolMapping"' "$STEAM_DIR/config/config.vdf"
           bin/macron steam status | grep -q '^default tool:    true$' \
             || { echo "::error::Steam dropped the macron mapping when it quit"; exit 1; }
@@ -93,6 +134,16 @@ jobs:
             exit 1
           fi
           [ ! -e "$STEAM_DIR/compatibilitytools.d/macron" ]
+          grep -q "Valve's files are back, byte for byte" "$EVIDENCE/disable.txt"
+          (cd /Applications/Steam.app && find . -type f -print0 | xargs -0 shasum -a 256 | sort -k 2) > "$EVIDENCE/steam-app-after.sha256"
+          diff "$EVIDENCE/steam-app-before.sha256" "$EVIDENCE/steam-app-after.sha256" \
+            || { echo "::error::Steam.app differs from before the hook"; exit 1; }
+          codesign --verify --strict --deep /Applications/Steam.app
+          spctl -a -vv /Applications/Steam.app
+          login_lines=$(wc -l < "$STEAM_DIR/logs/steamui_login.txt")
+          open -a /Applications/Steam.app
+          ci/steam-hook/steam.sh wait-login "$login_lines" 600
+          ci/steam-hook/steam.sh shutdown
 
       - name: The hook refuses an altered client and changes nothing
         run: |
@@ -102,12 +153,15 @@ jobs:
           printf 'x' >> "$altered/Steam.AppBundle/Steam/Contents/MacOS/steamclient.dylib"
           listing() { find "$altered" -print0 | xargs -0 stat -f '%N %z %m %p' | sort | shasum -a 256; }
           before=$(listing)
+          app_before=$(cd /Applications/Steam.app && find . -type f -print0 | xargs -0 shasum -a 256 | sort -k 2 | shasum -a 256)
           code=0
           bin/macron steam enable --steam-dir "$altered" > "$EVIDENCE/refusal.txt" 2> "$EVIDENCE/refusal.err" || code=$?
           cat "$EVIDENCE/refusal.err"
           [ "$code" = 125 ] || { echo "::error::enable exited $code on an altered client, want 125"; exit 1; }
           grep -q 'UNKNOWN_STEAM_BUILD' "$EVIDENCE/refusal.err"
           [ "$(listing)" = "$before" ] || { echo "::error::enable changed files on an altered client"; exit 1; }
+          app_after=$(cd /Applications/Steam.app && find . -type f -print0 | xargs -0 shasum -a 256 | sort -k 2 | shasum -a 256)
+          [ "$app_after" = "$app_before" ] || { echo "::error::enable changed Steam.app on an altered client"; exit 1; }
           echo "Refused with exit $code and changed nothing."
 
       - name: Collect Steam's logs
@@ -116,6 +170,7 @@ jobs:
           for log in compat_log.txt steamui_login.txt bootstrap_log.txt; do
             cp "$STEAM_DIR/logs/$log" "$EVIDENCE/" 2>/dev/null || true
           done
+          cp "$HOME/Library/Application Support/Macron/logs/steamplay.log" "$EVIDENCE/" 2>/dev/null || true
           screencapture -x "$EVIDENCE/3-end.png" || true
 
       - uses: actions/upload-artifact@v4

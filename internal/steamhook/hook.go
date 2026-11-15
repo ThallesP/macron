@@ -22,8 +22,12 @@ var mappingPath = []string{"InstallConfigStore", "Software", "Valve", "Steam", "
 
 type Hook struct {
 	SteamDir       string
+	SteamApp       string
 	MacronPath     string
+	SwitchLibrary  string
+	BackupDir      string
 	IsSteamRunning func() bool
+	Run            func(name string, args ...string) (output string, err error)
 }
 
 type Build struct {
@@ -33,15 +37,18 @@ type Build struct {
 }
 
 type Status struct {
-	SteamDir         string `json:"steamDir"`
-	Build            Build  `json:"build"`
-	IsToolRegistered bool   `json:"isToolRegistered"`
-	IsDefaultTool    bool   `json:"isDefaultTool"`
-	HasBackup        bool   `json:"hasBackup"`
+	SteamDir         string     `json:"steamDir"`
+	Build            Build      `json:"build"`
+	IsToolRegistered bool       `json:"isToolRegistered"`
+	IsDefaultTool    bool       `json:"isDefaultTool"`
+	HasBackup        bool       `json:"hasBackup"`
+	SteamApp         string     `json:"steamApp"`
+	IsSwitchOn       bool       `json:"isSwitchOn"`
+	SwitchUndo       SwitchUndo `json:"switchUndo,omitempty"`
 }
 
 func (s Status) IsEnabled() bool {
-	return s.IsToolRegistered && s.IsDefaultTool
+	return s.IsToolRegistered && s.IsDefaultTool && s.IsSwitchOn
 }
 
 func (h Hook) clientDir() string {
@@ -77,6 +84,8 @@ func (h Hook) Status() (Status, error) {
 		IsToolRegistered: fileExists(filepath.Join(h.toolDir(), "compatibilitytool.vdf")),
 		IsDefaultTool:    isMacronMapping(config),
 		HasBackup:        fileExists(h.backupPath()),
+		SteamApp:         h.SteamApp,
+		IsSwitchOn:       h.isSwitchOn(),
 	}, nil
 }
 
@@ -141,9 +150,15 @@ func (h Hook) Enable() (Status, error) {
 	if h.IsSteamRunning() {
 		return Status{}, failure.Errorf(failure.CodeSteamRunning, "Steam is running; quit it first, it rewrites config.vdf when it exits")
 	}
+	if err := h.checkSwitchCanGoOn(); err != nil {
+		return Status{}, err
+	}
 
 	config, err := h.readConfig(h.configPath())
 	if err != nil {
+		return Status{}, err
+	}
+	if err := h.switchOn(); err != nil {
 		return Status{}, err
 	}
 	if err := os.MkdirAll(filepath.Dir(h.configPath()), 0o755); err != nil {
@@ -201,7 +216,14 @@ func (h Hook) Disable() (Status, error) {
 	if err := os.Remove(h.backupPath()); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return Status{}, failure.Errorf(failure.CodeFileFailed, "could not remove %s: %v", h.backupPath(), err)
 	}
-	return h.Status()
+
+	undo, err := h.switchOff()
+	if err != nil {
+		return Status{}, err
+	}
+	status, err := h.Status()
+	status.SwitchUndo = undo
+	return status, err
 }
 
 func (h Hook) IsHooked() (bool, error) {
@@ -209,7 +231,7 @@ func (h Hook) IsHooked() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return fileExists(h.toolDir()) || isMacronMapping(config), nil
+	return fileExists(h.toolDir()) || isMacronMapping(config) || h.isSwitchOn() || fileExists(h.BackupDir), nil
 }
 
 func (h Hook) restoreMapping(config *Node) error {

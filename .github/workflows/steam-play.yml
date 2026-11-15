@@ -1,0 +1,114 @@
+# GOAL.md gate 2 as a standing check: Steam from Valve's DMG, signed in to the
+# test account, then Macron, then Steam's own Install and Play buttons on a
+# Windows-only game (ci/steam-play/gate2.sh).
+#
+# It uses the test account's secrets, so it runs only on main and on manual
+# runs: never add a pull_request trigger. The account's name never reaches the
+# log or an artifact: the login is typed from a mode-600 file, screenshots are
+# masked where Steam shows the name, and every screenshot is read back and
+# dropped if the name is in it.
+name: Steam Play
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - steamplay/**
+      - internal/steamhook/**
+      - internal/launch/**
+      - cmd/macron/**
+      - ci/steam-play/**
+      - .github/workflows/steam-play.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: steam-test-account
+  cancel-in-progress: false
+
+jobs:
+  buttons:
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      EVIDENCE: ${{ github.workspace }}/evidence
+      DRIVE: ${{ github.workspace }}/bin/drive
+      MACRON: ${{ github.workspace }}/bin/macron
+      STEAMPLAY_SOURCE: ${{ github.workspace }}/steamplay
+      STEAM_TEST_ACCOUNT: ${{ github.workspace }}/../steam-test-account
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Build macron, the Steam Play switch library and the window driver
+        run: |
+          set -euo pipefail
+          mkdir -p bin "$EVIDENCE"
+          go build -o bin/macron ./cmd/macron
+          steamplay/build.sh bin/macron-steamplay.dylib
+          swiftc -O ci/steam-play/drive.swift -o bin/drive
+
+      - name: The test account's login, in a file only this user can read
+        env:
+          STEAM_TEST_USER: ${{ secrets.STEAM_TEST_USER }}
+          STEAM_TEST_PASSWORD: ${{ secrets.STEAM_TEST_PASSWORD }}
+          STEAM_TEST_EMAIL: ${{ secrets.STEAM_TEST_EMAIL }}
+        run: |
+          set -euo pipefail
+          [ -n "$STEAM_TEST_USER" ] && [ -n "$STEAM_TEST_PASSWORD" ] || { echo "::error::the STEAM_TEST_USER and STEAM_TEST_PASSWORD secrets are not set"; exit 1; }
+          umask 077
+          printf 'STEAM_TEST_USER=%s\nSTEAM_TEST_PASSWORD=%s\nSTEAM_TEST_EMAIL=%s\n' "$STEAM_TEST_USER" "$STEAM_TEST_PASSWORD" "$STEAM_TEST_EMAIL" > "$STEAM_TEST_ACCOUNT"
+
+      - name: Install Macron's runtime
+        run: bin/macron runtime install
+
+      - name: Install the current Steam from Valve's DMG
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/steam.dmg" https://cdn.cloudflare.steamstatic.com/client/installer/steam.dmg
+          hdiutil attach -nobrowse -noverify -mountpoint "$RUNNER_TEMP/steamdmg" "$RUNNER_TEMP/steam.dmg"
+          cp -R "$RUNNER_TEMP/steamdmg/Steam.app" /Applications/
+          hdiutil detach "$RUNNER_TEMP/steamdmg"
+          ci/steam-play/steam.sh start
+
+      - name: Steam's own Install and Play buttons, before and after Macron
+        run: ci/steam-play/gate2.sh
+
+      - name: Quit Steam and forget the login
+        if: always()
+        run: |
+          "$HOME/Library/Application Support/Steam/Steam.AppBundle/Steam/Contents/MacOS/steam_osx" -shutdown > /dev/null 2>&1 || true
+          sleep 20
+          pkill -9 -x steam_osx || true
+          rm -rf "$HOME/Library/Application Support/Steam/config" "$HOME/Library/Application Support/Steam/userdata" "$STEAM_TEST_ACCOUNT.checked"
+          cp "$HOME/Library/Application Support/Steam/logs/compat_log.txt" "$EVIDENCE/" 2>/dev/null || true
+          cp "$HOME/Library/Application Support/Macron/logs/steamplay.log" "$EVIDENCE/" 2>/dev/null || true
+          cp -R "$HOME/Library/Application Support/Macron/logs/steam-871720" "$EVIDENCE/macron-logs-871720" 2>/dev/null || true
+
+      - name: No screenshot shows the account's name
+        if: always()
+        run: |
+          shown=0
+          while IFS= read -r -d '' picture; do
+            for key in STEAM_TEST_USER STEAM_TEST_EMAIL; do
+              if bin/drive shows-value "$picture" "$STEAM_TEST_ACCOUNT" "$key" 2> /dev/null; then
+                echo "::error::dropped ${picture#"$EVIDENCE"/}: it shows the account's name"
+                rm -f "$picture"
+                shown=1
+              fi
+            done
+          done < <(find "$EVIDENCE" -name '*.png' -print0)
+          rm -f "$STEAM_TEST_ACCOUNT"
+          exit "$shown"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: steam-play-evidence
+          path: evidence
+          retention-days: 30

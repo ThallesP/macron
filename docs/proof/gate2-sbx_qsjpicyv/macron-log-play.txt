@@ -1,0 +1,3 @@
+macron: game steam-871720, log /Users/runner/Library/Application Support/Macron/logs/steam-871720/20261115T195129Z.log
+macron: preparing the Windows environment at /Users/runner/Library/Application Support/Steam/steamapps/compatdata/871720/pfx
+macron: starting Ultimate Custom Night.exe with the dxmt backend

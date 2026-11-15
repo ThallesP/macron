@@ -32,11 +32,12 @@ jobs:
           mkdir -p "$RUNNER_TEMP/pr"
           go build -o "$RUNNER_TEMP/steam-builds" ./cmd/steam-builds
           code=0
-          "$RUNNER_TEMP/steam-builds" --check --write internal/steamhook/builds.go > "$RUNNER_TEMP/pr/rows.txt" || code=$?
+          "$RUNNER_TEMP/steam-builds" --check --write internal/steamhook/builds.go --header steamplay/builds.h > "$RUNNER_TEMP/pr/rows.txt" || code=$?
           cat "$RUNNER_TEMP/pr/rows.txt"
           [ "$code" = 1 ] || exit "$code"
           build=$(sed -nE 's/^\t\tID: +"([0-9]+)",$/\1/p' "$RUNNER_TEMP/pr/rows.txt" | head -1)
           cp internal/steamhook/builds.go "$RUNNER_TEMP/pr/builds.go"
+          cp steamplay/builds.h "$RUNNER_TEMP/pr/builds.h"
           echo "build=$build" >> "$GITHUB_OUTPUT"
           echo "::error title=KnownBuilds lacks Steam build $build::KnownBuilds has no row for at least one variant of Valve's current Mac Steam build $build (the log above names them), so macron steam enable refuses those clients. The pull-request job proposes the rows."
           exit 1
@@ -74,8 +75,9 @@ jobs:
         run: |
           set -euo pipefail
           cp "$RUNNER_TEMP/pr/builds.go" internal/steamhook/builds.go
+          cp "$RUNNER_TEMP/pr/builds.h" steamplay/builds.h
           git switch -c "$BRANCH"
-          git add internal/steamhook/builds.go
+          git add internal/steamhook/builds.go steamplay/builds.h
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
             commit -q -m "Steam hook: add Mac Steam build $BUILD to KnownBuilds" \
             -m "Rows from Valve's update manifest, made by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
@@ -88,13 +90,13 @@ jobs:
           envsubst '$BUILD $BRANCH $ROWS $RUN_URL $HOOK_RUNS' > "$RUNNER_TEMP/body.md" <<'EOF'
           Valve's update CDN serves Mac Steam build ${BUILD}, and `KnownBuilds` lacks a row for at least one of its variants, so `macron steam enable` refuses those clients with `UNKNOWN_STEAM_BUILD`.
 
-          The [Steam builds run](${RUN_URL}) read Valve's manifest (`steam_client_osx` on `client-update.akamai.steamstatic.com`), checked every package it downloaded against the manifest's `sha2`, and hashed `steamclient.dylib` and each variant's `steam_osx`. These are the build's rows; this pull request adds the ones `KnownBuilds` lacked:
+          The [Steam builds run](${RUN_URL}) read Valve's manifest (`steam_client_osx` on `client-update.akamai.steamstatic.com`), checked every package it downloaded against the manifest's `sha2`, hashed `steamclient.dylib` and each variant's `steam_osx`, and found in `steamclient.dylib` the two instructions the Steam Play switch changes (`steamplay/README.md`). These are the build's rows; this pull request adds the ones `KnownBuilds` lacked, and the same rows to the switch library's table (`steamplay/builds.h`):
 
           ```go
           ${ROWS}
           ```
 
-          **Before merging, let the Steam hook workflow check the build on this branch.** This run started it for `${BRANCH}` ([its runs](${HOOK_RUNS})): it installs Steam from Valve's DMG (the `macos-signed-2` variant), applies the hook to that build and checks Steam still reaches its login window. Merge only when that run is green. Rows for the other variants rest on Valve's manifest alone (README.md, "Steam hook").
+          **Before merging, let the Steam hook workflow check the build on this branch.** This run started it for `${BRANCH}` ([its runs](${HOOK_RUNS})): it installs Steam from Valve's DMG (the `macos-signed-2` variant), applies the hook to that build, and checks that the switch library turns Steam Play on in the running client, that Steam still reaches its login window, and that `macron steam disable` leaves Steam.app as Valve shipped it. Merge only when that run is green; on `main` the Steam Play workflow then presses Steam's real buttons with the test account. Rows for the other variants rest on Valve's manifest alone (README.md, "Steam hook").
 
           A pull request opened with the workflow's token starts no `pull_request` workflows: close and reopen it to run Test. Every run of the Steam builds workflow resets this branch to `main` plus the missing rows until it merges. Nothing here merges by itself.
           EOF

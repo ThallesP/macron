@@ -1,7 +1,8 @@
 #!/bin/bash
-# Removes Macron for the logged-in user: unregisters it from Steam, deletes its
-# runtimes, prefixes and logs (macron uninstall), then the program itself.
-# Steam must be closed. Usage: sudo macron-uninstall
+# Removes Macron for the logged-in user: puts Steam.app's own files back and
+# unregisters Macron from Steam, deletes its runtimes, prefixes and logs
+# (macron uninstall), then the program itself. Closes Steam first.
+# Usage: sudo macron-uninstall
 set -euo pipefail
 if [ "$(id -u)" != 0 ]; then
   exec sudo "$0" "$@"
@@ -13,7 +14,19 @@ if [ "$user" = root ]; then
   exit 1
 fi
 
+home=$(dscl . -read "/Users/$user" NFSHomeDirectory | sed 's/^NFSHomeDirectory: //')
+steam_client="$home/Library/Application Support/Steam/Steam.AppBundle/Steam/Contents/MacOS/steam_osx"
+if pgrep -x steam_osx > /dev/null; then
+  echo "Steam is open; asking it to quit."
+  sudo -u "$user" -H "$steam_client" -shutdown > /dev/null 2>&1 &
+  for _ in $(seq 1 90); do
+    pgrep -x steam_osx > /dev/null || break
+    sleep 1
+  done
+fi
+
 sudo -u "$user" -H /usr/local/bin/macron uninstall
 rm -f /usr/local/bin/macron /usr/local/bin/macron-uninstall /Library/Logs/Macron-install.log
+rm -rf /usr/local/lib/macron
 pkgutil --forget io.github.thallesp.macron > /dev/null 2>&1 || true
-echo "removed /usr/local/bin/macron, /usr/local/bin/macron-uninstall and /Library/Logs/Macron-install.log"
+echo "removed /usr/local/bin/macron, /usr/local/bin/macron-uninstall, /usr/local/lib/macron and /Library/Logs/Macron-install.log"

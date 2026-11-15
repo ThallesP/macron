@@ -1,0 +1,78 @@
+
+== Steam, signed in to the test account
+steam.sh: Steam is at its main window
+steam.sh: already signed in
+steam.sh: app 871720 is already in the library
+steam.sh: app 404410 is already in the library
+
+== Before Macron: the Windows-only game cannot be installed, the Mac game installs and runs
+steam.sh: 404410 is running: its window is open and Steam shows STOP
+steam.sh: 404410 stopped from Steam; Steam is back at PLAY
+
+== macron steam enable
+steam.sh: Steam has quit
+steam dir:       /Users/runner/Library/Application Support/Steam
+build:           1794536281 (known: true)
+steamclient:     sha256 55a9341f7e411f52bae049193a98071ae666b0fddb90ab3cae6aa527d9d84335
+steam_osx:       sha256 99cc08899ce366b9518c0a3782d1ae5954762894d2bf54cc2069c41df86162af
+tool registered: true
+default tool:    true
+backup:          true
+steam app:       /Applications/Steam.app
+steam play:      on
+steam.sh: Steam is at its main window
+
+== Steam Play is on in the running client
+[2026-11-15 19:50:14] pid 98012: Steam Play is on (build 1794536281, steamclient.dylib 221faa3a6a2c36c99130b0a45028af1b)
+
+== Install the Windows-only game with Steam's Install button
+[2026-11-15 19:51:10] AppID 871720 state changed : Fully Installed,Update Queued,
+[2026-11-15 19:51:10] AppID 871720 state changed : Fully Installed,
+[2026-11-15 19:51:10] AppID 871720 scheduler finished : removed from schedule (result No Error, state 0xc) 
+steam.sh: Steam installed 871720 into its library; the page shows PLAY
+Ultimate Custom Night.exe
+
+== Play starts it through macron
+steam.sh: 871720 is running: its window is open and Steam shows STOP
+[2026-11-15 19:51:29] StartSession: appID 871720 session fba76a69f428dc7a
+[2026-11-15 19:51:29] Command prefix for tool 0 "Macron" set to: "'/Users/runner/Library/Application Support/Steam/compatibilitytools.d/macron/.'/macron waitforexitandrun ".
+macron: game steam-871720, log /Users/runner/Library/Application Support/Macron/logs/steam-871720/20261115T195129Z.log
+macron: preparing the Windows environment at /Users/runner/Library/Application Support/Steam/steamapps/compatdata/871720/pfx
+macron: starting Ultimate Custom Night.exe with the dxmt backend
+
+== Quitting the game returns Steam to Play
+steam.sh: 871720 quit; Steam is back at PLAY
+
+== Steam's Stop button stops it too
+steam.sh: 871720 is running: its window is open and Steam shows STOP
+steam.sh: 871720 stopped from Steam; Steam is back at PLAY
+
+== The Mac-native game still runs as before, not through macron
+steam.sh: 404410 is running: its window is open and Steam shows STOP
+[2026-11-15 19:54:09] AppID 404410 adding PID 7738 as a tracked process "'/Users/runner/Library/Application Support/Steam/steamapps/common/Endless Sky/Endless Sky.app/Contents/MacOS/Endless Sky'"
+steam.sh: 404410 stopped from Steam; Steam is back at PLAY
+
+== A Steam build the switch does not know: it refuses and Steam stays stock
+steam.sh: Steam has quit
+steam.sh: Steam is at its main window
+[2026-11-15 19:55:06] pid 10010: UNKNOWN_STEAM_BUILD: steamclient.dylib 221faa3a6a2c36c99130b0a45028af1b is not a build this Macron knows; Steam Play stays off and nothing was changed. Steam has probably updated itself: install the newest Macron
+steam.sh: Steam has quit
+
+== macron steam disable puts Steam back
+steam dir:       /Users/runner/Library/Application Support/Steam
+build:           1794536281 (known: true)
+steamclient:     sha256 55a9341f7e411f52bae049193a98071ae666b0fddb90ab3cae6aa527d9d84335
+steam_osx:       sha256 99cc08899ce366b9518c0a3782d1ae5954762894d2bf54cc2069c41df86162af
+tool registered: false
+default tool:    false
+backup:          false
+steam app:       /Applications/Steam.app
+steam play:      off
+Steam.app:       Valve's files are back, byte for byte
+/Applications/Steam.app: accepted
+source=Notarized Developer ID
+origin=Developer ID Application: Valve Corporation (MXGJJ98X76)
+steam.sh: Steam is at its main window
+
+== Gate 2 flow passed
+GATE2-EXIT 0

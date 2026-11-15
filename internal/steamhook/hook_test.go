@@ -72,7 +72,18 @@ func newFixture(t *testing.T, config string) Hook {
 	}}}
 	t.Cleanup(func() { KnownBuilds = known })
 
-	return Hook{SteamDir: steamDir, MacronPath: "/opt/macron/bin/macron", IsSteamRunning: func() bool { return false }}
+	library := filepath.Join(t.TempDir(), SwitchLibraryName)
+	writeFixtureFile(t, library, "switch library")
+	app := newFakeApp(t)
+	return Hook{
+		SteamDir:       steamDir,
+		SteamApp:       app.path,
+		MacronPath:     "/opt/macron/bin/macron",
+		SwitchLibrary:  library,
+		BackupDir:      filepath.Join(t.TempDir(), "steam-app-backup"),
+		IsSteamRunning: func() bool { return false },
+		Run:            app.run,
+	}
 }
 
 func writeFixtureFile(t *testing.T, path string, content string) {
