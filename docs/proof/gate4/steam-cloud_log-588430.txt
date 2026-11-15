@@ -1,0 +1,30 @@
+[2026-11-15 22:39:27] [AppID 588430] Starting sync (init,)
+[2026-11-15 22:39:27] [AppID 588430] AutoCloud checking local state for user <id>
+[2026-11-15 22:39:27] [U:1:<id>] [AppID 588430] Init cache request complete
+[2026-11-15 22:39:27] [AppID 588430] YldWriteCacheDirectoryToFile - empty vector, deleting '~/Library/Application Support/Steam/userdata/<id>/588430/remotecache.vdf'
+[2026-11-15 22:39:28] [AppID 588430] Starting sync (eval,)
+[2026-11-15 22:39:28] [AppID 588430] AutoCloud checking local state for user <id>
+[2026-11-15 22:39:28] [AppID 588430] Need to sync from local change number '0' to global change number '0' (full), but not attempting now
+[2026-11-15 22:39:28] [AppID 588430] Eval complete
+[2026-11-15 22:39:28] [AppID 588430] YldWriteCacheDirectoryToFile - empty vector, deleting '~/Library/Application Support/Steam/userdata/<id>/588430/remotecache.vdf'
+[2026-11-15 22:41:12] [AppID 588430] Starting sync (AC Launch,down,)
+[2026-11-15 22:41:12] [AppID 588430] AutoCloud checking local state for user <id>
+[2026-11-15 22:41:12] [AppID 588430] Attempting to sync from local change number '0' to global change number '0' (full)
+[2026-11-15 22:41:12] [AppID 588430] Download complete in build list
+[2026-11-15 22:41:12] [AppID 588430] Successfully synced to ChangeNumber 0
+[2026-11-15 22:41:12] [AppID 588430] Running AutoCloud on launch. Looking for existing files to watch:
+[2026-11-15 22:41:12] [AppID 588430] AutoCloud done. Watching 0 files
+[2026-11-15 22:41:12] [AppID 588430] YldWriteCacheDirectoryToFile - empty vector, deleting '~/Library/Application Support/Steam/userdata/<id>/588430/remotecache.vdf'
+[2026-11-15 22:59:06] [AppID 588430] Starting sync (up,AC Exit,)
+[2026-11-15 22:59:06] [AppID 588430] Running AutoCloud on exit. Looking for new and updated files
+[2026-11-15 22:59:06] [AppID 588430]     Skipping rule 0 because ResolvePath (WinAppDataLocal, FalloutShelter) failed
+[2026-11-15 22:59:06] [AppID 588430]     Skipping rule 1 because ResolvePath (WinAppDataLocal, FalloutShelter) failed
+[2026-11-15 22:59:06] [AppID 588430] AutoCloud complete
+[2026-11-15 22:59:06] [AppID 588430] Need to sync from local change number '0' to global change number '0' (full), but not attempting now
+[2026-11-15 22:59:06] [AppID 588430] Upload complete in build list
+[2026-11-15 22:59:06] [AppID 588430] YldWriteCacheDirectoryToFile - empty vector, deleting '~/Library/Application Support/Steam/userdata/<id>/588430/remotecache.vdf'
+[2026-11-15 22:59:07] [AppID 588430] Starting sync (eval,)
+[2026-11-15 22:59:07] [AppID 588430] AutoCloud checking local state for user <id>
+[2026-11-15 22:59:07] [AppID 588430] Need to sync from local change number '0' to global change number '0' (full), but not attempting now
+[2026-11-15 22:59:07] [AppID 588430] Eval complete
+[2026-11-15 22:59:07] [AppID 588430] YldWriteCacheDirectoryToFile - empty vector, deleting '~/Library/Application Support/Steam/userdata/<id>/588430/remotecache.vdf'
