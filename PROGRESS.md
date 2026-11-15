@@ -252,6 +252,17 @@ On the dev machine: `sbx` is at `~/.local/bin/sbx`, Go is at `~/.local/go/bin` (
 
 Existing projects worth reading (see the licence rule in GOAL.md): NotProton (`NotProtonNot/NotProton`) switches on Steam Play in Mac Steam and ports Proton's Steam bridge; Proton-ish (`MagnusPladsen/Proton-ish`) is a fork that adds a free Wine engine and a per-game database.
 
+## How a sandbox will log in to the test account (decided, not yet run)
+
+Every sandbox is a new device, so:
+- **Steam Guard:** turned off for the test account, or an authenticator shared secret. The steps for Thalles are under "Needs Thalles"; Steam Guard off is the default.
+- **Credentials:** they live in `~/.config/macron/steam-test-account` (mode 600) on the dev machine. On a sandbox they are copied with `sbx scp` into a mode-600 file under the runner's home and read from there. In workflows they come from GitHub secrets, on `main` and `workflow_dispatch` only. They never appear on a command line, in a log, in an artifact or in a screenshot.
+- **Logging in:** Steam is installed from Valve's DMG into /Applications (as `ci/steam-hook/steam.sh` does) and started. Its login window is filled through the accessibility API on the sandbox, where no person is working. Login counts as done when `logs/connection_log.txt` shows a new `[Logged On]`. Screenshots are taken of the library window only, after login, never of the login form.
+- **The order once logged in:**
+  1. Add the free games: Ultimate Custom Night 871720, a free Mac-native game, a free game with achievements and Steam Cloud, then Overwatch 2357570.
+  2. Gate 1 first: fetch Ultimate Custom Night's Windows depot for investigation (`+download_depot 871720 871721`; this is allowed for measuring, never as gate 2's flow). Run `tools/clickteam-games/gltrace.sh` (draws and buffer maps per frame) and the fps measurement on macron.5 against stock Wine, which settles which fix is its cost.
+  3. Then gates 2, 4 and 5 as far as the parked decisions allow.
+
 ## Next
 
 0. The Steam test account (GOAL.md, "The Steam test account"): gates 2, 4 and 5 and the real game in gate 1 wait on it.
