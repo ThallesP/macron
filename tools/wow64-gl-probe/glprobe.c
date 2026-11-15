@@ -84,6 +84,9 @@
 #define GL_ARRAY_BUFFER_BINDING 0x8894
 #define GL_DYNAMIC_DRAW 0x88E8
 #define GL_UNIFORM_BUFFER 0x8A11
+#define GL_FRAMEBUFFER 0x8D40
+#define GL_RENDERBUFFER 0x8D41
+#define GL_COLOR_ATTACHMENT0 0x8CE0
 
 typedef HGLRC(WINAPI *CreateContextAttribs)(HDC, HGLRC, const int *);
 typedef BOOL(WINAPI *ChoosePixelFormatARB)(HDC, const int *, const FLOAT *, UINT, int *, UINT *);
@@ -113,6 +116,10 @@ typedef void(WINAPI *BufferSubData)(GLenum, ptrdiff_t, ptrdiff_t, const void *);
 typedef void(WINAPI *UniformMatrix4fv)(GLint, GLsizei, GLboolean, const GLfloat *);
 typedef void(WINAPI *Uniform3fv)(GLint, GLsizei, const GLfloat *);
 typedef void(WINAPI *DrawElementsInstancedBaseVertex)(GLenum, GLsizei, GLenum, const void *, GLsizei, GLint);
+typedef void(WINAPI *GenObjects)(GLsizei, GLuint *);
+typedef void(WINAPI *BindObject)(GLenum, GLuint);
+typedef void(WINAPI *RenderbufferStorage)(GLenum, GLenum, GLsizei, GLsizei);
+typedef void(WINAPI *FramebufferRenderbuffer)(GLenum, GLenum, GLenum, GLuint);
 
 typedef struct {
     int rounds;
@@ -335,15 +342,28 @@ static const char *cost(void)
     UniformMatrix4fv uniform_matrix4fv = proc("glUniformMatrix4fv");
     GetUniformLocation get_uniform_location = proc("glGetUniformLocation");
     DrawElementsInstancedBaseVertex draw_elements = proc("glDrawElementsInstancedBaseVertex");
-    GLuint shaders[2], program, vao, buffers[3];
+    GenObjects gen_framebuffers = proc("glGenFramebuffers"), gen_renderbuffers = proc("glGenRenderbuffers");
+    BindObject bind_framebuffer = proc("glBindFramebuffer"), bind_renderbuffer = proc("glBindRenderbuffer");
+    RenderbufferStorage renderbuffer_storage = proc("glRenderbufferStorage");
+    FramebufferRenderbuffer framebuffer_renderbuffer = proc("glFramebufferRenderbuffer");
+    GLuint shaders[2], program, vao, buffers[3], fbo, rbo;
     GLint s, m, n, k, value;
     float matrix[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}, color[3] = {1, 0.5f, 0.25f};
     BYTE data[64];
     double start;
-    int i, run, count = options.cost;
+    GLenum error;
+    int i, run, count = options.cost, errors = 0;
 
-    if (!create_shader || !buffer_sub_data || !uniform_matrix4fv || !draw_elements)
+    if (!create_shader || !buffer_sub_data || !uniform_matrix4fv || !draw_elements || !framebuffer_renderbuffer)
         return "cost: missing functions";
+    /* draw into a framebuffer object: a hidden window may have no drawable */
+    gen_framebuffers(1, &fbo);
+    bind_framebuffer(GL_FRAMEBUFFER, fbo);
+    gen_renderbuffers(1, &rbo);
+    bind_renderbuffer(GL_RENDERBUFFER, rbo);
+    renderbuffer_storage(GL_RENDERBUFFER, GL_RGBA8, 64, 64);
+    framebuffer_renderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo);
+    glViewport(0, 0, 64, 64);
     shaders[0] = create_shader(GL_VERTEX_SHADER);
     shaders[1] = create_shader(GL_FRAGMENT_SHADER);
     shader_source(shaders[0], 1, &vs, NULL);
@@ -373,6 +393,10 @@ static const char *cost(void)
     bind_buffer(GL_UNIFORM_BUFFER, buffers[2]);
     buffer_data(GL_UNIFORM_BUFFER, 64, NULL, GL_DYNAMIC_DRAW);
     memset(data, 0, sizeof(data));
+    if ((error = glGetError())) {
+        say("RESULT cost setup: GL error 0x%x\n", error);
+        errors++;
+    }
     glFinish();
 
 #define TIME(label, calls, statement)                                                                                \
@@ -386,6 +410,10 @@ static const char *cost(void)
         if (run)                                                                                                     \
             say("RESULT cost %s ns_per_call %.0f calls %d\n", label, (now_ns() - start) / ((double)runs * (calls)),  \
                 runs * (calls));                                                                                     \
+        if ((error = glGetError())) {                                                                                \
+            say("RESULT cost %s: GL error 0x%x\n", label, error);                                                    \
+            errors++;                                                                                                \
+        }                                                                                                            \
     }
 
     TIME("glGetIntegerv", 1, glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &value));
@@ -405,9 +433,7 @@ static const char *cost(void)
         draw_elements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (const void *)(INT_PTR)((i % 64) * 64), 1, (i % 64) * 8);
     });
 #undef TIME
-    if (glGetError())
-        return "cost: GL error";
-    return NULL;
+    return errors ? "cost: GL error" : NULL;
 }
 
 /* One round: what wined3d does to create an adapter and then a device. */
