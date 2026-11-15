@@ -91,7 +91,7 @@ Checked by hand on Thalles's MacBook Air (M3, macOS 26.5, Steam build 1794536281
 - **Throttled control:** 1.2 fps at 652 ms a frame, rejected.
 - **Picture:** SSIM 0.995 against the Windows reference, and all six image controls rejected.
 
-The scenario now runs in CI (`"ci": true`). Its share, 0.8, comes from the Windows runner, where the 32-bit probe runs at 0.88 to 0.91 of the 64-bit one; it is not set from Macron's numbers.
+The scenario now runs in CI (`"ci": true`). The first CI run, [Scenarios run 43658289617](https://github.com/ThallesP/macron/actions/runs/43658289617) on c7ee3f6, was green on all five scenarios: the probe ran at 8.1 fps against a threshold of 2.0 (0.8 of the baseline's 2.5), the control at 0.8 fps was rejected, and no restart was needed. Its share, 0.8, comes from the Windows runner, where the 32-bit probe runs at 0.88 to 0.91 of the 64-bit one; it is not set from Macron's numbers.
 
 **What it catches, and what it does not.**
 - It catches the 32-bit path stalling or crashing, which is what stock Wine 11.21 mostly did: 6 of 9 stock 32-bit runs never finished, and the `mix` runs crashed.
