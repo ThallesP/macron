@@ -5,8 +5,15 @@
  * runtime/wine/patches/README.md (0005) has what it found.
  *
  *   glprobe.exe [--rounds N] [--gets N] [--draw] [--threads N] [--syscalls N]
- *               [--syscall-thread] [--shaders N] [--churn]
+ *               [--syscall-thread] [--shaders N] [--churn] [--cost N]
  *
+ * --cost N times N calls each of a few cheap OpenGL calls in the first
+ * round's 3.2 core context and prints the time per call, glFinish included
+ * (so calls that opengl32 queues are counted with their replay):
+ * glGetIntegerv (returns a value, always a call to Wine's Unix side),
+ * glUniform1f, glBindBuffer, glBufferSubData of 64 bytes, glUniformMatrix4fv,
+ * and the nine calls wined3d makes for each Direct3D 9 draw of Ultimate
+ * Custom Night (three binds, two uploads, three uniforms, the draw).
  * --syscalls N makes N cheap system calls (NtYieldExecution) after the
  * rounds, to tell Wine's 32-to-64 transition apart from OpenGL.
  * --syscall-thread makes such calls on a thread of its own, without any
@@ -73,6 +80,10 @@
 #define GL_STATIC_DRAW 0x88E4
 #define GL_COMPILE_STATUS 0x8B81
 #define GL_LINK_STATUS 0x8B82
+#define GL_ELEMENT_ARRAY_BUFFER 0x8893
+#define GL_ARRAY_BUFFER_BINDING 0x8894
+#define GL_DYNAMIC_DRAW 0x88E8
+#define GL_UNIFORM_BUFFER 0x8A11
 
 typedef HGLRC(WINAPI *CreateContextAttribs)(HDC, HGLRC, const int *);
 typedef BOOL(WINAPI *ChoosePixelFormatARB)(HDC, const int *, const FLOAT *, UINT, int *, UINT *);
@@ -98,6 +109,10 @@ typedef void(WINAPI *VertexAttribPointer)(GLuint, GLint, GLenum, GLboolean, GLsi
 typedef void(WINAPI *EnableVertexAttribArray)(GLuint);
 typedef void(WINAPI *Uniform1f)(GLint, GLfloat);
 typedef GLint(WINAPI *GetUniformLocation)(GLuint, const char *);
+typedef void(WINAPI *BufferSubData)(GLenum, ptrdiff_t, ptrdiff_t, const void *);
+typedef void(WINAPI *UniformMatrix4fv)(GLint, GLsizei, GLboolean, const GLfloat *);
+typedef void(WINAPI *Uniform3fv)(GLint, GLsizei, const GLfloat *);
+typedef void(WINAPI *DrawElementsInstancedBaseVertex)(GLenum, GLsizei, GLenum, const void *, GLsizei, GLint);
 
 typedef struct {
     int rounds;
@@ -108,9 +123,10 @@ typedef struct {
     int syscall_thread;
     int shaders;
     int churn;
+    int cost;
 } Options;
 
-static Options options = {20, 200, FALSE, 1, 0, 0, 1, 0};
+static Options options = {20, 200, FALSE, 1, 0, 0, 1, 0, 0};
 static volatile LONG gl_done;
 
 static void say(const char *format, ...)
@@ -281,6 +297,119 @@ static int draw(void)
     return 1;
 }
 
+static double now_ns(void)
+{
+    LARGE_INTEGER counter, frequency;
+
+    QueryPerformanceCounter(&counter);
+    QueryPerformanceFrequency(&frequency);
+    return (double)counter.QuadPart * 1e9 / (double)frequency.QuadPart;
+}
+
+/* Times options.cost calls of each kind; glFinish ends each run, so calls
+ * that opengl32 queues are paid for with their replay. */
+static const char *cost(void)
+{
+    static const char *vs = "#version 150\nin vec2 p;\nuniform float s;\nuniform mat4 m;\nuniform mat4 n;\n"
+                            "void main() { gl_Position = n * m * vec4(p * s, 0.0, 1.0); }\n";
+    static const char *fs = "#version 150\nout vec4 c;\nuniform vec3 k;\nvoid main() { c = vec4(k, 1.0); }\n";
+    static const float quad[] = {0.0f, 0.0f, 0.01f, 0.0f, 0.0f, 0.01f, 0.01f, 0.01f};
+    static const unsigned short indices[] = {0, 1, 2, 2, 1, 3};
+    CreateShader create_shader = proc("glCreateShader");
+    ShaderSource shader_source = proc("glShaderSource");
+    CompileShader compile_shader = proc("glCompileShader");
+    CreateProgram create_program = proc("glCreateProgram");
+    AttachShader attach_shader = proc("glAttachShader");
+    LinkProgram link_program = proc("glLinkProgram");
+    UseProgram use_program = proc("glUseProgram");
+    GenVertexArrays gen_vertex_arrays = proc("glGenVertexArrays");
+    BindVertexArray bind_vertex_array = proc("glBindVertexArray");
+    GenBuffers gen_buffers = proc("glGenBuffers");
+    BindBuffer bind_buffer = proc("glBindBuffer");
+    BufferData buffer_data = proc("glBufferData");
+    BufferSubData buffer_sub_data = proc("glBufferSubData");
+    VertexAttribPointer vertex_attrib_pointer = proc("glVertexAttribPointer");
+    EnableVertexAttribArray enable_vertex_attrib_array = proc("glEnableVertexAttribArray");
+    Uniform1f uniform1f = proc("glUniform1f");
+    Uniform3fv uniform3fv = proc("glUniform3fv");
+    UniformMatrix4fv uniform_matrix4fv = proc("glUniformMatrix4fv");
+    GetUniformLocation get_uniform_location = proc("glGetUniformLocation");
+    DrawElementsInstancedBaseVertex draw_elements = proc("glDrawElementsInstancedBaseVertex");
+    GLuint shaders[2], program, vao, buffers[3];
+    GLint s, m, n, k, value;
+    float matrix[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}, color[3] = {1, 0.5f, 0.25f};
+    BYTE data[64];
+    double start;
+    int i, run, count = options.cost;
+
+    if (!create_shader || !buffer_sub_data || !uniform_matrix4fv || !draw_elements)
+        return "cost: missing functions";
+    shaders[0] = create_shader(GL_VERTEX_SHADER);
+    shaders[1] = create_shader(GL_FRAGMENT_SHADER);
+    shader_source(shaders[0], 1, &vs, NULL);
+    shader_source(shaders[1], 1, &fs, NULL);
+    compile_shader(shaders[0]);
+    compile_shader(shaders[1]);
+    program = create_program();
+    attach_shader(program, shaders[0]);
+    attach_shader(program, shaders[1]);
+    link_program(program);
+    use_program(program);
+    s = get_uniform_location(program, "s");
+    m = get_uniform_location(program, "m");
+    n = get_uniform_location(program, "n");
+    k = get_uniform_location(program, "k");
+    if (s < 0 || m < 0 || n < 0 || k < 0)
+        return "cost: program";
+    gen_vertex_arrays(1, &vao);
+    bind_vertex_array(vao);
+    gen_buffers(3, buffers);
+    bind_buffer(GL_ARRAY_BUFFER, buffers[0]);
+    buffer_data(GL_ARRAY_BUFFER, 64 * 64, NULL, GL_DYNAMIC_DRAW);
+    vertex_attrib_pointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+    enable_vertex_attrib_array(0);
+    bind_buffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]);
+    buffer_data(GL_ELEMENT_ARRAY_BUFFER, 64 * 64, NULL, GL_DYNAMIC_DRAW);
+    bind_buffer(GL_UNIFORM_BUFFER, buffers[2]);
+    buffer_data(GL_UNIFORM_BUFFER, 64, NULL, GL_DYNAMIC_DRAW);
+    memset(data, 0, sizeof(data));
+    glFinish();
+
+#define TIME(label, calls, statement)                                                                                \
+    for (run = 0; run < 2; run++) {                                                                                    \
+        int runs = run ? count : count / 10 + 1;                                                                     \
+        start = now_ns();                                                                                            \
+        for (i = 0; i < runs; i++) {                                                                                 \
+            statement;                                                                                               \
+        }                                                                                                            \
+        glFinish();                                                                                                  \
+        if (run)                                                                                                     \
+            say("RESULT cost %s ns_per_call %.0f calls %d\n", label, (now_ns() - start) / ((double)runs * (calls)),  \
+                runs * (calls));                                                                                     \
+    }
+
+    TIME("glGetIntegerv", 1, glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &value));
+    TIME("glUniform1f", 1, uniform1f(s, (float)(i & 1)));
+    TIME("glBindBuffer", 1, bind_buffer(GL_UNIFORM_BUFFER, (i & 1) ? buffers[2] : 0));
+    TIME("glBufferSubData-64", 1, buffer_sub_data(GL_ARRAY_BUFFER, (i % 64) * 64, 64, data));
+    TIME("glUniformMatrix4fv", 1, uniform_matrix4fv(m, 1, GL_FALSE, matrix));
+    TIME("d3d9-draw-9-calls", 9, {
+        bind_buffer(GL_ARRAY_BUFFER, buffers[0]);
+        buffer_sub_data(GL_ARRAY_BUFFER, (i % 64) * 64, sizeof(quad), quad);
+        bind_buffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]);
+        buffer_sub_data(GL_ELEMENT_ARRAY_BUFFER, (i % 64) * 64, sizeof(indices), indices);
+        bind_buffer(GL_UNIFORM_BUFFER, buffers[2]);
+        uniform_matrix4fv(m, 1, GL_FALSE, matrix);
+        uniform_matrix4fv(n, 1, GL_FALSE, matrix);
+        uniform3fv(k, 1, color);
+        draw_elements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (const void *)(INT_PTR)((i % 64) * 64), 1, (i % 64) * 8);
+    });
+#undef TIME
+    if (glGetError())
+        return "cost: GL error";
+    return NULL;
+}
+
 /* One round: what wined3d does to create an adapter and then a device. */
 static const char *round_trip(int round, int thread)
 {
@@ -364,6 +493,8 @@ static const char *round_trip(int round, int thread)
         glGetError();
         CHECK_MODE(14);
     }
+    if (options.cost && round == 0 && thread == 0)
+        failed = cost();
     for (i = 0; options.draw && i < options.shaders && !failed; i++) {
         if (!draw())
             failed = "draw";
@@ -465,9 +596,11 @@ int main(int argc, char **argv)
             options.syscalls = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--churn"))
             options.churn = 1;
+        else if (!strcmp(argv[i], "--cost") && i + 1 < argc)
+            options.cost = atoi(argv[++i]);
         else {
             say("usage: glprobe.exe [--rounds N] [--gets N] [--draw] [--threads N] [--syscalls N] [--syscall-thread] [--shaders N] "
-                "[--churn]\n");
+                "[--churn] [--cost N]\n");
             return 2;
         }
     }

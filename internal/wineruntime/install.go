@@ -55,6 +55,11 @@ var dxmtArchitectures = []string{"x86_64-windows", "x86_64-unix", "i386-windows"
 
 var windowsArchitectures = []string{"i386-windows", "x86_64-windows"}
 
+// overlayUnixLibs are the overlay's Unix libraries that go into the plain
+// tree too, because the overlay's Windows modules there call into them:
+// opengl32.dll's calls to its Unix side are numbered, and patch 0007 adds one.
+var overlayUnixLibs = []string{"lib/wine/x86_64-unix/opengl32.so"}
+
 func Find(layout Layout, manifest Manifest) (Installed, error) {
 	dir := layout.RuntimeDir(manifest.Version)
 	recorded, err := os.ReadFile(filepath.Join(dir, installedMarker))
@@ -197,6 +202,16 @@ func addWineOverlay(ctx context.Context, archive, staging string) error {
 		}
 		if err := copyTree(ctx, modules, filepath.Join(staging, string(TreePlain), "lib", "wine", arch)); err != nil {
 			return err
+		}
+	}
+	for _, lib := range overlayUnixLibs {
+		source := filepath.Join(unpacked, lib)
+		if _, err := os.Stat(source); err != nil {
+			continue
+		}
+		output, err := exec.CommandContext(ctx, "cp", source, filepath.Join(staging, string(TreePlain), lib)).CombinedOutput()
+		if err != nil {
+			return failure.Errorf(failure.CodeExtractFailed, "copying %s into the plain Wine tree: %s: %s", filepath.Base(lib), err, output)
 		}
 	}
 	return os.RemoveAll(unpacked)

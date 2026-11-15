@@ -67,6 +67,7 @@ func serve(t *testing.T) *fixture {
 		"lib/wine/x86_64-unix/winemac.so":     "macron winemac",
 		"lib/wine/i386-windows/wined3d.dll":   "macron wined3d 32",
 		"lib/wine/x86_64-windows/wined3d.dll": "macron wined3d",
+		"lib/wine/x86_64-unix/opengl32.so":    "macron opengl32 unix",
 		"share/doc/macron-wine/COPYING.LIB":   "licence",
 	})
 	dxvk := tarball(t, map[string]string{
@@ -141,6 +142,9 @@ func TestInstallBuildsAPlainAndADXMTTree(t *testing.T) {
 		}
 		if got := read(t, filepath.Join(installed.Root(tree), "lib/wine/x86_64-windows/wined3d.dll")); got != "macron wined3d" {
 			t.Errorf("%s tree wined3d.dll = %q", tree, got)
+		}
+		if got := read(t, filepath.Join(installed.Root(tree), "lib/wine/x86_64-unix/opengl32.so")); got != "macron opengl32 unix" {
+			t.Errorf("%s tree opengl32.so = %q", tree, got)
 		}
 	}
 	if got := read(t, installed.Wine(TreeDXMT)); got != "wine" {

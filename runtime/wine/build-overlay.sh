@@ -1,9 +1,9 @@
 #!/bin/bash
-# Builds winemac.so (x86_64), wined3d.dll (i386 and x86_64) and wow64cpu.dll
-# (x86_64) from Wine 11.21 with the patches in runtime/wine/patches, checks
-# that they are drop-ins for
-# the same files in Gcenx's wine-devel 11.21 build, and packs them as an
-# overlay for that tree. Runs on an Apple silicon Mac (a GitHub macos-26
+# Builds winemac.so (x86_64), wined3d.dll (i386 and x86_64), wow64cpu.dll
+# (x86_64) and opengl32 (opengl32.so, x86_64, and opengl32.dll, i386 and
+# x86_64) from Wine 11.21 with the patches in runtime/wine/patches, checks
+# that they are drop-ins for the same files in Gcenx's wine-devel 11.21 build,
+# and packs them as an overlay for that tree. Runs on an Apple silicon Mac (a GitHub macos-26
 # runner) with Xcode and Homebrew. Usage: runtime/wine/build-overlay.sh <work-dir> <out-dir>
 set -euo pipefail
 
@@ -35,12 +35,15 @@ tar -xJf llvm-mingw.tar.xz -C llvm-mingw --strip-components 1
 
 rm -rf gcenx && mkdir gcenx
 tar -xJf gcenx-wine.tar.xz -C gcenx --include '*/x86_64-unix/winemac.so' --include '*/x86_64-unix/win32u.so' \
-  --include '*/i386-windows/wined3d.dll' --include '*/x86_64-windows/wined3d.dll' --include '*/x86_64-windows/wow64cpu.dll'
+  --include '*/i386-windows/wined3d.dll' --include '*/x86_64-windows/wined3d.dll' --include '*/x86_64-windows/wow64cpu.dll' \
+  --include '*/x86_64-unix/opengl32.so' --include '*/i386-windows/opengl32.dll' --include '*/x86_64-windows/opengl32.dll'
 gcenx_winemac=$(find gcenx -path '*/x86_64-unix/winemac.so')
 gcenx_win32u=$(find gcenx -path '*/x86_64-unix/win32u.so')
+gcenx_opengl32=$(find gcenx -path '*/x86_64-unix/opengl32.so')
 minos=$(otool -l "$gcenx_winemac" | awk '/LC_BUILD_VERSION/ {b=1} b && $1 == "minos" {print $2; exit}')
 install_name=$(otool -D "$gcenx_winemac" | tail -n 1)
-echo "Gcenx's winemac.so targets macOS $minos and is named $install_name"
+opengl32_install_name=$(otool -D "$gcenx_opengl32" | tail -n 1)
+echo "Gcenx's winemac.so targets macOS $minos and is named $install_name; opengl32.so is named $opengl32_install_name"
 
 rm -rf src build && mkdir src build
 tar -xzf wine-source.tar.gz -C src --strip-components 1
@@ -61,7 +64,14 @@ configure() {
 
 build() {
   (cd build && MACOSX_DEPLOYMENT_TARGET=$minos arch -x86_64 make -j"$(sysctl -n hw.ncpu)" dlls/winemac.drv/winemac.so dlls/win32u/win32u.so \
-    dlls/wined3d/i386-windows/wined3d.dll dlls/wined3d/x86_64-windows/wined3d.dll dlls/wow64cpu/x86_64-windows/wow64cpu.dll)
+    dlls/wined3d/i386-windows/wined3d.dll dlls/wined3d/x86_64-windows/wined3d.dll dlls/wow64cpu/x86_64-windows/wow64cpu.dll \
+    dlls/opengl32/opengl32.so dlls/opengl32/i386-windows/opengl32.dll dlls/opengl32/x86_64-windows/opengl32.dll)
+}
+
+keep_opengl32() { # <upstream|patched>
+  cp build/dlls/opengl32/opengl32.so "$work/opengl32-$1.so"
+  install_name_tool -id "$opengl32_install_name" "$work/opengl32-$1.so"
+  for arch in i386 x86_64; do cp "build/dlls/opengl32/$arch-windows/opengl32.dll" "$work/opengl32-$1-$arch.dll"; done
 }
 
 configure
@@ -70,6 +80,7 @@ cp build/dlls/winemac.drv/winemac.so "$work/winemac-upstream.so"
 install_name_tool -id "$install_name" "$work/winemac-upstream.so"
 for arch in i386 x86_64; do cp "build/dlls/wined3d/$arch-windows/wined3d.dll" "$work/wined3d-upstream-$arch.dll"; done
 cp build/dlls/wow64cpu/x86_64-windows/wow64cpu.dll "$work/wow64cpu-upstream.dll"
+keep_opengl32 upstream
 
 for patch in "$here"/patches/*.patch; do
   patch -d src -p1 --forward <"$patch"
@@ -81,6 +92,7 @@ install_name_tool -id "$install_name" "$work/winemac-patched.so"
 cp build/dlls/win32u/win32u.so "$work/win32u-upstream.so"
 for arch in i386 x86_64; do cp "build/dlls/wined3d/$arch-windows/wined3d.dll" "$work/wined3d-patched-$arch.dll"; done
 cp build/dlls/wow64cpu/x86_64-windows/wow64cpu.dll "$work/wow64cpu-patched.dll"
+keep_opengl32 patched
 
 "$here/check-abi.sh" "$gcenx_winemac" "$gcenx_win32u" "$work/winemac-upstream.so" "$work/win32u-upstream.so" "$work/winemac-patched.so" | tee "$out/abi-check.txt"
 for arch in i386 x86_64; do
@@ -89,13 +101,21 @@ for arch in i386 x86_64; do
 done
 "$here/check-pe-exports.sh" "$work/llvm-mingw/bin/llvm-objdump" "$(find gcenx -path '*/x86_64-windows/wow64cpu.dll')" \
   "$work/wow64cpu-upstream.dll" "$work/wow64cpu-patched.dll" | tee -a "$out/abi-check.txt"
+"$here/check-unix-lib.sh" "$gcenx_opengl32" "$work/opengl32-upstream.so" "$work/opengl32-patched.so" | tee -a "$out/abi-check.txt"
+for arch in i386 x86_64; do
+  "$here/check-pe-exports.sh" "$work/llvm-mingw/bin/llvm-objdump" "$(find gcenx -path "*/$arch-windows/opengl32.dll")" \
+    "$work/opengl32-upstream-$arch.dll" "$work/opengl32-patched-$arch.dll" | tee -a "$out/abi-check.txt"
+done
 
 stage="$work/stage"
 rm -rf "$stage" && mkdir -p "$stage/lib/wine/x86_64-unix" "$stage/lib/wine/i386-windows" "$stage/lib/wine/x86_64-windows" "$stage/share/doc/macron-wine"
 cp "$work/winemac-patched.so" "$stage/lib/wine/x86_64-unix/winemac.so"
 for arch in i386 x86_64; do cp "$work/wined3d-patched-$arch.dll" "$stage/lib/wine/$arch-windows/wined3d.dll"; done
 cp "$work/wow64cpu-patched.dll" "$stage/lib/wine/x86_64-windows/wow64cpu.dll"
+cp "$work/opengl32-patched.so" "$stage/lib/wine/x86_64-unix/opengl32.so"
+for arch in i386 x86_64; do cp "$work/opengl32-patched-$arch.dll" "$stage/lib/wine/$arch-windows/opengl32.dll"; done
 codesign --force --sign - "$stage/lib/wine/x86_64-unix/winemac.so"
+codesign --force --sign - "$stage/lib/wine/x86_64-unix/opengl32.so"
 cp "$here"/patches/*.patch "$here/patches/README.md" src/COPYING.LIB "$out/abi-check.txt" "$stage/share/doc/macron-wine/"
 tar -C "$stage" -cJf "$out/$ASSET_NAME" lib share
 cp "$here"/patches/*.patch "$out/"

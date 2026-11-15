@@ -5,6 +5,12 @@
  *
  *   probe.exe [mix|up|vb|tex] [--sprites N] [--warmup S] [--seconds S]
  *             [--hold S] [--window WxH] [--throttle-ms N] [--no-present]
+ *             [--sprite-size N]
+ *
+ * --sprite-size N draws every quad of the scene (the sprites, and the
+ * backdrop, panel and overlay too) N by N pixels, so with N = 1 a frame
+ * costs its draws and next to nothing in rasterising: the per-draw CPU cost
+ * of the Direct3D 9 and OpenGL layers, alone.
  */
 #define COBJMACROS
 #include <windows.h>
@@ -41,6 +47,7 @@ typedef struct {
     int window_width;
     int window_height;
     BOOL present;
+    int sprite_size;
 } Options;
 
 typedef struct {
@@ -126,6 +133,7 @@ static BOOL parse_options(int argc, char **argv, Options *o)
     o->window_width = WIDTH;
     o->window_height = HEIGHT;
     o->present = TRUE;
+    o->sprite_size = 0;
     for (i = 1; i < argc; i++) {
         const char *a = argv[i];
         const char *value = i + 1 < argc ? argv[i + 1] : NULL;
@@ -154,6 +162,8 @@ static BOOL parse_options(int argc, char **argv, Options *o)
             o->hold_seconds = atof(value);
         else if (strcmp(a, "--throttle-ms") == 0)
             o->throttle_ms = atoi(value);
+        else if (strcmp(a, "--sprite-size") == 0)
+            o->sprite_size = atoi(value);
         else if (strcmp(a, "--window") == 0) {
             if (sscanf(value, "%dx%d", &o->window_width, &o->window_height) != 2)
                 return FALSE;
@@ -163,7 +173,8 @@ static BOOL parse_options(int argc, char **argv, Options *o)
         i++;
     }
     return o->sprites > 0 && o->sprites <= VERTEX_BUFFER_QUADS - 8 && o->measure_seconds > 0 && o->warmup_seconds >= 0 &&
-           o->hold_seconds >= 0 && o->throttle_ms >= 0 && o->window_width > 0 && o->window_height > 0;
+           o->hold_seconds >= 0 && o->throttle_ms >= 0 && o->window_width > 0 && o->window_height > 0 &&
+           o->sprite_size >= 0;
 }
 
 static DWORD argb(int a, int r, int g, int b)
@@ -296,9 +307,18 @@ static const char *create_resources(Scene *s)
     return NULL;
 }
 
+static int sprite_size;
+
 static void quad(Vertex *v, float x, float y, float w, float h, DWORD color)
 {
-    float left = x - 0.5f, top = y - 0.5f, right = x + w - 0.5f, bottom = y + h - 0.5f;
+    float left, top, right, bottom;
+
+    if (sprite_size)
+        w = h = (float)sprite_size;
+    left = x - 0.5f;
+    top = y - 0.5f;
+    right = x + w - 0.5f;
+    bottom = y + h - 0.5f;
     Vertex corners[4] = {
         { left, top, 0, 1, color, 0, 0 },
         { right, top, 0, 1, color, 1, 0 },
@@ -500,7 +520,7 @@ int main(int argc, char **argv)
     memset(&s, 0, sizeof(s));
     if (!parse_options(argc, argv, &s.options)) {
         say("usage: probe.exe [mix|up|vb|tex] [--sprites N] [--warmup S] [--seconds S] [--hold S] [--window WxH] "
-               "[--throttle-ms N] [--no-present]\n");
+               "[--throttle-ms N] [--no-present] [--sprite-size N]\n");
         return 2;
     }
     hwnd = open_window(s.options.window_width, s.options.window_height);
@@ -527,11 +547,13 @@ int main(int argc, char **argv)
         say("RESULT d3d9 resources: FAILED (%s)\n", failed);
         return 1;
     }
+    sprite_size = s.options.sprite_size;
     say("RESULT config mode %s sprites %d bits %d back_buffer %dx%d window %dx%d warmup_s %.1f measure_s %.1f "
-           "throttle_ms %d present %s dynamic_panel %s\n",
+           "throttle_ms %d present %s dynamic_panel %s sprite_size %d\n",
            mode_names[s.options.mode], s.options.sprites, (int)(sizeof(void *) * 8), WIDTH, HEIGHT,
            s.options.window_width, s.options.window_height, s.options.warmup_seconds, s.options.measure_seconds,
-           s.options.throttle_ms, s.options.present ? "yes" : "no", s.panel_is_dynamic ? "yes" : "no");
+           s.options.throttle_ms, s.options.present ? "yes" : "no", s.panel_is_dynamic ? "yes" : "no",
+           s.options.sprite_size);
 
     QueryPerformanceFrequency(&frequency);
     QueryPerformanceCounter(&started);
