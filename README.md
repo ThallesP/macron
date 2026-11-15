@@ -8,7 +8,7 @@ Mac + Proton. Press Play on a Windows-only game in the Mac Steam client and have
 
 1. **Steam hook**: switches on the Steam Play code that already ships (disabled) in Steam for Mac and registers Macron as a compatibility tool.
 2. **Launcher**: the headless program Steam calls on Play. It prepares a private Windows environment for the game and starts it under Wine.
-3. **Steam bridge**: a Mac port of Proton's `lsteamclient`, so games reach the native Steam client for ownership, achievements and cloud saves.
+3. **Steam bridge**: a Mac port of Proton's `lsteamclient`, so games reach the native Steam client for ownership, achievements and cloud saves. On hold: `lsteamclient` is under the Steamworks SDK License, which does not let this repository publish it (see Licences).
 4. **Runtime**: Wine with DXMT (DirectX 11) and D3DMetal (DirectX 12). Rosetta 2 first, FEX later.
 5. **Fixes database**: per-game settings keyed by Steam app ID.
 6. **Installer**: one package that sets everything up. The only UI.
@@ -103,6 +103,7 @@ Every game tried. The first three are scenarios that pass in CI; the next five c
 | Mesa 26.1.8 for Windows (pal1000/mesa-dist-win) | MIT | downloaded on Windows runners for OpenGL references, and by macron when `MACRON_OPENGL=llvmpipe` |
 | Go standard library | BSD 3-Clause | built into macron and macron-check |
 | Steam for Mac (Valve) | proprietary | installed by the `Steam hook` workflow to test against; never redistributed, the repo keeps only file hashes |
+| Proton's `lsteamclient` (ValveSoftware/Proton, tag `proton-11.0-2e`, commit `bc896217ffcd67f892f952b010f898fe7bd0f0a1`) | Steamworks SDK License (`lsteamclient/LICENSE`), not the BSD 3-Clause of Proton's top level (`LICENSE.proton`). It grants local copies of the source, only to develop software that uses Steamworks, and redistribution of the SDK's `redistributable_bin` folder only; all other rights are reserved. It covers the whole folder: Valve's Wine glue, the generated wrappers and the 91 Steamworks SDK header sets (`cxx.h` alone is Wine's, LGPL 2.1+). Proton's README: "If you distribute a built version of Proton to other users, you must adhere to the terms of these licenses" | not used. Its source, a patch made of its lines, and a build of it (a public artifact or a release) would all be redistribution, which the licence does not grant. PROGRESS.md, "Needs Thalles" |
 
 Macron itself has no licence yet (see PROGRESS.md, "Needs Thalles").
 
