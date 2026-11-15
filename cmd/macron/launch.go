@@ -68,6 +68,7 @@ type gameStart struct {
 	Cwd         string
 	Args        []string
 	WaitForWine bool
+	SteamBridge bool
 }
 
 func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
@@ -128,6 +129,7 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 		Progress:       progress,
 		WaitForWine:    in.WaitForWine,
 		SoftwareOpenGL: openGL == "llvmpipe",
+		SteamBridge:    in.SteamBridge,
 	})
 	if err != nil {
 		return fail(output, err)

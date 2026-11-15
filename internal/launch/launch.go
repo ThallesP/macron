@@ -31,6 +31,7 @@ type Input struct {
 	Progress       func(string)
 	WaitForWine    bool
 	SoftwareOpenGL bool
+	SteamBridge    bool
 }
 
 var backendTrees = map[fixes.Backend]wineruntime.Tree{
@@ -89,7 +90,14 @@ func Run(ctx context.Context, in Input) (int, error) {
 	}
 
 	in.Progress(fmt.Sprintf("starting %s with the %s backend", filepath.Base(exe), in.Profile.Backend))
-	game := exec.CommandContext(ctx, in.Runtime.Wine(tree), slices.Concat([]string{exe}, in.Args, in.Profile.Args)...)
+	command := slices.Concat([]string{exe}, in.Args, in.Profile.Args)
+	if in.SteamBridge {
+		env, command, err = withSteamBridge(ctx, in, tree, env, command)
+		if err != nil {
+			return 0, err
+		}
+	}
+	game := exec.CommandContext(ctx, in.Runtime.Wine(tree), command...)
 	game.Dir = in.Cwd
 	if game.Dir == "" {
 		game.Dir = filepath.Dir(exe)

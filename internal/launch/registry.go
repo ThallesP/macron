@@ -17,34 +17,50 @@ import (
 
 const registryMarker = ".macron-registry.json"
 
+type registryImport struct {
+	Values   []fixes.RegistryValue
+	Marker   string
+	FileName string
+	Message  string
+}
+
 func EnsureRegistry(ctx context.Context, in Input, env []string) error {
-	want, err := json.Marshal(in.Profile.Registry)
+	return importRegistry(ctx, in, env, registryImport{
+		Values:   in.Profile.Registry,
+		Marker:   registryMarker,
+		FileName: "macron-profile.reg",
+		Message:  "writing the profile's registry values",
+	})
+}
+
+func importRegistry(ctx context.Context, in Input, env []string, request registryImport) error {
+	want, err := json.Marshal(request.Values)
 	if err != nil {
 		return err
 	}
-	markerPath := filepath.Join(in.Prefix, registryMarker)
+	markerPath := filepath.Join(in.Prefix, request.Marker)
 	if have, err := os.ReadFile(markerPath); err == nil && bytes.Equal(have, want) {
 		return nil
 	}
-	if len(in.Profile.Registry) == 0 {
+	if len(request.Values) == 0 {
 		return os.WriteFile(markerPath, want, 0o644)
 	}
 
-	in.Progress("writing the profile's registry values")
-	regFile := filepath.Join(in.Prefix, "drive_c", "macron-profile.reg")
-	if err := os.WriteFile(regFile, []byte(RegFile(in.Profile.Registry)), 0o644); err != nil {
+	in.Progress(request.Message)
+	regFile := filepath.Join(in.Prefix, "drive_c", request.FileName)
+	if err := os.WriteFile(regFile, []byte(RegFile(request.Values)), 0o644); err != nil {
 		return err
 	}
 	defer os.Remove(regFile)
 	tree := backendTrees[in.Profile.Backend]
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
-	regedit := exec.CommandContext(ctx, in.Runtime.Wine(tree), "regedit", "/S", `C:\macron-profile.reg`)
+	regedit := exec.CommandContext(ctx, in.Runtime.Wine(tree), "regedit", "/S", `C:\`+request.FileName)
 	regedit.Env = env
 	regedit.Stdout = in.Output
 	regedit.Stderr = in.Output
 	if err := regedit.Run(); err != nil {
-		return failure.Errorf(failure.CodePrefixFailed, "importing the profile's registry values: %s", err)
+		return failure.Errorf(failure.CodePrefixFailed, "%s: %s", request.Message, err)
 	}
 	waitForWineserver(ctx, in.Runtime.Wineserver(tree), env)
 	return os.WriteFile(markerPath, want, 0o644)
