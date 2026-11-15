@@ -52,6 +52,35 @@ The patch marks the context as deallocating and, in that state, reaches the main
 
 Like 0001 and 0002, 0005 changes only `winemac.so`, which `../check-abi.sh` checks. The runtime puts the patched `winemac.so` in its DXMT tree only, so profiles on the plain tree (`backend: wined3d`) keep Gcenx's.
 
+## 0006: switch between 32-bit and 64-bit code with `iret` instead of far jumps
+
+In a 32-bit program on 64-bit Wine (WoW64), every system call and every Unix call (how a Windows module such as `opengl32.dll` calls its Unix side) leaves 32-bit code for 64-bit code in `wow64cpu.dll` and comes back. Wine 11.21 does both with far jumps:
+
+- in: the thunk that `Wow64Transition` and `__wine_unix_call_dispatcher` point at is `ljmp *addr` (`ff 2d`, a 6-byte far pointer to `syscall_32to64` or `unix_call_32to64` and the 64-bit code selector);
+- out: `syscall_32to64` and `unix_call_32to64` go back with `ljmp *(%r14)` (`41 ff 2e`) to the saved 32-bit `eip` and `cs`. Only the path after a context change (`WOW64_CPURESERVED_FLAG_RESET_STATE`) and the thread's first entry use `iretq`.
+
+Under Rosetta a far jump between the two code segments sometimes runs its target in the old mode. The 32-bit Direct3D 9 frame-rate probe on Apple's software renderer hits it while it creates its device, both ways (PROGRESS.md, "The 32-bit OpenGL crashes"):
+
+- in: `Unhandled page fault on read access to 00002DC1 at address 7BF41239`. `wow64cpu.dll + 0x1239` is `movl cs32_sel(%rip),%edx` in `unix_call_32to64`; read as 32-bit code, `8b 15 c1 2d 00 00` loads from the absolute address `0x2dc1`. The thread arrived through the thunk's `ljmp` still in 32-bit mode.
+- out: the fault at the start of `set_context_attribute()` in 32-bit `opengl32.dll` (`mov %fs:0x18,%eax` decoded as 64-bit code), and the jumps to two 32-bit values read as one address in 0004's notes: the `ljmp` back left the thread in 64-bit mode. Without `+seh` this direction mostly shows as a silent exit 5, because Wine cannot dispatch the exception.
+
+The patch enters 64-bit code with `iretl` (the thunk becomes `pushfl; pushl $cs64; pushl $target; iretl`, the same 12 bytes) and returns with `iretq` on the fast path as well, building the frame the reset-state path already builds. The stacks the 64-bit code sees are the same as before: `iretl` in 32-bit mode pops `eip`, `cs` and the flags, and the `iretq` frame sits in the 0x28 bytes `BTCpuSimulate` reserves.
+
+Measured on a GitHub macos-26 runner (sandbox sbx_uqstb45i, runtime macron.4, `MACRON_OPENGL=apple-software`): `probe32.exe mix --warmup 1 --seconds 1` through `macron launch`, 40 rounds, each round one start per build in rotating order, every Wine process killed and the prefix replaced by a fresh copy before each start, `wow64cpu.dll` swapped in both runtime trees and the prefix:
+
+| `wow64cpu.dll` | failed starts | how |
+|---|---|---|
+| macron.4's (Gcenx's build, far jumps both ways) | 25 of 40 | 10 crash, 6 exit 1, 6 exit 5, 3 stall |
+| `iretq` out, `ljmp` in | 14 of 40 | 7 crash, 7 exit 1 |
+| `iretl` in, `iretq` out (this patch) | 0 of 40 | |
+| `lret` in, `iretq` out | 0 of 40 | |
+
+In a second batch with `WINEDEBUG=+seh`, 12 rounds: 3 of 12 failed with macron.4's, 3 of 12 with `iretq` only on the way out, all six the page fault at `unix_call_32to64`'s `movl cs32_sel(%rip)` (the way in); 0 of 12 with each of the two other builds. So changing only the way out removes the exit-5 starts (the way out) but not the crash on the way in, and the far jump in is the more frequent failure. `lret` in did as well as `iretl`; the patch uses `iret` both ways, one form for both directions. The `wow64cpu.dll` that `../build-overlay.sh` then built with 0001 to 0006 (overlay SHA-256 `869bbd8d...`, not published) failed 0 of 15 starts in another alternating batch, macron.4's 10 of 15.
+
+No regression measured: the 32-bit probe with 10 s measured ran at 8.97 fps on average with the patch (6 of 6 starts, 8.57 to 9.11) against 8.93 with macron.4's (4 starts, 8.46 to 9.11; its other 2 of 6 failed), and the 64-bit probe, which does not load `wow64cpu.dll`, passed 20 of 20 starts with each build. Why Rosetta misses the mode change on a far jump is not known. `tools/wow64-gl-probe` never reproduced it with plain system calls, nor with system calls next to a thread that keeps starting threads (each one writes an LDT entry for its `%fs`, and the 32-bit code selector is an LDT entry too on macOS).
+
+`wow64cpu.dll` is a Windows module (x86_64 only); `../check-pe-exports.sh` checks that it exports what Gcenx's does. The runtime copies it into both Wine trees, like `wined3d.dll`.
+
 ## Building
 
-`.github/workflows/wine-build.yml` runs `../build-overlay.sh` on a macos-26 runner: it builds `winemac.so` (x86_64) and `wined3d.dll` (i386 and x86_64) from the source above, unpatched and patched, compares them with Gcenx's, and packs the patched ones as an overlay (`lib/wine/x86_64-unix/winemac.so`, `lib/wine/{i386,x86_64}-windows/wined3d.dll`, plus this folder and Wine's licence under `share/doc/macron-wine/`). Run from `main`, it publishes the overlay as a release; `internal/wineruntime` pins it by URL and SHA-256, copies all of it into the DXMT Wine tree, and copies `wined3d.dll` into the plain tree too, which keeps Gcenx's `winemac.so`.
+`.github/workflows/wine-build.yml` runs `../build-overlay.sh` on a macos-26 runner: it builds `winemac.so` (x86_64), `wined3d.dll` (i386 and x86_64) and `wow64cpu.dll` (x86_64) from the source above, unpatched and patched, compares them with Gcenx's, and packs the patched ones as an overlay (`lib/wine/x86_64-unix/winemac.so`, `lib/wine/{i386,x86_64}-windows/wined3d.dll`, `lib/wine/x86_64-windows/wow64cpu.dll`, plus this folder and Wine's licence under `share/doc/macron-wine/`). Run from `main`, it publishes the overlay as a release; `internal/wineruntime` pins it by URL and SHA-256, copies all of it into the DXMT Wine tree, and copies the Windows modules (`wined3d.dll`, `wow64cpu.dll`) into the plain tree too, which keeps Gcenx's `winemac.so`.

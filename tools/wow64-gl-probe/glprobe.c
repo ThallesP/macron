@@ -5,7 +5,7 @@
  * runtime/wine/patches/README.md (0005) has what it found.
  *
  *   glprobe.exe [--rounds N] [--gets N] [--draw] [--threads N] [--syscalls N]
- *               [--syscall-thread] [--shaders N]
+ *               [--syscall-thread] [--shaders N] [--churn]
  *
  * --syscalls N makes N cheap system calls (NtYieldExecution) after the
  * rounds, to tell Wine's 32-to-64 transition apart from OpenGL.
@@ -13,6 +13,10 @@
  * OpenGL, while the other threads run their rounds.
  * --shaders N draws with N new shader programs per round (implies --draw),
  * so Apple's software renderer generates new machine code each time.
+ * --churn starts and joins empty threads on a thread of its own until the
+ * other threads are done. On macOS every 32-bit Wine thread gets an LDT
+ * entry for %fs (i386_set_ldt, which Rosetta emulates), so this changes the
+ * LDT while the other threads switch between 32-bit and 64-bit code.
  *
  * After each OpenGL call it checks that the CPU is still in 32-bit mode:
  * "xor eax,eax; .byte 0x40; nop" leaves eax at 1 in 32-bit mode (0x40 is
@@ -103,9 +107,10 @@ typedef struct {
     int syscalls;
     int syscall_thread;
     int shaders;
+    int churn;
 } Options;
 
-static Options options = {20, 200, FALSE, 1, 0, 0, 1};
+static Options options = {20, 200, FALSE, 1, 0, 0, 1, 0};
 static volatile LONG gl_done;
 
 static void say(const char *format, ...)
@@ -395,6 +400,28 @@ static DWORD WINAPI syscaller(void *arg)
     return 0;
 }
 
+static DWORD WINAPI idle(void *arg)
+{
+    return 0;
+}
+
+static DWORD WINAPI churner(void *arg)
+{
+    LONG started = 0;
+    HANDLE thread;
+
+    while (!gl_done) {
+        if (!(thread = CreateThread(NULL, 0, idle, NULL, 0, NULL)))
+            break;
+        WaitForSingleObject(thread, INFINITE);
+        CloseHandle(thread);
+        CHECK_MODE(92);
+        started++;
+    }
+    say("RESULT churn thread: %ld threads\n", started);
+    return 0;
+}
+
 static DWORD WINAPI worker(void *arg)
 {
     int thread = (int)(INT_PTR)arg, round;
@@ -415,7 +442,7 @@ static DWORD WINAPI worker(void *arg)
 
 int main(int argc, char **argv)
 {
-    HANDLE threads[17];
+    HANDLE threads[18];
     DWORD code, failed = 0;
     int i;
 
@@ -436,24 +463,31 @@ int main(int argc, char **argv)
             options.syscall_thread = 1;
         else if (!strcmp(argv[i], "--syscalls") && i + 1 < argc)
             options.syscalls = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--churn"))
+            options.churn = 1;
         else {
-            say("usage: glprobe.exe [--rounds N] [--gets N] [--draw] [--threads N] [--syscalls N] [--syscall-thread] [--shaders N]\n");
+            say("usage: glprobe.exe [--rounds N] [--gets N] [--draw] [--threads N] [--syscalls N] [--syscall-thread] [--shaders N] "
+                "[--churn]\n");
             return 2;
         }
     }
     if (options.threads < 1 || options.threads > 16)
         return 2;
-    say("RESULT config rounds %d gets %d draw %s shaders %d threads %d syscalls %d bits %d\n", options.rounds,
+    say("RESULT config rounds %d gets %d draw %s shaders %d threads %d syscalls %d churn %d bits %d\n", options.rounds,
         options.gets, options.draw ? "yes" : "no", options.draw ? options.shaders : 0, options.threads, options.syscalls,
-        (int)(sizeof(void *) * 8));
+        options.churn, (int)(sizeof(void *) * 8));
     if (options.syscall_thread)
         threads[options.threads] = CreateThread(NULL, 0, syscaller, NULL, 0, NULL);
+    if (options.churn)
+        threads[options.threads + 1] = CreateThread(NULL, 0, churner, NULL, 0, NULL);
     for (i = 0; i < options.threads; i++)
         threads[i] = CreateThread(NULL, 0, worker, (void *)(INT_PTR)i, 0, NULL);
     WaitForMultipleObjects(options.threads, threads, TRUE, INFINITE);
     gl_done = 1;
     if (options.syscall_thread)
         WaitForSingleObject(threads[options.threads], INFINITE);
+    if (options.churn)
+        WaitForSingleObject(threads[options.threads + 1], INFINITE);
     for (i = 0; i < options.threads; i++) {
         GetExitCodeThread(threads[i], &code);
         failed |= code;
