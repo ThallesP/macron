@@ -16,6 +16,8 @@ The loop's memory. Read it first, update it last. GOAL.md has the gates and the 
 | 4. The Steam bridge (`SteamAPI_Init`, achievements, cloud) | in progress since 2026-11-15: Thalles answered the licence question ("can't we just do what they do?"), so the port goes ahead the way NotProton ships it (GOAL.md, licence rule; README.md says Valve has not confirmed redistribution is allowed). An Opus 5.5 subagent is building it on branch `steam-bridge`; the signed-in check comes after |
 | 5. Overwatch as far as a sandbox takes it (sign-in screen) | not started; unblocked now that the test account logs in and Steam's Install button works |
 
+**2026-11-15, 21:10 UTC: handed to Opus 5.5.** The Mythos thread hit its usage limit at 20:54 UTC, just after pushing a7f9a69 (gate 3 green). Thalles asked for the rest to carry on with Opus 5.5. What it left, as far as this file and GitHub show: gates 2 and 3 green and v0.2.0 published; sandbox sbx_qsjpicyv still running (started 18:15 UTC, Macron installed, signed in, Overwatch's 78.44 GB download started there at 20:39 and was at 29% around 20:50); sandbox sbx_dljon6jn still running (started 20:05 UTC, signed in, Ultimate Custom Night installed); branch `steam-bridge` at 3ac6e8b with the bridge built and `docs/steam-bridge.md` describing what is left (the signed-in check), its subagent stopped with the thread. Not verified from here: whether the dev checkout or a worktree holds uncommitted work. The remaining gates (1's real game, 4, 5) use the switch as built; GOAL.md's Models rule says what stays with Mythos, and anything for it goes under "For Mythos" below.
+
 **2026-11-15, evening: Steam's own buttons work.** A Claude Mythos 5.2 thread wrote the Steam Play switch (`steamplay/`, Macron's own code) and took gate 2's flow through Steam's real window on a sandbox with the test account, which signs in with its name and password alone (Steam Guard is off, no CAPTCHA appeared).
 
 **2026-11-15: unblocked by Thalles.** The Steam Play switch goes ahead, done by a Claude Mythos 5.2 thread with NotProton as the reference ("see how NotProton does it, and if necessary delegate it to Mythos 5.2 to handle it"), and the Steam test account exists (login on the dev machine, not in the repo). Gates 2, 3 and 5 and the real game in gate 1 can move. Later the same day: Steam Guard is off on the test account (Thalles), and gate 4 is unparked: "can't we just do what they do?", so the Steam bridge is ported the way NotProton ships it (only Macron's changes and a fetch script in the repo, Valve's Steamworks SDK License kept on that folder, binaries in the release). Valve has not confirmed redistribution; ValveSoftware/Proton issue #7801 asks and is open. NotProton's `NOTICE` says its `lsteamclient` stays under the Steamworks SDK License; its repo holds `steamclient_main.c`, `unixlib.cpp`, `unix_steam_input_manual.cpp`, a patch, `fetch.sh` and `build.sh`.
@@ -299,12 +301,18 @@ Every sandbox is a new device. Since 2026-11-15 Steam Guard is off on the test a
 
 ## Next
 
-1. Gate 3: the Release workflow's DMG, with the switch in it, on a fresh sandbox the way Thalles will use it (Steam from Valve's DMG, signed in, then the installer, then gate 2's flow, then `sudo macron-uninstall`); publish it and put the link at the top of this file.
+1. Gate 3: done, v0.2.0 ("Gate 3, 2026-11-15").
 2. Gate 1: Ultimate Custom Night's frame rate, started with Play, title screen and into a night (`show-fps`), with `tools/clickteam-games/gltrace.sh` to settle which of the Wine fixes is its cost; then say what the virtual GPU limits.
 3. Gate 5: Overwatch (2357570) as far as its sign-in screen: add it, Install, Play, record how far it got.
 4. Gate 4: merge the `steam-bridge` branch when its build side is done, then the signed-in check (SteamAPI_Init in a game started by Play, an achievement, a cloud save) and a second release.
 5. A new Steam build: the daily `Steam builds` run proposes the rows; after merging, cut a release so the row reaches installed Macs.
 6. Left from phase 1: the hardware OpenGL path (Xonotic without `MACRON_OPENGL`) is still unchecked on a real Mac.
+
+## For Mythos
+
+Work on the Steam Play switch itself (`steamplay/`, what the installer does to Steam.app) that came up after the hand-over to Opus 5.5. Say what was seen and where the evidence is; do not attempt it on Opus.
+
+- Nothing yet.
 
 ## Needs Thalles
 
