@@ -2,23 +2,20 @@
 # test account, then Macron, then Steam's own Install and Play buttons on a
 # Windows-only game (ci/steam-play/gate2.sh).
 #
-# It uses the test account's secrets, so it runs only on main and on manual
-# runs: never add a pull_request trigger. The account's name never reaches the
-# log or an artifact: the login is typed from a mode-600 file, screenshots are
-# masked where Steam shows the name, and every screenshot is read back and
-# dropped if the name is in it.
+# It uses the test account's secrets, so it runs only on main (every morning,
+# after the Steam builds check) and on manual runs: never add a pull_request
+# trigger. It does not run on every push: the account can be in use on one
+# machine at a time (while a game runs on one machine, Steam on another shows
+# it as Running and offers CONNECT instead of Install), and every run is a
+# login from a new device. The account's name never reaches the log or an
+# artifact: the login is typed from a mode-600 file, screenshots are masked
+# where Steam shows the name, and every screenshot is read back and dropped if
+# the name is in it.
 name: Steam Play
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - steamplay/**
-      - internal/steamhook/**
-      - internal/launch/**
-      - cmd/macron/**
-      - ci/steam-play/**
-      - .github/workflows/steam-play.yml
+  schedule:
+    - cron: "23 8 * * *"
   workflow_dispatch:
 
 permissions:
