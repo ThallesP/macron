@@ -1,0 +1,75 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Sun, 15 Nov 2026 02:30:00 +0000
+Subject: [PATCH] winemac.drv: Don't retain an OpenGL context that is being
+ freed.
+
+-[NSOpenGLContext dealloc] calls -clearDrawable. Off the main thread,
+WineOpenGLContext's override sends [super clearDrawable] to the main
+thread in a block, and copying the block retains self, the context
+being freed. The main thread releases the block after it has woken the
+waiting thread, so that release can reach the context after this
+thread has freed it: objc_release on freed memory, on the main thread,
+and the process dies with c0000005 "in system thread".
+
+It happens when the last reference to a context goes away off the main
+thread, for example in wglDeleteContext or thread cleanup when no
+main-thread block still holds the context. wined3d does that while it
+creates its adapter: a context on a hidden window, then deleted.
+
+While deallocating, reach the main thread through a __block variable,
+which a block does not retain under manual reference counting.
+---
+--- a/dlls/winemac.drv/cocoa_opengl.m
++++ b/dlls/winemac.drv/cocoa_opengl.m
+@@ -30,11 +30,15 @@
+ 
+ 
+ @interface WineOpenGLContext ()
++{
++    BOOL deallocating;
++}
+ @property (retain, nonatomic) NSView* latentView;
+ @property (nullable, weak) NSView *view;    /* redeclare this to avoid NSOpenGLContext's deprecation warnings */
+ 
+     + (NSView*) dummyView;
+     - (void) wine_updateBackingSize:(const CGSize*)size;
++    - (void) wine_superClearDrawable;
+ 
+ @end
+ 
+@@ -45,6 +49,7 @@
+ 
+     - (void) dealloc
+     {
++        deallocating = TRUE;
+         [[self view] release];
+         [latentView release];
+         [super dealloc];
+@@ -146,11 +151,27 @@
+         [oldView release];
+     }
+ 
++    - (void) wine_superClearDrawable
++    {
++        [super clearDrawable];
++    }
++
+     - (void) clearDrawable
+     {
+         NSView* oldView = [self view];
+         if ([NSThread isMainThread])
+             [super clearDrawable];
++        else if (deallocating)
++        {
++            /* -[NSOpenGLContext dealloc] calls this.  A block that captures
++               self would retain the context while it is being freed, and the
++               main thread would release it after this thread has freed it.
++               A __block variable is not retained. */
++            __block WineOpenGLContext* context = self;
++            OnMainThread(^{
++                [context wine_superClearDrawable];
++            });
++        }
+         else OnMainThread(^{
+             [super clearDrawable];
+         });
