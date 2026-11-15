@@ -109,6 +109,7 @@ func TestLoadRejectsBadFrameRateScenarios(t *testing.T) {
 		"share without exe":     {`"minFps": 30`, `"minFps": 30, "minShareOfBaseline": 0.8`},
 		"exe without share":     {`"minFps": 30`, `"minFps": 30, "baselineExe": "probe64.exe"`},
 		"baseline is a path":    {`"minFps": 30`, `"minFps": 30, "baselineExe": "../probe64.exe", "minShareOfBaseline": 0.8`},
+		"too many starts":       {`"ci": true`, `"ci": true, "startAttempts": 4`},
 	}
 	base := strings.Replace(valid, `"reached": {"output": "", "settleSeconds": 5, "timeoutSeconds": 600},`, frameRateBlock, 1)
 	for name, change := range cases {

@@ -95,7 +95,7 @@ Every game tried. The first three are scenarios that pass in CI; the next five c
 | Dependency | Licence | Used as |
 |---|---|---|
 | Wine (Gcenx/macOS_Wine_builds 11.21) | LGPL 2.1+ | downloaded at install time, unmodified |
-| Wine 11.21 `winemac.so` and `wined3d.dll` with Macron's patches (this repository's `runtime-wine-11.21-macron.2` release) | LGPL 2.1+ | downloaded at install time: `winemac.so` into the DXMT tree, `wined3d.dll` into both trees; source and patches are published with the release |
+| Wine 11.21 `winemac.so` and `wined3d.dll` with Macron's patches (this repository's `runtime-wine-11.21-macron.3` release) | LGPL 2.1+ | downloaded at install time: `winemac.so` into the DXMT tree, `wined3d.dll` into both trees; source and patches are published with the release |
 | DXMT 0.80 (3Shain/dxmt) | LGPL 2.1+ | downloaded at install time, unmodified |
 | DXVK-macOS 1.10.3-20230507 (Gcenx/DXVK-macOS) | zlib | downloaded at install time, unmodified (the `dxvk` backend) |
 | Mesa 26.1.8 for Windows (pal1000/mesa-dist-win) | MIT | downloaded on Windows runners for OpenGL references, and by macron when `MACRON_OPENGL=llvmpipe` |

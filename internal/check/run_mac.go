@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -123,7 +125,7 @@ func (r *macRun) do(ctx context.Context) error {
 		return err
 	}
 	r.stage("starting the game through macron")
-	window, output, err := r.launchAndWait(ctx, game, r.Scenario.Args, "game.log")
+	window, output, err := r.launchWithAttempts(ctx, game, r.Scenario.Args, "game.log")
 	defer r.stopGame()
 	if err != nil {
 		return err
@@ -183,7 +185,7 @@ func (r *macRun) measureFrameRate(ctx context.Context, game Game, measuredOutput
 	args := append(slices.Clone(r.Scenario.Args), ThrottleArg, strconv.Itoa(throttleMs))
 	timings := maps.Clone(r.report.TimingsSecs)
 	since := time.Now()
-	_, throttled, err := r.launchAndWait(ctx, game, args, "game-throttled.log")
+	_, throttled, err := r.launchWithAttempts(ctx, game, args, "game-throttled.log")
 	r.report.TimingsSecs = timings
 	r.mark("throttledRun", since)
 	if err != nil {
@@ -207,7 +209,7 @@ func (r *macRun) runBaseline(ctx context.Context, game Game, frameRate scenario.
 	baseline := Game{Exe: filepath.Join(filepath.Dir(game.Exe), frameRate.BaselineExe), Cwd: game.Cwd}
 	timings := maps.Clone(r.report.TimingsSecs)
 	since := time.Now()
-	_, output, err := r.launchAndWait(ctx, baseline, r.Scenario.Args, "game-baseline.log")
+	_, output, err := r.launchWithAttempts(ctx, baseline, r.Scenario.Args, "game-baseline.log")
 	r.report.TimingsSecs = timings
 	r.mark("baselineRun", since)
 	r.stopGame()
@@ -215,6 +217,32 @@ func (r *macRun) runBaseline(ctx context.Context, game Game, frameRate scenario.
 		r.report.Notes = append(r.report.Notes, fmt.Sprintf("the baseline run failed: %s", err))
 	}
 	return output.String()
+}
+
+type endedEarlyError struct {
+	err     error
+	logName string
+}
+
+func (e endedEarlyError) Error() string {
+	return fmt.Sprintf("the game ended before reaching its menu (%v); see %s", e.err, e.logName)
+}
+
+func (r *macRun) launchWithAttempts(ctx context.Context, g Game, args []string, logName string) (MacWindow, *lockedBuffer, error) {
+	attempts := max(r.Scenario.StartAttempts, 1)
+	for attempt := 1; ; attempt++ {
+		name := logName
+		if attempt > 1 {
+			name = strings.TrimSuffix(logName, ".log") + fmt.Sprintf("-attempt%d.log", attempt)
+		}
+		window, output, err := r.launchAndWait(ctx, g, args, name)
+		var endedEarly endedEarlyError
+		if attempt == attempts || !errors.As(err, &endedEarly) {
+			return window, output, err
+		}
+		r.report.Notes = append(r.report.Notes, fmt.Sprintf("start %d of %s ended before its condition and was started again: %s", attempt, filepath.Base(g.Exe), endedEarly))
+		r.stopGame()
+	}
 }
 
 func (r *macRun) launchAndWait(ctx context.Context, g Game, args []string, logName string) (MacWindow, *lockedBuffer, error) {
@@ -249,7 +277,7 @@ func (r *macRun) launchAndWait(ctx context.Context, g Game, args []string, logNa
 		select {
 		case err := <-exited:
 			r.saveWindows(lastWindows)
-			return MacWindow{}, output, fmt.Errorf("the game ended before reaching its menu (%v); see %s", err, logName)
+			return MacWindow{}, output, endedEarlyError{err: err, logName: logName}
 		case <-timeout:
 			r.saveWindows(lastWindows)
 			game.Process.Kill()

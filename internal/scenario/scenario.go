@@ -54,24 +54,25 @@ type Download struct {
 }
 
 type Scenario struct {
-	Name         string            `json:"name"`
-	Title        string            `json:"title"`
-	Game         string            `json:"game"`
-	Downloads    []Download        `json:"downloads"`
-	Build        string            `json:"build"`
-	Exe          string            `json:"exe"`
-	Cwd          string            `json:"cwd"`
-	Args         []string          `json:"args"`
-	MacronEnv    map[string]string `json:"macronEnv"`
-	Files        []fixes.File      `json:"files"`
-	Window       Window            `json:"window"`
-	Reached      Reached           `json:"reached"`
-	Compare      Compare           `json:"compare"`
-	Reference    Reference         `json:"reference"`
-	OtherGame    string            `json:"otherGame"`
-	WindowsExtra []string          `json:"windowsExtra"`
-	FrameRate    *FrameRate        `json:"frameRate,omitempty"`
-	CI           bool              `json:"ci"`
+	Name          string            `json:"name"`
+	Title         string            `json:"title"`
+	Game          string            `json:"game"`
+	Downloads     []Download        `json:"downloads"`
+	Build         string            `json:"build"`
+	Exe           string            `json:"exe"`
+	Cwd           string            `json:"cwd"`
+	Args          []string          `json:"args"`
+	MacronEnv     map[string]string `json:"macronEnv"`
+	Files         []fixes.File      `json:"files"`
+	Window        Window            `json:"window"`
+	Reached       Reached           `json:"reached"`
+	Compare       Compare           `json:"compare"`
+	Reference     Reference         `json:"reference"`
+	OtherGame     string            `json:"otherGame"`
+	WindowsExtra  []string          `json:"windowsExtra"`
+	FrameRate     *FrameRate        `json:"frameRate,omitempty"`
+	StartAttempts int               `json:"startAttempts,omitempty"`
+	CI            bool              `json:"ci"`
 
 	Dir string `json:"-"`
 }
@@ -160,6 +161,9 @@ func (s Scenario) validate() error {
 	}
 	if s.FrameRate != nil && s.CI && !s.FrameRate.HasThreshold() {
 		return invalid("a frame-rate scenario runs in CI only with a threshold (frameRate.minFps or minShareOfBaseline above 0)")
+	}
+	if s.StartAttempts < 0 || s.StartAttempts > 3 {
+		return invalid("startAttempts is how many times a program that exits before its condition is started, from 1 to 3")
 	}
 	if s.FrameRate != nil && s.Reached.Output != FrameRateLine {
 		return invalid("a frame-rate scenario is reached when the probe prints %q", FrameRateLine)
