@@ -6,15 +6,19 @@
 #
 #   DRIVE=<drive> EVIDENCE=<dir> STEAM_TEST_ACCOUNT=<file> MACRON=<macron> gate2.sh
 #
-# MACRON_IS_INSTALLED=1 skips "macron steam enable": the installer already ran
-# it (the gate 3 run). STEAMPLAY_SOURCE is the steamplay/ folder, needed for
-# the unknown-build check; without it that check is skipped and says so.
+# GATE2_PHASE splits the run for gate3.sh, where Macron's installer does the
+# enabling: "before" stops after the checks on a stock Steam, "after" starts
+# at "Steam Play is on" and stops before the unknown-build check and the
+# disable. STEAMPLAY_SOURCE is the steamplay/ folder, needed for the
+# unknown-build check; without it that check is skipped and says so.
 set -uo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
 drive=${DRIVE:?}
 evidence=${EVIDENCE:?}
-macron=${MACRON:?MACRON must point at the macron program}
+phase=${GATE2_PHASE:-all}
+macron=${MACRON:-}
+[ "$phase" = before ] || [ -n "$macron" ] || { echo "MACRON must point at the macron program" >&2; exit 2; }
 steam_app=${STEAM_APP:-/Applications/Steam.app}
 steam_dir="$HOME/Library/Application Support/Steam"
 macron_home="$HOME/Library/Application Support/Macron"
@@ -55,26 +59,34 @@ since() {
   tail -n +"$(($2 + 1))" "$1" 2> /dev/null
 }
 
-say "Steam, signed in to the test account"
-pgrep -x steam_osx > /dev/null || steam start
-steam login
-steam add "$windows_game"
-steam add "$native_game"
+if [ "$phase" != after ]; then
+  say "Steam, signed in to the test account"
+  pgrep -x steam_osx > /dev/null || steam start
+  steam login
+  steam add "$windows_game"
+  steam add "$native_game"
 
-if [ "${MACRON_IS_INSTALLED:-0}" != 1 ]; then
   say "Before Macron: the Windows-only game cannot be installed, the Mac game installs and runs"
-  "$macron" steam status | grep -q '^steam play:      off$' || fail "Steam Play is already on; this run starts from a stock Steam"
+  if [ -n "$macron" ]; then
+    "$macron" steam status | grep -q '^steam play:      off$' || fail "Steam Play is already on; this run starts from a stock Steam"
+  fi
   steam page "$windows_game" "1-before-macron-windows-game"
   sees "AVAILABLE FOR" || fail "a stock Steam should show the Windows-only game as AVAILABLE FOR Windows"
   sees "SPACE REQUIRED" && fail "a stock Steam offers to install the Windows-only game; nothing left to switch on"
   [ -f "$steam_dir/steamapps/appmanifest_$native_game.acf" ] || EVIDENCE="$evidence/before-macron" steam install "$native_game" 1200
   EVIDENCE="$evidence/before-macron" steam play "$native_game" "${native_game_window[@]}" 180
   EVIDENCE="$evidence/before-macron" steam stop "$native_game" "${native_game_window[@]}"
-
-  say "macron steam enable"
-  steam quit
   app_listing > "$evidence/steam-app-before.sha256"
   codesign --verify --strict --deep "$steam_app" || fail "Steam.app's signature is not valid before Macron touched it"
+fi
+if [ "$phase" = before ]; then
+  say "Done with the stock Steam"
+  exit 0
+fi
+
+if [ "$phase" = all ]; then
+  say "macron steam enable"
+  steam quit
   "$macron" steam enable | tee "$evidence/enable.txt"
   grep -q '^steam play:      on$' "$evidence/enable.txt" || fail "macron steam enable did not switch Steam Play on"
   steam start
@@ -118,8 +130,8 @@ grep -q 'Endless Sky.app/Contents/MacOS/Endless Sky' "$evidence/native-game-proc
 pgrep -f 'macron (waitforexitandrun|run)' > /dev/null && fail "macron is running for a Mac-native game"
 steam stop "$native_game" "${native_game_window[@]}"
 
-if [ "${MACRON_IS_INSTALLED:-0}" = 1 ]; then
-  say "Done (the installer's run: the uninstall check follows outside this script)"
+if [ "$phase" = after ]; then
+  say "Done with Steam's buttons"
   exit 0
 fi
 
