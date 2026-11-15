@@ -81,6 +81,26 @@ No regression measured: the 32-bit probe with 10 s measured ran at 8.97 fps on a
 
 `wow64cpu.dll` is a Windows module (x86_64 only); `../check-pe-exports.sh` checks that it exports what Gcenx's does. The runtime copies it into both Wine trees, like `wined3d.dll`.
 
+## 0007: queue OpenGL calls that return nothing and replay them in one Unix call
+
+Every OpenGL call a Windows program makes goes from `opengl32.dll` to `opengl32.so`. On macOS under Rosetta that transition costs about 14 µs: Wine's dispatcher switches `%gs` with two `thread_set_tsd_base` Mach traps and saves and restores MXCSR. Ultimate Custom Night's night frame makes about 32,000 such calls (PROGRESS.md, "Gate 1, what the sandbox shows").
+
+The patch adds `dlls/opengl32/batch.c`. `UNIX_CALL` on the Windows side now goes through `opengl_unix_call()`, which queues some calls per thread in a 128 KB queue and replays the queue in one Unix call (`flush_batch`, or `wow64_flush_batch` for a 32-bit program) before any other call. A call is queued when it returns nothing and its arguments are values or point to data whose size the call gives (`glBufferSubData`, `glUniform*v`, matrices, fixed-size vectors); that data is copied.
+
+Draws are queued only while no vertex array in the process was ever given a client pointer. Elements draws also need an element array buffer known to be bound.
+
+Everything else replays the queue first: calls that return something (`glGetError` among them), calls that touch client memory later, context changes, `wglSwapBuffers`, `glFlush`, `glFinish`, thread exit. The replay calls the same Unix entry points the calls would have reached directly, with the params the Windows side built, so order and behaviour are unchanged. `dlls/opengl32/batch_table.h` says which calls may be queued. `../gl-batch-table.py` generates it from `unixlib.h` and `unix_thunks.h`. `WINE_OPENGL_BATCH=0` turns batching off.
+
+Measured on sandbox sbx_hzfsgybj (Apple M1 virtual machine, macOS 26.7.2, `MACRON_OPENGL=apple-software`, through `macron launch`), three alternating rounds; `docs/gl-batch.md` has every number:
+- **Queued calls:** 0.13 to 0.27 µs, against 13 to 19 µs before, in 32-bit and 64-bit programs. `glGetIntegerv`, never queued, still costs about 15 µs.
+- **Direct3D 9 probe, 32-bit:** with 3,900 one-pixel sprites (`up --sprite-size 1 --window 1024x768`), 1.58 fps before and 23.2 fps after.
+- **Same probe, 64-bit:** 0.56 to 0.95 fps. Its draws map buffers, and a map can never be queued.
+- **Without Wine:** the same OpenGL work in a native x86_64 program (`loadprobe`) ran at 63 fps.
+
+The `d3d9-fps-probe`, `d3d11-probe` and `openttd` scenario checks passed with it.
+
+The patch changes the numbering of `opengl32`'s Unix calls, so `opengl32.dll` (i386, x86_64) and `opengl32.so` must come from the same build. The overlay carries all three, and the runtime puts them in both Wine trees. `../check-unix-lib.sh` checks that `opengl32.so` imports, exports, links and searches what Gcenx's does. `../check-pe-exports.sh` checks that the DLLs export what Gcenx's do.
+
 ## Building
 
-`.github/workflows/wine-build.yml` runs `../build-overlay.sh` on a macos-26 runner: it builds `winemac.so` (x86_64), `wined3d.dll` (i386 and x86_64) and `wow64cpu.dll` (x86_64) from the source above, unpatched and patched, compares them with Gcenx's, and packs the patched ones as an overlay (`lib/wine/x86_64-unix/winemac.so`, `lib/wine/{i386,x86_64}-windows/wined3d.dll`, `lib/wine/x86_64-windows/wow64cpu.dll`, plus this folder and Wine's licence under `share/doc/macron-wine/`). Run from `main`, it publishes the overlay as a release; `internal/wineruntime` pins it by URL and SHA-256, copies all of it into the DXMT Wine tree, and copies the Windows modules (`wined3d.dll`, `wow64cpu.dll`) into the plain tree too, which keeps Gcenx's `winemac.so`.
+`.github/workflows/wine-build.yml` runs `../build-overlay.sh` on a macos-26 runner: it builds `winemac.so` (x86_64), `wined3d.dll` (i386 and x86_64), `wow64cpu.dll` (x86_64) and `opengl32` (`opengl32.so`, x86_64; `opengl32.dll`, i386 and x86_64) from the source above, unpatched and patched, compares them with Gcenx's, and packs the patched ones as an overlay (`lib/wine/x86_64-unix/{winemac,opengl32}.so`, `lib/wine/{i386,x86_64}-windows/{wined3d,opengl32}.dll`, `lib/wine/x86_64-windows/wow64cpu.dll`, plus this folder and Wine's licence under `share/doc/macron-wine/`). Run from `main`, it publishes the overlay as a release; `internal/wineruntime` pins it by URL and SHA-256, copies all of it into the DXMT Wine tree, and copies the Windows modules (`wined3d.dll`, `wow64cpu.dll`, `opengl32.dll`) and `opengl32.so` into the plain tree too, which keeps Gcenx's `winemac.so`.

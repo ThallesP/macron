@@ -1,0 +1,99 @@
+# round 1 22:31:40
+stock glprobe32 RESULT cost glGetIntegerv ns_per_call 17345 calls 20000
+stock glprobe32 RESULT cost glUniform1f ns_per_call 16577 calls 20000
+stock glprobe32 RESULT cost glBindBuffer ns_per_call 16232 calls 20000
+stock glprobe32 RESULT cost glBufferSubData-64 ns_per_call 18493 calls 20000
+stock glprobe32 RESULT cost glUniformMatrix4fv ns_per_call 19120 calls 20000
+stock glprobe32 RESULT cost d3d9-draw-9-calls ns_per_call 17134 calls 180000
+stock glprobe64 RESULT cost glGetIntegerv ns_per_call 16783 calls 20000
+stock glprobe64 RESULT cost glUniform1f ns_per_call 15687 calls 20000
+stock glprobe64 RESULT cost glBindBuffer ns_per_call 15862 calls 20000
+stock glprobe64 RESULT cost glBufferSubData-64 ns_per_call 14946 calls 20000
+stock glprobe64 RESULT cost glUniformMatrix4fv ns_per_call 13548 calls 20000
+stock glprobe64 RESULT cost d3d9-draw-9-calls ns_per_call 14746 calls 180000
+stock probe32 RESULT fps 1.55 p50_ms 589.939 p95_ms 869.863 p99_ms 869.863 frames 16
+stock probe64 RESULT fps 0.55 p50_ms 1819.621 p95_ms 1956.166 p99_ms 1956.166 frames 6
+patched glprobe32 RESULT cost glGetIntegerv ns_per_call 17245 calls 20000
+patched glprobe32 RESULT cost glUniform1f ns_per_call 332 calls 20000
+patched glprobe32 RESULT cost glBindBuffer ns_per_call 276 calls 20000
+patched glprobe32 RESULT cost glBufferSubData-64 ns_per_call 206 calls 20000
+patched glprobe32 RESULT cost glUniformMatrix4fv ns_per_call 224 calls 20000
+patched glprobe32 RESULT cost d3d9-draw-9-calls ns_per_call 331 calls 180000
+patched glprobe64 RESULT cost glGetIntegerv ns_per_call 16957 calls 20000
+patched glprobe64 RESULT cost glUniform1f ns_per_call 165 calls 20000
+patched glprobe64 RESULT cost glBindBuffer ns_per_call 218 calls 20000
+patched glprobe64 RESULT cost glBufferSubData-64 ns_per_call 123 calls 20000
+patched glprobe64 RESULT cost glUniformMatrix4fv ns_per_call 200 calls 20000
+patched glprobe64 RESULT cost d3d9-draw-9-calls ns_per_call 201 calls 180000
+patched probe32 RESULT fps 22.16 p50_ms 42.837 p95_ms 60.775 p99_ms 71.269 frames 222
+patched probe64 RESULT fps 0.89 p50_ms 1119.828 p95_ms 1234.520 p99_ms 1234.520 frames 9
+loadprobe-x86_64 RESULT adapter Apple Software Renderer, OpenGL 4.1 APPLE-23.1.1
+loadprobe-x86_64 RESULT api=gl-sw vb=ring arch=x86_64 size=1024x768 draws=3900 quad=1x1 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 50.48 p50_ms 17.95 p95_ms 27.79 frames 505 cpu_cores 0.97
+loadprobe-arm64 RESULT adapter Apple Software Renderer, OpenGL 4.1 APPLE-23.1.1
+loadprobe-arm64 RESULT api=gl-sw vb=ring arch=arm64 size=1024x768 draws=3900 quad=1x1 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 59.23 p50_ms 16.05 p95_ms 23.83 frames 593 cpu_cores 0.97
+# round 2 22:38:33
+patched glprobe32 RESULT cost glGetIntegerv ns_per_call 16380 calls 20000
+patched glprobe32 RESULT cost glUniform1f ns_per_call 204 calls 20000
+patched glprobe32 RESULT cost glBindBuffer ns_per_call 282 calls 20000
+patched glprobe32 RESULT cost glBufferSubData-64 ns_per_call 215 calls 20000
+patched glprobe32 RESULT cost glUniformMatrix4fv ns_per_call 273 calls 20000
+patched glprobe32 RESULT cost d3d9-draw-9-calls ns_per_call 282 calls 180000
+patched glprobe64 RESULT cost glGetIntegerv ns_per_call 16588 calls 20000
+patched glprobe64 RESULT cost glUniform1f ns_per_call 182 calls 20000
+patched glprobe64 RESULT cost glBindBuffer ns_per_call 210 calls 20000
+patched glprobe64 RESULT cost glBufferSubData-64 ns_per_call 140 calls 20000
+patched glprobe64 RESULT cost glUniformMatrix4fv ns_per_call 200 calls 20000
+patched glprobe64 RESULT cost d3d9-draw-9-calls ns_per_call 261 calls 180000
+patched probe32 RESULT fps 19.31 p50_ms 50.625 p95_ms 66.883 p99_ms 98.375 frames 194
+patched probe64 RESULT fps 1.07 p50_ms 919.393 p95_ms 1062.746 p99_ms 1062.746 frames 11
+stock glprobe32 RESULT cost glGetIntegerv ns_per_call 13631 calls 20000
+stock glprobe32 RESULT cost glUniform1f ns_per_call 13576 calls 20000
+stock glprobe32 RESULT cost glBindBuffer ns_per_call 13223 calls 20000
+stock glprobe32 RESULT cost glBufferSubData-64 ns_per_call 13323 calls 20000
+stock glprobe32 RESULT cost glUniformMatrix4fv ns_per_call 13607 calls 20000
+stock glprobe32 RESULT cost d3d9-draw-9-calls ns_per_call 14372 calls 180000
+stock glprobe64 RESULT cost glGetIntegerv ns_per_call 16499 calls 20000
+stock glprobe64 RESULT cost glUniform1f ns_per_call 15081 calls 20000
+stock glprobe64 RESULT cost glBindBuffer ns_per_call 15149 calls 20000
+stock glprobe64 RESULT cost glBufferSubData-64 ns_per_call 15238 calls 20000
+stock glprobe64 RESULT cost glUniformMatrix4fv ns_per_call 15700 calls 20000
+stock glprobe64 RESULT cost d3d9-draw-9-calls ns_per_call 16613 calls 180000
+stock probe32 RESULT fps 1.45 p50_ms 686.611 p95_ms 763.619 p99_ms 763.619 frames 15
+stock probe64 RESULT fps 0.57 p50_ms 1710.894 p95_ms 1869.786 p99_ms 1869.786 frames 6
+loadprobe-x86_64 RESULT adapter Apple Software Renderer, OpenGL 4.1 APPLE-23.1.1
+loadprobe-x86_64 RESULT api=gl-sw vb=ring arch=x86_64 size=1024x768 draws=3900 quad=1x1 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 58.17 p50_ms 16.06 p95_ms 25.29 frames 583 cpu_cores 1.00
+loadprobe-arm64 RESULT adapter Apple Software Renderer, OpenGL 4.1 APPLE-23.1.1
+loadprobe-arm64 RESULT api=gl-sw vb=ring arch=arm64 size=1024x768 draws=3900 quad=1x1 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 64.79 p50_ms 14.25 p95_ms 23.14 frames 648 cpu_cores 0.92
+# round 3 22:45:17
+stock glprobe32 RESULT cost glGetIntegerv ns_per_call 14217 calls 20000
+stock glprobe32 RESULT cost glUniform1f ns_per_call 14334 calls 20000
+stock glprobe32 RESULT cost glBindBuffer ns_per_call 14498 calls 20000
+stock glprobe32 RESULT cost glBufferSubData-64 ns_per_call 14109 calls 20000
+stock glprobe32 RESULT cost glUniformMatrix4fv ns_per_call 13703 calls 20000
+stock glprobe32 RESULT cost d3d9-draw-9-calls ns_per_call 15195 calls 180000
+stock glprobe64 RESULT cost glGetIntegerv ns_per_call 14211 calls 20000
+stock glprobe64 RESULT cost glUniform1f ns_per_call 14713 calls 20000
+stock glprobe64 RESULT cost glBindBuffer ns_per_call 15058 calls 20000
+stock glprobe64 RESULT cost glBufferSubData-64 ns_per_call 14040 calls 20000
+stock glprobe64 RESULT cost glUniformMatrix4fv ns_per_call 13796 calls 20000
+stock glprobe64 RESULT cost d3d9-draw-9-calls ns_per_call 15058 calls 180000
+stock probe32 RESULT fps 1.75 p50_ms 558.210 p95_ms 652.129 p99_ms 652.129 frames 18
+stock probe64 RESULT fps 0.57 p50_ms 1742.751 p95_ms 1916.049 p99_ms 1916.049 frames 6
+patched glprobe32 RESULT cost glGetIntegerv ns_per_call 14194 calls 20000
+patched glprobe32 RESULT cost glUniform1f ns_per_call 151 calls 20000
+patched glprobe32 RESULT cost glBindBuffer ns_per_call 200 calls 20000
+patched glprobe32 RESULT cost glBufferSubData-64 ns_per_call 136 calls 20000
+patched glprobe32 RESULT cost glUniformMatrix4fv ns_per_call 184 calls 20000
+patched glprobe32 RESULT cost d3d9-draw-9-calls ns_per_call 206 calls 180000
+patched glprobe64 RESULT cost glGetIntegerv ns_per_call 14215 calls 20000
+patched glprobe64 RESULT cost glUniform1f ns_per_call 139 calls 20000
+patched glprobe64 RESULT cost glBindBuffer ns_per_call 207 calls 20000
+patched glprobe64 RESULT cost glBufferSubData-64 ns_per_call 118 calls 20000
+patched glprobe64 RESULT cost glUniformMatrix4fv ns_per_call 178 calls 20000
+patched glprobe64 RESULT cost d3d9-draw-9-calls ns_per_call 192 calls 180000
+patched probe32 RESULT fps 28.13 p50_ms 34.030 p95_ms 46.532 p99_ms 65.693 frames 282
+patched probe64 RESULT fps 0.90 p50_ms 1058.871 p95_ms 1358.226 p99_ms 1358.226 frames 9
+loadprobe-x86_64 RESULT adapter Apple Software Renderer, OpenGL 4.1 APPLE-23.1.1
+loadprobe-x86_64 RESULT api=gl-sw vb=ring arch=x86_64 size=1024x768 draws=3900 quad=1x1 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 80.52 p50_ms 12.13 p95_ms 14.39 frames 806 cpu_cores 1.01
+loadprobe-arm64 RESULT adapter Apple Software Renderer, OpenGL 4.1 APPLE-23.1.1
+loadprobe-arm64 RESULT api=gl-sw vb=ring arch=arm64 size=1024x768 draws=3900 quad=1x1 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 72.94 p50_ms 12.98 p95_ms 17.93 frames 730 cpu_cores 0.98
