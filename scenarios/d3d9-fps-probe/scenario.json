@@ -33,7 +33,6 @@
     "minShareOfBaseline": 0.8,
     "minFpsSource": "Windows runner (WARP): the 32-bit probe in mix mode ran at 0.885 of the 64-bit one on main (17.43 against 19.69 fps, https://github.com/ThallesP/macron/actions/runs/43634976736) and at 0.911 and 0.884 in branch runs (https://github.com/ThallesP/macron/actions/runs/43634196191); 0.8 leaves room for noise. Macron's own numbers are not part of it."
   },
-  "startAttempts": 3,
   "otherGame": "d3d11-probe",
   "windowsExtra": [],
   "ci": true

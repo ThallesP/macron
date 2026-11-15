@@ -87,7 +87,7 @@ Defined in `internal/check/framerate.go` before any of Macron's numbers were com
 
 ## Programs that crash while starting
 
-A scenario may set `startAttempts` (1 to 3). When the program exits before it reaches the scenario's condition, the check starts it again, up to that many times in all, and each failed start is written into the report's notes and the summary with its exit status and log. A program that reaches its condition is never started again, so a slow run, a wrong picture or a crash after the condition still fails. The frame-rate scenario uses it because the 32-bit probe crashes while creating its Direct3D device in some runs on the runner (PROGRESS.md, "Gate 1 findings"): that crash is a separate, open problem, and the notes keep it visible instead of letting it fail one push in five.
+A scenario may set `startAttempts` (1 to 3). When the program exits before it reaches the scenario's condition, the check starts it again, up to that many times in all, and each failed start is written into the report's notes and the summary with its exit status and log. A program that reaches its condition is never started again, so a slow run, a wrong picture or a crash after the condition still fails. The frame-rate scenario used it while the 32-bit probe crashed in some starts under Rosetta; Wine patch 0006 fixed that crash, and the scenario is back to one start, so a crash on start fails the check again.
 
 ## Negative control
 

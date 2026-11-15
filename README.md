@@ -2,7 +2,7 @@
 
 Mac + Proton. Press Play on a Windows-only game in the Mac Steam client and have it run.
 
-**Status:** early, not released. Working: the launcher (`macron`) with its pinned runtime, which is Wine 11.21 with Macron's five Wine patches, DXMT and DXVK. Also the fixes database, and the scenario checks (`macron-check`): three real games and two programs of ours pass in CI on GitHub's macOS runners, checked against the originals on Windows. That includes a frame-rate check of the 32-bit Direct3D 9 path. On Apple's OpenGL, Wine 11.21 copied the whole streaming vertex buffer twice for every draw a 32-bit Direct3D game made (Ultimate Custom Night ran at 5 fps on an M3), and Macron's patches remove that. There is also an installer (a DMG with a pkg, and `macron uninstall`). Not working yet:
+**Status:** early, not released. Working: the launcher (`macron`) with its pinned runtime, which is Wine 11.21 with Macron's six Wine patches, DXMT and DXVK. Also the fixes database, and the scenario checks (`macron-check`): three real games and two programs of ours pass in CI on GitHub's macOS runners, checked against the originals on Windows. That includes a frame-rate check of the 32-bit Direct3D 9 path. On Apple's OpenGL, Wine 11.21 copied the whole streaming vertex buffer twice for every draw a 32-bit Direct3D game made (Ultimate Custom Night ran at 5 fps on an M3), and Macron's patches remove that. There is also an installer (a DMG with a pkg, and `macron uninstall`). Not working yet:
 - **Steam's own Install and Play buttons:** registering Macron as a compatibility tool is not enough; the Mac client still refuses Windows-only games with "Invalid platform". How the Steam Play switch goes ahead is Thalles's decision.
 - **The Steam bridge:** on hold for its licence.
 - **Tests with a logged-in Steam:** they need a test account.
@@ -127,7 +127,7 @@ Every game tried. The first three are scenarios that pass in CI; the next five c
 | Dependency | Licence | Used as |
 |---|---|---|
 | Wine (Gcenx/macOS_Wine_builds 11.21) | LGPL 2.1+ | downloaded at install time, unmodified |
-| Wine 11.21 `winemac.so` and `wined3d.dll` with Macron's patches (this repository's `runtime-wine-11.21-macron.4` release) | LGPL 2.1+ | downloaded at install time: `winemac.so` into the DXMT tree, `wined3d.dll` into both trees; source and patches are published with the release |
+| Wine 11.21 `winemac.so`, `wined3d.dll` and `wow64cpu.dll` with Macron's patches (this repository's `runtime-wine-11.21-macron.5` release) | LGPL 2.1+ | downloaded at install time: `winemac.so` into the DXMT tree, `wined3d.dll` and `wow64cpu.dll` into both trees; source and patches are published with the release |
 | DXMT 0.80 (3Shain/dxmt) | LGPL 2.1+ | downloaded at install time, unmodified |
 | DXVK-macOS 1.10.3-20230507 (Gcenx/DXVK-macOS) | zlib | downloaded at install time, unmodified (the `dxvk` backend) |
 | Mesa 26.1.8 for Windows (pal1000/mesa-dist-win) | MIT | downloaded on Windows runners for OpenGL references, and by macron when `MACRON_OPENGL=llvmpipe` |
