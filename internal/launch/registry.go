@@ -55,6 +55,7 @@ func importRegistry(ctx context.Context, in Input, env []string, request registr
 	tree := backendTrees[in.Profile.Backend]
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
+	startServerWithoutLinger(ctx, in.Runtime.Wineserver(tree), env)
 	regedit := exec.CommandContext(ctx, in.Runtime.Wine(tree), "regedit", "/S", `C:\`+request.FileName)
 	regedit.Env = env
 	regedit.Stdout = in.Output

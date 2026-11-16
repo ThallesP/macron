@@ -90,16 +90,16 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 	}
 	defer logFile.Close()
 	output := io.MultiWriter(stderr, logFile)
-	progress := progressTo(output)
+	progress := timedProgressTo(output, time.Now())
 	progress(fmt.Sprintf("game %s, log %s", in.Profile.ID, logFile.Name()))
 
 	openGL := os.Getenv("MACRON_OPENGL")
 	if openGL != "" && openGL != "llvmpipe" && openGL != "apple-software" {
-		return fail(output, failure.Errorf(failure.CodeInvalidInput, "MACRON_OPENGL=%q; the choices are llvmpipe and apple-software", openGL))
+		return failTo(progress, failure.Errorf(failure.CodeInvalidInput, "MACRON_OPENGL=%q; the choices are llvmpipe and apple-software", openGL))
 	}
 	profile, err := withBackendFromEnv(in.Profile, os.Getenv("MACRON_BACKEND"))
 	if err != nil {
-		return fail(output, err)
+		return failTo(progress, err)
 	}
 	if _, err := os.Stat(layout.ShowFPSFile()); err == nil {
 		profile = withFrameCounter(profile)
@@ -118,10 +118,10 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 	}
 	installed, err := wineruntime.Install(ctx, layout, wineruntime.Pinned, progress)
 	if err != nil {
-		return fail(output, err)
+		return failTo(progress, err)
 	}
 	if err := followGameModeSwitch(ctx, layout, installed, progress); err != nil {
-		return fail(output, err)
+		return failTo(progress, err)
 	}
 	exitCode, err := launch.Run(ctx, launch.Input{
 		Runtime:        installed,
@@ -139,7 +139,7 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 		SteamBridge:    in.SteamBridge,
 	})
 	if err != nil {
-		return fail(output, err)
+		return failTo(progress, err)
 	}
 	return exitCode
 }
@@ -219,11 +219,25 @@ func progressTo(w io.Writer) func(string) {
 	}
 }
 
+// timedProgressTo starts each line of a game's log with the wall time (UTC,
+// like the log's name) and the seconds since macron started the game, so a
+// slow start shows where its time went.
+func timedProgressTo(w io.Writer, start time.Time) func(string) {
+	return func(message string) {
+		now := time.Now()
+		fmt.Fprintf(w, "macron: %s +%.2fs %s\n", now.UTC().Format("15:04:05.000Z"), now.Sub(start).Seconds(), message)
+	}
+}
+
 func fail(w io.Writer, err error) int {
+	return failTo(progressTo(w), err)
+}
+
+func failTo(progress func(string), err error) int {
 	code := failure.CodeOf(err)
 	if code == "" {
 		code = "UNEXPECTED"
 	}
-	fmt.Fprintf(w, "macron: %s: %s\n", code, err)
+	progress(fmt.Sprintf("%s: %s", code, err))
 	return exitFailed
 }

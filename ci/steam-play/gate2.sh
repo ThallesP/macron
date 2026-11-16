@@ -108,7 +108,7 @@ grep -q "StartSession: appID $windows_game" "$evidence/compat-log-play.txt" || f
 grep -q 'macron waitforexitandrun' "$evidence/compat-log-play.txt" || fail "Steam's compat log does not show macron waitforexitandrun"
 game_log=$(ls -t "$macron_home/logs/steam-$windows_game/"*.log | head -1)
 grep 'macron:' "$game_log" | tee "$evidence/macron-log-play.txt"
-grep -q 'macron: starting Ultimate Custom Night.exe' "$evidence/macron-log-play.txt" || fail "macron's log does not show it starting the game"
+grep -Eq 'macron: .*starting Ultimate Custom Night.exe' "$evidence/macron-log-play.txt" || fail "macron's log does not show it starting the game"
 
 say "Quitting the game returns Steam to Play"
 steam quit_game "$windows_game" "${windows_game_window[@]}"

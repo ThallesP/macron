@@ -12,7 +12,7 @@ import (
 
 const usage = `macron runs Windows games on macOS.
 
-  macron runtime install|path       download and unpack the pinned runtime, or print where it is
+  macron runtime install|path       download and unpack the pinned runtime and make its template prefixes, or print where it is
   macron launch --game <id> -- <exe> [args]
                                     start a game with its profile from the fixes database
   macron kill --game <id>           stop everything running in a game's Windows environment

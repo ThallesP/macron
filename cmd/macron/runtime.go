@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/ThallesP/macron/internal/launch"
 	"github.com/ThallesP/macron/internal/wineruntime"
 )
 
@@ -28,6 +29,9 @@ func runtimeCommand(ctx context.Context, args []string, stdout, stderr io.Writer
 	}
 	installed, err := wineruntime.Install(ctx, layout, wineruntime.Pinned, progressTo(stderr))
 	if err != nil {
+		return fail(stderr, err)
+	}
+	if err := launch.PrepareTemplates(ctx, installed, stderr, progressTo(stderr)); err != nil {
 		return fail(stderr, err)
 	}
 	fmt.Fprintf(stdout, "runtime %s is at %s\n", installed.Version, installed.Dir)

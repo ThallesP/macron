@@ -59,6 +59,7 @@ func runInstallStep(ctx context.Context, in Input, tree wineruntime.Tree, env []
 	}
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Minute)
 	defer cancel()
+	startServerWithoutLinger(ctx, in.Runtime.Wineserver(tree), env)
 	install := exec.CommandContext(ctx, in.Runtime.Wine(tree), append([]string{file}, step.Args...)...)
 	install.Env = env
 	install.Stdout = in.Output

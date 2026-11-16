@@ -20,16 +20,19 @@ import (
 )
 
 const fakeWine = `#!/bin/sh
-echo "$*" >> "$WINEPREFIX/../wine-calls.txt"
+echo "$*" >> "$FAKE_WINE_ROOT/wine-calls.txt"
 if [ "$1" = wineboot ]; then
+	echo "$WINEPREFIX" >> "$FAKE_WINE_ROOT/wineboot-prefixes.txt"
 	home="$WINEPREFIX/drive_c/users/$USER"
-	mkdir -p "$home/AppData/Roaming" "$WINEPREFIX/../mac-documents" "$WINEPREFIX/drive_c/windows/system32" "$WINEPREFIX/drive_c/windows/syswow64"
-	ln -s "$WINEPREFIX/../mac-documents" "$home/Documents"
+	mkdir -p "$home/AppData/Roaming" "$FAKE_WINE_ROOT/mac-documents" "$WINEPREFIX/drive_c/windows/system32" "$WINEPREFIX/drive_c/windows/syswow64"
+	[ -e "$home/Documents" ] || ln -s "$FAKE_WINE_ROOT/mac-documents" "$home/Documents"
+	echo "registry" > "$WINEPREFIX/system.reg"
+	date -r "$(dirname "$0")/../share/wine/wine.inf" +%s > "$WINEPREFIX/.update-timestamp"
 	exit 0
 fi
 [ "$1" = regedit ] && exit 0
-env | grep -E '^(WINE|DXMT|GALLIUM)' | sort > "$WINEPREFIX/../game-env.txt"
-pwd > "$WINEPREFIX/../game-cwd.txt"
+env | grep -E '^(WINE|DXMT|GALLIUM)' | sort > "$FAKE_WINE_ROOT/game-env.txt"
+pwd > "$FAKE_WINE_ROOT/game-cwd.txt"
 echo "game output"
 exit 3
 `
@@ -37,9 +40,9 @@ exit 3
 func TestRunEndsTheWindowsEnvironmentWhenAskedToStop(t *testing.T) {
 	g := newGame(t)
 	runtime := fakeRuntime(t)
-	gameInAnotherProcess := "sleep 60 &\necho $! > \"$WINEPREFIX/../game.pid\"\ntouch \"$WINEPREFIX/../game-started\"\nexec sleep 60"
+	gameInAnotherProcess := "sleep 60 &\necho $! > \"$FAKE_WINE_ROOT/game.pid\"\ntouch \"$FAKE_WINE_ROOT/game-started\"\nexec sleep 60"
 	waitingGame := strings.Replace(fakeWine, "echo \"game output\"\nexit 3", gameInAnotherProcess, 1)
-	recordingServer := "#!/bin/sh\necho \"$*\" >> \"$WINEPREFIX/../wineserver-calls.txt\"\n[ \"$1\" = -k ] && kill \"$(cat \"$WINEPREFIX/../game.pid\")\"\nexit 0\n"
+	recordingServer := "#!/bin/sh\necho \"$*\" >> \"$FAKE_WINE_ROOT/wineserver-calls.txt\"\n[ \"$1\" = -k ] && kill \"$(cat \"$FAKE_WINE_ROOT/game.pid\")\"\nexit 0\n"
 	for _, tree := range []wineruntime.Tree{wineruntime.TreePlain, wineruntime.TreeDXMT} {
 		bin := filepath.Join(runtime.Root(tree), "bin")
 		if err := os.WriteFile(filepath.Join(bin, "wine"), []byte(waitingGame), 0o755); err != nil {
@@ -101,8 +104,25 @@ func fakeRuntime(t *testing.T) wineruntime.Installed {
 		if err := os.WriteFile(filepath.Join(bin, "wineserver"), []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
 			t.Fatal(err)
 		}
+		writeWineInf(t, installed.Root(tree), wineInfTime)
 	}
 	return installed
+}
+
+var wineInfTime = time.Unix(1793450195, 0)
+
+func writeWineInf(t *testing.T, root string, modified time.Time) {
+	t.Helper()
+	inf := filepath.Join(root, "share", "wine", "wine.inf")
+	if err := os.MkdirAll(filepath.Dir(inf), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(inf, []byte("[Version]\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(inf, modified, modified); err != nil {
+		t.Fatal(err)
+	}
 }
 
 type game struct {
@@ -115,6 +135,7 @@ func newGame(t *testing.T) game {
 	t.Helper()
 	t.Setenv("USER", "player")
 	root := t.TempDir()
+	t.Setenv("FAKE_WINE_ROOT", root)
 	exe := filepath.Join(root, "Game", "game.exe")
 	if err := os.MkdirAll(filepath.Dir(exe), 0o755); err != nil {
 		t.Fatal(err)
@@ -226,6 +247,119 @@ func TestChangingBackendRefreshesThePrefix(t *testing.T) {
 
 	if boots := strings.Count(g.read(t, "wine-calls.txt"), "wineboot"); boots != 2 {
 		t.Errorf("wineboot ran %d times, want 2", boots)
+	}
+}
+
+func TestANewGameIsClonedFromTheRuntimesTemplate(t *testing.T) {
+	g := newGame(t)
+	runtime := fakeRuntime(t)
+	in := Input{Runtime: runtime, Profile: fixes.Default("x"), Prefix: g.prefix, Exe: g.exe, Output: &bytes.Buffer{}, Progress: func(string) {}}
+	if _, err := Run(context.Background(), in); err != nil {
+		t.Fatal(err)
+	}
+	in.Prefix = filepath.Join(g.root, "another-prefix")
+
+	if _, err := Run(context.Background(), in); err != nil {
+		t.Fatal(err)
+	}
+
+	boots := strings.Fields(g.read(t, "wineboot-prefixes.txt"))
+	template := filepath.Join(runtime.Dir, templatesFolder, string(wineruntime.TreeDXMT))
+	if len(boots) != 1 || !strings.HasPrefix(boots[0], template+".partial-") {
+		t.Errorf("wineboot ran in %v, want once in a new template next to %s", boots, template)
+	}
+	for _, prefix := range []string{"prefix", "another-prefix"} {
+		if got := g.read(t, prefix+"/system.reg"); got != "registry\n" {
+			t.Errorf("%s/system.reg = %q, want the template's", prefix, got)
+		}
+		if _, hasRecord := readPrefixRecord(filepath.Join(g.root, prefix)); !hasRecord {
+			t.Errorf("%s has no %s", prefix, prefixMarker)
+		}
+	}
+	if fileExists(filepath.Join(template, prefixMarker)) {
+		t.Errorf("the template has a %s, so a clone would look made for a game", prefixMarker)
+	}
+}
+
+func TestAPrefixInAFolderWithFilesIsBootedInPlace(t *testing.T) {
+	g := newGame(t)
+	if err := os.MkdirAll(g.prefix, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(g.prefix, "keep.txt"), []byte("mine"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Run(context.Background(), Input{Runtime: fakeRuntime(t), Profile: fixes.Default("x"), Prefix: g.prefix, Exe: g.exe, Output: &bytes.Buffer{}, Progress: func(string) {}}); err != nil {
+		t.Fatal(err)
+	}
+
+	if boots := strings.Fields(g.read(t, "wineboot-prefixes.txt")); len(boots) != 1 || boots[0] != g.prefix {
+		t.Errorf("wineboot ran in %v, want once in %s", boots, g.prefix)
+	}
+	if got := g.read(t, "prefix/keep.txt"); got != "mine" {
+		t.Errorf("keep.txt = %q", got)
+	}
+}
+
+func TestANewRuntimeWithTheSameWineInfDoesNotUpdateThePrefix(t *testing.T) {
+	g := newGame(t)
+	runtime := fakeRuntime(t)
+	profile := fixes.Default("x")
+	profile.Backend = fixes.BackendDXVK
+	writeDXVK(t, runtime, "old dxvk")
+	in := Input{Runtime: runtime, Profile: profile, Prefix: g.prefix, Exe: g.exe, Output: &bytes.Buffer{}, Progress: func(string) {}}
+	if _, err := Run(context.Background(), in); err != nil {
+		t.Fatal(err)
+	}
+	in.Runtime = fakeRuntime(t)
+	in.Runtime.Version = "test-2"
+	writeDXVK(t, in.Runtime, "new dxvk")
+
+	if _, err := Run(context.Background(), in); err != nil {
+		t.Fatal(err)
+	}
+
+	if boots := strings.Fields(g.read(t, "wineboot-prefixes.txt")); len(boots) != 1 {
+		t.Errorf("wineboot ran in %v, want only for the first runtime's template", boots)
+	}
+	if got := g.read(t, "prefix/drive_c/windows/system32/d3d11.dll"); got != "new dxvk 64" {
+		t.Errorf("system32/d3d11.dll = %q, want the new runtime's DXVK", got)
+	}
+	if record, _ := readPrefixRecord(g.prefix); record.Runtime != "test-2" {
+		t.Errorf("the prefix is recorded for %q, want test-2", record.Runtime)
+	}
+}
+
+func TestANewRuntimeWithAnotherWineInfUpdatesThePrefix(t *testing.T) {
+	g := newGame(t)
+	in := Input{Runtime: fakeRuntime(t), Profile: fixes.Default("x"), Prefix: g.prefix, Exe: g.exe, Output: &bytes.Buffer{}, Progress: func(string) {}}
+	if _, err := Run(context.Background(), in); err != nil {
+		t.Fatal(err)
+	}
+	in.Runtime = fakeRuntime(t)
+	in.Runtime.Version = "test-2"
+	writeWineInf(t, in.Runtime.Root(wineruntime.TreeDXMT), wineInfTime.Add(time.Hour))
+
+	if _, err := Run(context.Background(), in); err != nil {
+		t.Fatal(err)
+	}
+
+	boots := strings.Fields(g.read(t, "wineboot-prefixes.txt"))
+	if len(boots) != 2 || boots[1] != g.prefix {
+		t.Errorf("wineboot ran in %v, want a second time in %s", boots, g.prefix)
+	}
+}
+
+func writeDXVK(t *testing.T, runtime wineruntime.Installed, content string) {
+	t.Helper()
+	for bits, suffix := range map[wineruntime.DXVKBits]string{wineruntime.DXVK64: " 64", wineruntime.DXVK32: " 32"} {
+		if err := os.MkdirAll(runtime.DXVK(bits), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(runtime.DXVK(bits), "d3d11.dll"), []byte(content+suffix), 0o644); err != nil {
+			t.Fatal(err)
+		}
 	}
 }
 

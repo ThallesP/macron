@@ -88,6 +88,7 @@ func Run(ctx context.Context, in Input) (int, error) {
 	if err := WriteFiles(in.Profile.Files, Places(in.Prefix, filepath.Dir(exe))); err != nil {
 		return 0, err
 	}
+	in.Progress("prefix ready")
 
 	in.Progress(fmt.Sprintf("starting %s with the %s backend", filepath.Base(exe), in.Profile.Backend))
 	command := slices.Concat([]string{exe}, in.Args, in.Profile.Args)
@@ -96,6 +97,7 @@ func Run(ctx context.Context, in Input) (int, error) {
 		if err != nil {
 			return 0, err
 		}
+		in.Progress("Steam bridge ready")
 	}
 	game := exec.CommandContext(ctx, in.Runtime.Wine(tree), command...)
 	game.Dir = in.Cwd
@@ -113,7 +115,11 @@ func Run(ctx context.Context, in Input) (int, error) {
 		return game.Process.Kill()
 	}
 	game.WaitDelay = 10 * time.Second
-	exitCode, err := exitCodeOf(game.Run())
+	if err := game.Start(); err != nil {
+		return 0, failure.Errorf(failure.CodeLaunchFailed, "starting Wine: %s", err)
+	}
+	in.Progress(fmt.Sprintf("game process started (Wine process %d)", game.Process.Pid))
+	exitCode, err := exitCodeOf(game.Wait())
 	if ctx.Err() != nil {
 		return ExitStopped, nil
 	}
