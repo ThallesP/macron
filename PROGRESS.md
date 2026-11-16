@@ -1,6 +1,10 @@
 # Progress
 
-**Thalles, when you wake (2026-11-16):** for Ultimate Custom Night install the release candidate rather than 0.4.0. [v0.5.0-rc1](https://github.com/ThallesP/macron/releases/tag/v0.5.0-rc1) (published, tested) takes its menu from 5 to 31 fps on your M3; **v0.5.0-rc2**, which also puts wined3d's command stream on its own thread (Wine patches 0010 and 0011) and reached 60 fps in the menu on your M3 in a test build, is being built and tested now and will be linked here when it is published: install that one if it is here. Same install command as below with the new file name. A night is not measured on a real Mac yet.
+**Thalles, when you wake (2026-11-16): install [v0.5.0-rc2](https://github.com/ThallesP/macron/releases/tag/v0.5.0-rc2)** (a pre-release): download `Macron-0.5.0-rc2.dmg` (SHA-256 `1e7f37206995f255e54a15530674c98941af6024a1b99adf068847c8a3190c5b`), open it, and run `sudo installer -pkg "/Volumes/Macron 0.5.0-rc2/Macron.pkg" -target /`. It installs over 0.4.0.
+- **Ultimate Custom Night's menu ran at 60 fps on your M3, with dips**, in unattended runs while you slept (the same runtime, built from main before the DMG existed): median 59.9 over two minutes, about a quarter of the readings below 56, the lowest 46, mostly in the first 20 s; with 0.4.0 it was 5. `docs/proof/gate1-m3/macron11/`.
+- **A night is not measured.** It needs input, which nobody sent while you were away.
+- **If a game misbehaves** (stutters, garbage, a hang): put `WINE_D3D_CONFIG=csmt=0 %command%` in its Steam launch options. That puts Wine's Direct3D work back on the game's thread, as before; Ultimate Custom Night's menu then runs at 31.
+- Tested before publishing on a fresh sandbox with the test account (sbx_f6asp4cn: `gate3.sh`, the Steam bridge, `macron diagnose`, uninstall; `docs/proof/release-0.5.0-rc2/`); the published file is those bytes.
 
 **Release to try: [Macron 0.4.0](https://github.com/ThallesP/macron/releases/tag/v0.4.0)** (2026-11-16), `Macron-0.4.0.dmg`, SHA-256 `1dd139fc9682e8c8093e0d242c62ed1164a35898896c52c8c68b5848ee9ef9c0`. Download it, open it, and run `sudo installer -pkg "/Volumes/Macron 0.4.0/Macron.pkg" -target /` (the package is unsigned; the release notes have the other ways). Installing it over 0.3.0 is fine. `sudo macron-uninstall` puts Steam back as it was.
 
