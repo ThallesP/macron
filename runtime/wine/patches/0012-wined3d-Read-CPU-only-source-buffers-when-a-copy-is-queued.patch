@@ -1,0 +1,104 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Mon, 16 Nov 2026 12:00:00 +0000
+Subject: [PATCH] wined3d: Read a CPU-only source buffer when a copy from it
+ is queued, not when the command stream runs it.
+
+With the command stream on its own thread (0011), Ultimate Custom
+Night's menu on an M3 runs at a median 60 fps but a quarter of the
+frame counter's readings are below 56, and the game's thread spends 5%
+in wined3d_pause (Sleep(0) between spins) while the command stream
+thread waits for work half the time (docs/proof/gate1-m3/macron11/).
+The game's vertex buffer is a D3DPOOL_SYSTEMMEM one of 4,096 quads
+that it wraps with a DISCARD lock about every second frame, and d3d9
+copies from it into its GPU copy before each draw. Each queued copy
+referred to the system memory buffer, so the DISCARD map (0010) waited
+until the command stream had run every queued copy: a drain of the
+whole queue every other frame.
+
+Such a copy now takes the data at once, through the same heap upload
+UpdateSubResource uses, with the NOOVERWRITE or DISCARD the application
+promised (0009). Nothing queued refers to the system memory buffer,
+and a DISCARD map of it no longer waits.
+---
+diff --git a/dlls/wined3d/cs.c b/dlls/wined3d/cs.c
+index b7b1c61..1614194 100644
+--- a/dlls/wined3d/cs.c
++++ b/dlls/wined3d/cs.c
+@@ -2955,6 +2955,29 @@ void wined3d_device_context_emit_update_sub_resource(struct wined3d_device_conte
+     wined3d_device_context_finish(context, WINED3D_CS_QUEUE_MAP);
+ }
+ 
++/* Uploads a copy of data into a GPU buffer, taken now: the command stream
++ * does not read the source later. map_flags may carry NOOVERWRITE or DISCARD
++ * (see wined3d_client_resource.copy_writes). Returns false when the buffer
++ * cannot take such an upload; the caller then copies as before. */
++bool wined3d_device_context_emit_upload_buffer(struct wined3d_device_context *context,
++        struct wined3d_resource *resource, const struct wined3d_box *box, const void *data, uint32_t map_flags)
++{
++    struct wined3d_map_desc map_desc;
++    struct wined3d_box dummy_box;
++    struct upload_bo bo;
++
++    if (box->right - box->left == resource->size)
++        invalidate_client_address(resource);
++    if (!context->ops->map_upload_bo(context, resource, 0, &map_desc, box, map_flags))
++        return false;
++    resource->client.copy_writes |= CLIENT_WRITE_SYNC;
++    resource->client.cs_writes = true;
++    memcpy(map_desc.data, data, box->right - box->left);
++    context->ops->unmap_upload_bo(context, resource, 0, &dummy_box, &bo);
++    wined3d_device_context_upload_bo(context, resource, 0, box, &bo, map_desc.row_pitch, map_desc.slice_pitch);
++    return true;
++}
++
+ static void wined3d_cs_exec_add_dirty_texture_region(struct wined3d_cs *cs, const void *data)
+ {
+     const struct wined3d_cs_add_dirty_texture_region *op = data;
+diff --git a/dlls/wined3d/device.c b/dlls/wined3d/device.c
+index 61cf3a5..c7e5907 100644
+--- a/dlls/wined3d/device.c
++++ b/dlls/wined3d/device.c
+@@ -4478,6 +4478,30 @@ HRESULT CDECL wined3d_device_context_copy_sub_resource_region(struct wined3d_dev
+                     ? WINED3D_BLT_BUFFER_DISCARD : WINED3D_BLT_BUFFER_NOOVERWRITE;
+         client->copy_writes = 0;
+         client->copy_dst = dst_resource;
++
++        /* A buffer only the CPU uses is read now, not when the command stream
++         * gets to the copy: then nothing queued refers to it, and a DISCARD
++         * or plain map of it (wined3d_cs_map_cpu_buffer()) need not wait for
++         * the command stream to finish everything before it. Ultimate Custom
++         * Night wraps its vertex buffer with DISCARD every other frame. */
++        if (!(src_resource->access & WINED3D_RESOURCE_ACCESS_GPU) && (dst_resource->access & WINED3D_RESOURCE_ACCESS_GPU)
++                && buffer_from_resource(src_resource)->locations == WINED3D_LOCATION_SYSMEM && src_resource->heap_memory
++                && context == &context->device->cs->c && !src_resource->client.cs_writes)
++        {
++            uint32_t map_flags = WINED3D_MAP_WRITE;
++            bool uploaded;
++
++            if (blt_flags & WINED3D_BLT_BUFFER_DISCARD)
++                map_flags |= WINED3D_MAP_DISCARD;
++            else if (blt_flags & WINED3D_BLT_BUFFER_NOOVERWRITE)
++                map_flags |= WINED3D_MAP_NOOVERWRITE;
++            wined3d_device_context_lock(context);
++            uploaded = wined3d_device_context_emit_upload_buffer(context, dst_resource, &dst_box,
++                    (const uint8_t *)src_resource->heap_memory + src_box->left, map_flags);
++            wined3d_device_context_unlock(context);
++            if (uploaded)
++                return WINED3D_OK;
++        }
+     }
+ 
+     wined3d_device_context_lock(context);
+diff --git a/dlls/wined3d/wined3d_private.h b/dlls/wined3d/wined3d_private.h
+index ae916f3..b4c06f2 100644
+--- a/dlls/wined3d/wined3d_private.h
++++ b/dlls/wined3d/wined3d_private.h
+@@ -3975,6 +3975,8 @@ static inline void wined3d_buffer_validate_user(struct wined3d_buffer *buffer)
+ void wined3d_buffer_acquire_bo_for_write(struct wined3d_buffer *buffer,
+         struct wined3d_context *context);
+ void wined3d_buffer_cleanup(struct wined3d_buffer *buffer);
++bool wined3d_device_context_emit_upload_buffer(struct wined3d_device_context *context,
++        struct wined3d_resource *resource, const struct wined3d_box *box, const void *data, uint32_t map_flags);
+ void wined3d_buffer_copy(struct wined3d_buffer *dst_buffer, unsigned int dst_offset,
+         struct wined3d_buffer *src_buffer, unsigned int src_offset, unsigned int size, uint32_t map_flags);
+ void wined3d_buffer_copy_bo_address(struct wined3d_buffer *dst_buffer, struct wined3d_context *context,
