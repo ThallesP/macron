@@ -193,7 +193,7 @@ Commit, scrubbed as above, to `docs/proof/gate1-m3/macron9-raw/`:
 - the raw `sample` output of the game's thread in the menu, default configuration (`sample <pid> 8 2 -file ...`; the whole file, with the `???` frames and their addresses);
 - from the same start, the `+loaddll` lines (`WINEDEBUG=-all,+loaddll`; only the `Loaded L"..." at <address>` lines).
 
-What it means: the overlay's `wined3d.dll` and `opengl32.dll` carry DWARF. With the load addresses I resolve every x86 frame, the 10.2% "no named frame" included, to a function and a line, and the native frames under `wow64_flush_batch` name Apple's OpenGL calls. That says which of these is the 13 ms: d3d9's copy of the system memory vertex buffer before each draw, the index streaming, the maps that go through wined3d's command stream (four a draw for this game), state application, the batch replay, or the map and unmap in each unsynchronized write.
+What it means: the overlay's `wined3d.dll` and `opengl32.dll` carry DWARF, and `tools/clickteam-games/sample-functions.py` resolves the sample's x86 frames with them (the sandboxes cannot: their `sample` does not unwind into 32-bit x86 frames under Rosetta). With the load addresses I resolve every x86 frame, the 10.2% "no named frame" included, to a function and a line, and the native frames under `wow64_flush_batch` name Apple's OpenGL calls. That says which of these is the 13 ms: d3d9's copy of the system memory vertex buffer before each draw, the index streaming, the maps that go through wined3d's command stream (four a draw for this game), state application, the batch replay, or the map and unmap in each unsynchronized write.
 
 ### U2: the menu without 0007's batching (2 minutes)
 
