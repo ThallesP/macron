@@ -1,0 +1,23 @@
+228472 select
+12275 event_op
+9759 close_handle
+8838 create_event
+2637 release_semaphore
+ 581 ioctl
+ 467 set_timer
+ 467 create_timer
+ 429 open_key
+ 304 get_key_value
+ 294 set_async_direct_result
+ 292 set_queue_mask
+ 291 recv_socket
+ 287 set_cursor
+ 287 get_window_rectangles
+ 287 get_thread_input
+ 140 enum_key
+ 100 create_key
+  80 set_key_value
+   7 get_async_result
+   4 get_message
+   3 send_socket
+   1 get_process_debug_info

@@ -1,0 +1,40 @@
+202368 01e0 select
+9704 018c select
+9303 018c close_handle
+8838 018c create_event
+6072 0140 event_op
+3159 0140 select
+2406 0248 select
+2236 01bc select
+2220 01c0 select
+2155 01b8 select
+1300 0248 event_op
+1253 02d0 event_op
+1118 0224 release_semaphore
+ 873 0278 select
+ 825 0228 release_semaphore
+ 778 01c0 event_op
+ 772 02d0 select
+ 728 01bc event_op
+ 722 01b8 event_op
+ 612 0224 event_op
+ 577 0224 select
+ 574 0140 release_semaphore
+ 574 0140 ioctl
+ 545 0228 select
+ 539 022c select
+ 467 018c set_timer
+ 467 018c create_timer
+ 330 0254 close_handle
+ 289 0140 set_async_direct_result
+ 287 01d0 select
+ 287 01d0 event_op
+ 287 0140 set_queue_mask
+ 287 0140 set_cursor
+ 287 0140 recv_socket
+ 250 0254 open_key
+ 249 02ac select
+ 231 0250 event_op
+ 220 0254 get_key_value
+ 215 0244 event_op
+ 177 0140 open_key

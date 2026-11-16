@@ -282,3 +282,45 @@ RESULT fps 59.99 frames 17997 interval_ms p50 16.669 p95 17.390 p99 18.265
 | abba-off-2 | 84.6 (22.6 to 135.6) | 54.5 | 59% | 9.07 / 9.64 / 11.33 / 16.91 | 49 0   18 1  126 2  |
 
 `shot-abba-off-1.png` and `shot-abba-on-1.png`: the benchmark's window 90 s after the script started each run (`screencapture -l`, no permission question).
+
+## Request 15 (Overwatch's Wine server requests, 2026-11-16 06:32 to 06:35 local)
+
+Start 1 again with `WINEDEBUG=-all,+server` added, sound off, an empty workspace in front, nothing clicked, 185 s; `server-count.sh` over 5 s of the launch log from 165 s after the script started. The game kept running with the trace on: the HUD's last line is frame 10,610 with a 17.3 ms interval and 8.4 ms of GPU time, so it was drawing at about its usual rate. The launch log was 3.2 GB and is deleted. No screenshot, so "menu" is what the game shows by itself.
+
+```
+seconds 5
+bytes 117238740
+lines 548119
+requests 266302
+metal-HUD lines 10
+```
+
+The requests in those 5 s (`requests.txt`, all of it):
+
+```
+228472 select
+12275 event_op
+9759 close_handle
+8838 create_event
+2637 release_semaphore
+ 581 ioctl
+ 467 set_timer
+ 467 create_timer
+ 429 open_key
+ 304 get_key_value
+ 294 set_async_direct_result
+ 292 set_queue_mask
+ 291 recv_socket
+ 287 set_cursor
+ 287 get_window_rectangles
+ 287 get_thread_input
+ 140 enum_key
+ 100 create_key
+  80 set_key_value
+   7 get_async_result
+   4 get_message
+   3 send_socket
+   1 get_process_debug_info
+```
+
+So 228,472 of 266,302 requests are `select` (86%), and with `event_op`, `create_event`, `close_handle` and `release_semaphore` the synchronisation calls are 98%: about 53,000 server round trips a second, of which window, input and registry requests are a few hundred.
