@@ -6,15 +6,16 @@
 # archive and the install notes. The programs macron diagnose times calls with
 # (tools/wow64-cost) go to /usr/local/lib/macron/diagnose, the Windows ones
 # built with the llvm-mingw that runtime/wine/release.env pins.
-# Usage: ci/package/build.sh <version x.y.z> <out-dir>
+# Usage: ci/package/build.sh <version x.y.z or x.y.z-rcN> <out-dir>
 set -euo pipefail
 umask 022
 version=$1
 out=$2
-if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "version must look like 1.2.3, got '$version'" >&2
+if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
+  echo "version must look like 1.2.3 or 1.2.3-rc1, got '$version'" >&2
   exit 2
 fi
+package_version=${version%%-*}
 
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../.." && pwd)
@@ -48,8 +49,8 @@ chmod 755 "$diagnose"/*
 chmod 755 "$payload/macron" "$here/scripts/postinstall"
 
 pkgbuild --root "$work/payload" --install-location / --scripts "$here/scripts" \
-  --identifier io.github.thallesp.macron --version "$version" "$work/macron.pkg"
-sed "s/@VERSION@/$version/" "$here/distribution.xml" > "$work/distribution.xml"
+  --identifier io.github.thallesp.macron --version "$package_version" "$work/macron.pkg"
+sed "s/@VERSION@/$package_version/" "$here/distribution.xml" > "$work/distribution.xml"
 productbuild --distribution "$work/distribution.xml" --resources "$here/resources" \
   --package-path "$work" "$work/dmg/Macron.pkg"
 install -m 644 "$root/docs/install.md" "$work/dmg/Read me.txt"
