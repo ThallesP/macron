@@ -79,6 +79,20 @@ func TestAppleSoftwareRendererAddsTheMacDriverSetting(t *testing.T) {
 	}
 }
 
+func TestDLSSSwitchTurnsOnDXMTsNVIDIAExtensionWithoutTouchingTheProfile(t *testing.T) {
+	profile := fixes.Default("steam-1")
+	profile.Env = map[string]string{"DXMT_LOG_LEVEL": "info"}
+
+	got := withDLSS(profile)
+
+	if len(profile.Env) != 1 {
+		t.Fatalf("the profile's own env changed: %v", profile.Env)
+	}
+	if got.Env["DXMT_ENABLE_NVEXT"] != "1" || got.Env["DXMT_LOG_LEVEL"] != "info" {
+		t.Errorf("env = %v, want DXMT_ENABLE_NVEXT=1 and the profile's own", got.Env)
+	}
+}
+
 func TestFrameCounterLogsTheFrameRateWithoutTouchingTheProfile(t *testing.T) {
 	profile := fixes.Default("steam-1")
 	profile.Env = map[string]string{"DXMT_LOG_LEVEL": "info"}

@@ -94,6 +94,7 @@ func macronHome(t *testing.T) wineruntime.Layout {
 	writeTestFile(t, filepath.Join(layout.DownloadsDir(), "wine.tar.xz"), "archive")
 	writeTestFile(t, layout.ShowFPSFile(), "")
 	writeTestFile(t, layout.GameModeFile(), "")
+	writeTestFile(t, layout.DLSSFile(), "")
 	return layout
 }
 

@@ -44,6 +44,15 @@ func (l Layout) ShowFPSFile() string {
 	return filepath.Join(l.Home, "show-fps")
 }
 
+// DLSSFile switches DXMT's NVIDIA extension on for every DXMT game while it
+// exists: games then see an NVIDIA GPU and their DLSS calls run on Apple's
+// MetalFX temporal upscaler (docs/perf/README.md, candidate 1). Off by
+// default, as DXMT advises: a game that believes it runs on NVIDIA may take
+// paths that are only fast there.
+func (l Layout) DLSSFile() string {
+	return filepath.Join(l.Home, "dlss")
+}
+
 // GameModeFile switches Game Mode on for every game while it exists: the
 // runtime's Wine loader then runs from a games-category app bundle
 // (gamemode.go).
@@ -63,5 +72,6 @@ func (l Layout) CreatedPaths() []string {
 		l.DownloadsDir(),
 		l.ShowFPSFile(),
 		l.GameModeFile(),
+		l.DLSSFile(),
 	}
 }

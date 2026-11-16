@@ -105,6 +105,10 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 		profile = withFrameCounter(profile)
 		progress(fmt.Sprintf("logging the frame rate (%s exists)", layout.ShowFPSFile()))
 	}
+	if _, err := os.Stat(layout.DLSSFile()); err == nil && profile.Backend == fixes.BackendDXMT {
+		profile = withDLSS(profile)
+		progress(fmt.Sprintf("DXMT answers as an NVIDIA GPU, so DLSS runs on MetalFX (%s exists)", layout.DLSSFile()))
+	}
 	if openGL == "apple-software" {
 		profile = withAppleSoftwareRenderer(profile)
 		progress("OpenGL may use Apple's software renderer when there is no hardware one (MACRON_OPENGL=apple-software)")
@@ -185,6 +189,16 @@ func withFrameCounter(profile fixes.Profile) fixes.Profile {
 	env["DXVK_HUD"] = "fps"
 	env["MTL_HUD_ENABLED"] = "1"
 	env["MTL_HUD_LOG_ENABLED"] = "1"
+	profile.Env = env
+	return profile
+}
+
+func withDLSS(profile fixes.Profile) fixes.Profile {
+	env := maps.Clone(profile.Env)
+	if env == nil {
+		env = map[string]string{}
+	}
+	env["DXMT_ENABLE_NVEXT"] = "1"
 	profile.Env = env
 	return profile
 }
