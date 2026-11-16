@@ -18,9 +18,14 @@ Macron makes Steam's own Install and Play buttons work for Windows-only games in
 
 ## What changed for speed, and what is not known yet
 
-Ultimate Custom Night ran at 5 frames a second on Thalles's M3 with 0.4.0. The cause, measured there: Apple's OpenGL on Apple silicon is built on Metal, and every time a game's vertices were uploaded into a buffer the GPU was still drawing from, it sent its work to the GPU and waited for it, about 3,900 times a frame in a night. This build writes those uploads without waiting (Wine patch 0009), the way a native program on that Mac ran the same load at 120 frames a second instead of 3. The test machines have no GPU OpenGL, so they show that the uploads no longer wait, not the frame rate: that is measured on a real Mac.
+Ultimate Custom Night ran at 5 frames a second in its menu on Thalles's M3 with 0.4.0. Two causes, both measured there:
 
-If a game draws garbage or flickers with this build, `WINE_OPENGL_UNSYNCHRONIZED=0 %command%` in its Steam launch options brings back the old uploads, and `WINE_OPENGL_BATCH=0 %command%` turns off the batching of OpenGL calls. Direct3D 10 and 11 games go through DXMT and are not affected by either.
+- Apple's OpenGL on Apple silicon is built on Metal, and every time a game's vertices were uploaded into a buffer the GPU was still drawing from, it sent its work to the GPU and waited, about 2,000 to 4,000 times a frame. This build writes those uploads without waiting (Wine patch 0009): the menu went from 5 to 31.
+- Then the game's own thread did all of Wine's Direct3D work too, and three times per draw it waited for itself. This build maps the game's system memory buffers without that wait (0010) and runs Wine's Direct3D work on a second thread (0011): in a test build on the M3 the menu ran at 60, the game's frame rate, using nearly two cores.
+
+A night (about 1.7 times the menu's work) has not been measured on a real Mac yet. Turn the frame counter on (below) and `macron diagnose` reports it.
+
+If a game draws garbage, flickers or stutters with this build, these go in its Steam launch options, one at a time, to find which change it is: `WINE_D3D_CONFIG=csmt=0 %command%` (Direct3D work back on the game's thread), `WINE_OPENGL_UNSYNCHRONIZED=0 %command%` (the old uploads), `WINE_OPENGL_BATCH=0 %command%` (no batching of OpenGL calls). Direct3D 10 and 11 games go through DXMT and are not affected by any of them.
 
 ## Before you start
 
