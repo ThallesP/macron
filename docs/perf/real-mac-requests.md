@@ -318,6 +318,25 @@ Push `~/macron-perf/results/ow-server/` (`window.txt`, `requests.txt`, `threads.
 
 `docs/perf/real-mac-results.md`: request 9's four `RESULT fps` lines; request 10's table and each run's `bench.txt`; request 11's list of exported files and anything that failed; request 12's summary; request 13's three lines; request 14's four summaries; request 15's files. Files into `docs/perf/m3-batch2/` as above (each run's `summary.txt`, `env.txt`, `hud.csv`, `thermal.txt`, `bench.txt`, the trace exports, the two screenshots). Suggested order: 13 needs a log, so 12 first; then 9, 10, 11, 14.
 
+## Batch 3 (2026-11-16, after batch 2)
+
+### Request 16: what Overwatch's threads do on its menu (about 5 minutes; his account, nothing clicked, the same start as request 6's start 1)
+
+Request 15 found one thread polling the Wine server about 40,000 times a second (zero-timeout waits), about 6 ms of round trips a frame at 54 frames a second. This shows whether that thread is the one holding the frame: macOS's `sample` of the game's process for 5 seconds, with no trace on.
+
+1. Start Overwatch exactly as for start 1 (`MTL_HUD_ENABLED=1 MTL_HUD_LOG_ENABLED=1`, no `show-fps` file, no `WINEDEBUG`).
+2. When the menu has been up for about a minute, in another terminal:
+
+   ```sh
+   pid=$(ps -axo pid=,%cpu=,command= | grep -i 'overwatch\.exe' | grep -v -e grep -e 'steam\.exe' -e macron | sort -k2 -rn | head -1 | awk '{print $1}')
+   ps -o pid=,%cpu=,command= -p "$pid" | cut -c1-80
+   sample "$pid" 5 2 -mayDie -file ~/macron-perf/ow-sample.txt
+   sed -E 's|/Users/[^/ ]+|~|g' ~/macron-perf/ow-sample.txt | gzip > ~/macron-perf/ow-sample.txt.gz
+   ```
+3. Quit the game as before.
+
+Push `ow-sample.txt.gz` to `docs/perf/m3-batch3/` and the `ps` line (its CPU share) into the results. If `sample` asks for a permission or a password, stop and say so. Read (I do the analysis): for each thread, its number of samples and how many sit under Wine's server call (`server_call`, `wait_select_reply`, `read` inside `ntdll.so`). If the busiest thread spends a large share there, the polls are on the frame's path and answering them in the game's process (docs/perf/README.md, candidate 6) would raise the menu's frame rate; if the busy threads are elsewhere and the poller mostly waits, it would mostly save the server's half core.
+
 ## Ultimate Custom Night (gate 1 thread, Opus 5.5)
 
 Context: `docs/proof/gate1-m3/macron9.md`. With `macron.9` the menu runs at 31 fps; the game's thread works about 19 ms a frame (13 of them in Wine) and waits for its frame timer for the rest. The menu is the benchmark (no input needed). Same setup as macron9.md: `macron` built from main, its runtime in a separate `MACRON_HOME`, empty workspace, sound off. Results go to `docs/proof/gate1-m3/` with the home folder written `~` (`sed -E 's|/Users/[^/ ]+|~|g'`).
