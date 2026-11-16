@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -402,4 +403,17 @@ func lastValue(env []string, name string) string {
 		}
 	}
 	return value
+}
+
+func TestAProgramThatLeavesItsOutputOpenStillExitsWithItsCode(t *testing.T) {
+	var output bytes.Buffer
+	program := exec.Command("sh", "-c", "sleep 5 & echo started; exit 0")
+	program.Stdout = &output
+	program.WaitDelay = 200 * time.Millisecond
+
+	exitCode, err := exitCodeOf(program.Run())
+
+	if err != nil || exitCode != 0 {
+		t.Fatalf("exit code %d, error %v; want 0 and no error when only a background program kept the output open", exitCode, err)
+	}
 }

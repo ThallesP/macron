@@ -157,6 +157,7 @@ func withFrameCounter(profile fixes.Profile) fixes.Profile {
 	env["WINEDEBUG"] = "-all,+fps"
 	env["DXVK_HUD"] = "fps"
 	env["MTL_HUD_ENABLED"] = "1"
+	env["MTL_HUD_LOG_ENABLED"] = "1"
 	profile.Env = env
 	return profile
 }

@@ -88,7 +88,7 @@ func TestFrameCounterLogsTheFrameRateWithoutTouchingTheProfile(t *testing.T) {
 	if len(profile.Env) != 1 {
 		t.Fatalf("the profile's own env changed: %v", profile.Env)
 	}
-	for name, want := range map[string]string{"WINEDEBUG": "-all,+fps", "DXVK_HUD": "fps", "MTL_HUD_ENABLED": "1", "DXMT_LOG_LEVEL": "info"} {
+	for name, want := range map[string]string{"WINEDEBUG": "-all,+fps", "DXVK_HUD": "fps", "MTL_HUD_ENABLED": "1", "MTL_HUD_LOG_ENABLED": "1", "DXMT_LOG_LEVEL": "info"} {
 		if got.Env[name] != want {
 			t.Errorf("%s = %q, want %q", name, got.Env[name], want)
 		}

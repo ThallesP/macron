@@ -32,6 +32,8 @@ var (
 	steamID64      = regexp.MustCompile(`7656119\d{10}`)
 	frameRateLine  = regexp.MustCompile(`trace:fps:(\w+).*@ approx ([0-9.]+)fps`)
 	startLine      = regexp.MustCompile(`starting (.+) with the (\w+) backend`)
+	hudLine        = regexp.MustCompile(`metal-HUD:(.*)`)
+	notANumber     = regexp.MustCompile(`[^0-9.]`)
 )
 
 func diagnoseCommand(ctx context.Context, args []string, stdout, stderr io.Writer) int {
@@ -198,6 +200,7 @@ type frameRateLog struct {
 	Backend   string
 	HasBridge bool
 	Rates     []float64
+	Intervals []float64
 }
 
 func readFrameRateLog(name string, text string) (frameRateLog, bool) {
@@ -219,18 +222,59 @@ func readFrameRateLog(name string, text string) (frameRateLog, bool) {
 	if len(log.Rates) == 0 {
 		log.Rates = ratesBySource["wglSwapBuffers"]
 	}
+	for _, match := range hudLine.FindAllStringSubmatch(text, -1) {
+		log.Intervals = append(log.Intervals, hudIntervals(match[1])...)
+	}
 	return log, true
 }
 
-func (l frameRateLog) summary() string {
-	head := fmt.Sprintf("%s: %s, %s backend, Steam bridge %t", l.Name, l.Exe, l.Backend, l.HasBridge)
-	if len(l.Rates) == 0 {
-		return head + "\n   no frame counter lines (Direct3D 10 and 11 games show Apple's Metal HUD instead of logging)"
+func hudIntervals(line string) []float64 {
+	fields := strings.Split(line, ",")
+	start := 3
+	if (len(fields)-3)%2 == 1 {
+		start = 4
 	}
-	sorted := slices.Clone(l.Rates)
-	sort.Float64s(sorted)
-	last := l.Rates[max(0, len(l.Rates)-10):]
-	return fmt.Sprintf("%s\n   %d samples, median %.1f fps, lowest %.1f, highest %.1f; last ones: %s", head, len(sorted), sorted[len(sorted)/2], sorted[0], sorted[len(sorted)-1], strings.Trim(fmt.Sprint(last), "[]"))
+	var intervals []float64
+	for i := start; i+1 < len(fields); i += 2 {
+		interval, err := strconv.ParseFloat(notANumber.ReplaceAllString(fields[i], ""), 64)
+		if err == nil {
+			intervals = append(intervals, interval)
+		}
+	}
+	return intervals
+}
+
+func (l frameRateLog) summary() string {
+	lines := []string{fmt.Sprintf("%s: %s, %s backend, Steam bridge %t", l.Name, l.Exe, l.Backend, l.HasBridge)}
+	if len(l.Rates) > 0 {
+		sorted := slices.Clone(l.Rates)
+		sort.Float64s(sorted)
+		last := l.Rates[max(0, len(l.Rates)-10):]
+		lines = append(lines, fmt.Sprintf("   frame counter: %d samples, median %.1f fps, lowest %.1f, highest %.1f; last ones: %s", len(sorted), sorted[len(sorted)/2], sorted[0], sorted[len(sorted)-1], strings.Trim(fmt.Sprint(last), "[]")))
+	}
+	if len(l.Intervals) > 0 {
+		lines = append(lines, "   Metal HUD: "+intervalSummary(l.Intervals))
+	}
+	if len(lines) == 1 {
+		lines = append(lines, "   no frame counter lines and no Metal HUD lines")
+	}
+	return strings.Join(lines, "\n")
+}
+
+func intervalSummary(intervals []float64) string {
+	total, longest, over50, over100 := 0.0, 0.0, 0, 0
+	for _, interval := range intervals {
+		total += interval
+		longest = max(longest, interval)
+		if interval > 50 {
+			over50++
+		}
+		if interval > 100 {
+			over100++
+		}
+	}
+	return fmt.Sprintf("%d frames, %.1f fps on average, %d longer than 50 ms, %d longer than 100 ms, the longest %.0f ms",
+		len(intervals), 1000*float64(len(intervals))/total, over50, over100, longest)
 }
 
 func writeGames(report io.Writer, layout wineruntime.Layout) {

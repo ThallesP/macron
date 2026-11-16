@@ -173,5 +173,8 @@ func exitCodeOf(err error) (int, error) {
 	if errors.As(err, &exited) && exited.ExitCode() >= 0 {
 		return exited.ExitCode(), nil
 	}
+	if errors.Is(err, exec.ErrWaitDelay) {
+		return 0, nil
+	}
 	return 0, err
 }

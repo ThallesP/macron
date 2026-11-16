@@ -35,7 +35,7 @@ func TestReadFrameRateLogSummarisesTheCounter(t *testing.T) {
 	if !isFrameRateLog || log.Exe != "Game.exe" || log.Backend != "dxmt" || !log.HasBridge || len(log.Rates) != 3 {
 		t.Fatalf("unexpected log: %+v", log)
 	}
-	if summary := log.summary(); !strings.Contains(summary, "median 59.0 fps, lowest 30.0, highest 60.5") {
+	if summary := log.summary(); !strings.Contains(summary, "frame counter: 3 samples, median 59.0 fps, lowest 30.0, highest 60.5") {
 		t.Fatalf("unexpected summary: %s", summary)
 	}
 }
@@ -47,6 +47,24 @@ func TestReadFrameRateLogFallsBackToOpenGLSwaps(t *testing.T) {
 
 	if len(log.Rates) != 1 || log.Rates[0] != 42 {
 		t.Fatalf("unexpected rates: %v", log.Rates)
+	}
+}
+
+func TestReadFrameRateLogCountsMetalHUDHitches(t *testing.T) {
+	text := strings.Join([]string{
+		"macron: logging the frame rate (show-fps exists)",
+		"macron: starting Overwatch.exe with the dxmt backend",
+		"2026-11-16 02:00:20.100 wine[123:456] metal-HUD: 100,512.0,1024.0,16.6,9.1,16.8,9.0",
+		"2026-11-16 02:00:20.200 wine[123:456] metal-HUD: 102,512.0,1024.0,3,120.5,9.2,60.0,9.0",
+	}, "\n")
+
+	log, _ := readFrameRateLog("steam-2357570/a.log", text)
+
+	if len(log.Intervals) != 4 {
+		t.Fatalf("intervals %v, want 4", log.Intervals)
+	}
+	if summary := log.summary(); !strings.Contains(summary, "4 frames, 18.7 fps on average, 2 longer than 50 ms, 1 longer than 100 ms, the longest 120 ms") {
+		t.Fatalf("unexpected summary: %s", summary)
 	}
 }
 
