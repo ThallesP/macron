@@ -1,0 +1,19 @@
+gpuload mix, d3d11, 1600x900, sync 1, 2026-11-16T08:54:43Z
+macOS 26.5.2, Apple M3
+Now drawing from 'AC Power'
+waited 0 s for thermal pressure 0 before starting
+
+HUD frames logged: 2610
+frames measured: 2349 (the first 261 left out)
+frames a second: 60.0
+GPU busy: 85% (sum of GPU time over sum of intervals)
+interval ms: p25 16.67, median 16.67, p75 16.67, p95 16.67, p99 16.67
+GPU time ms: p25 14.08, median 14.21, p75 14.42, p95 14.68, p99 14.86
+thermal pressure levels seen:   29 0 
+
+benchmark's own result:
+RESULT config api d3d11 mode mix size 1600x900 passes 8 draws 4000 sync 1
+RESULT fps 59.99 frames 1200 interval_ms p50 16.659 p95 17.515 p99 17.832
+
+DXMT and Metal lines:
+   1 macron: gpuload.exe exited with 0

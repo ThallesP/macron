@@ -1,0 +1,16 @@
+gpuload fill 12 passes, d3d11, 1600x900, sync 1, 300 s
+
+HUD frames logged: 36168
+frames measured: 32552 (the first 3616 left out)
+frames a second: 60.0
+GPU busy: 85% (sum of GPU time over sum of intervals)
+interval ms: p25 16.67, median 16.67, p75 16.67, p95 16.67, p99 16.67
+GPU time ms: p25 14.10, median 14.32, p75 14.59, p95 14.78, p99 14.93
+thermal pressure levels seen:  301 0 
+
+benchmark's own result:
+RESULT config api d3d11 mode fill size 1600x900 passes 12 draws 0 sync 1
+RESULT fps 59.99 frames 17997 interval_ms p50 16.669 p95 17.390 p99 18.265
+
+DXMT and Metal lines:
+   1 macron: gpuload.exe exited with 0

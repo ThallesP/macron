@@ -1,0 +1,2 @@
+RESULT config api d3d11 mode fill size 1600x900 passes 12 draws 0 sync 1
+RESULT fps 59.99 frames 17997 interval_ms p50 16.669 p95 17.390 p99 18.265

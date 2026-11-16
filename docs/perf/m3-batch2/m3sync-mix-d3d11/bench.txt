@@ -1,0 +1,2 @@
+RESULT config api d3d11 mode mix size 1600x900 passes 8 draws 4000 sync 1
+RESULT fps 59.99 frames 1200 interval_ms p50 16.659 p95 17.515 p99 17.832

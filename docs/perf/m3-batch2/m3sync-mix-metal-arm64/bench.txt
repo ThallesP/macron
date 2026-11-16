@@ -1,0 +1,3 @@
+RESULT config api metal-arm64 mode mix size 1600x900 passes 8 draws 4000 sync 1
+RESULT fps 60.00 frames 1201 interval_ms p50 16.665 p95 17.175 p99 17.437
+RESULT gpu_ms p50 13.596 p95 15.055 frames 1201

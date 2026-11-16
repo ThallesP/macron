@@ -1,0 +1,3 @@
+RESULT config api metal-x86_64 mode draws size 1600x900 passes 0 draws 4000 sync 1
+RESULT fps 60.00 frames 1201 interval_ms p50 16.682 p95 17.093 p99 17.598
+RESULT gpu_ms p50 0.771 p95 0.824 frames 1201

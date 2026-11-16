@@ -172,3 +172,113 @@ WindowServer 30.3 22
 So on this screen the GPU works 40% of the time (7.8 ms of an 18.3 ms frame) and the frame rate is 54, while `wineserver` uses about half a core next to the game's one core. That is the case the request describes as "server round trips are a real cost".
 
 Start 2 (the NVIDIA switch) was not run.
+
+# Batch 2 (2026-11-16 05:45 to 06:19 local, 08:45 to 09:19 UTC)
+
+Same Mac and rules as batch 1 (empty workspace in front, benchmark windows floating and active, Wine's sound off). Files in `docs/perf/m3-batch2/`. Request 15 follows separately.
+
+## Request 9
+
+```
+cap-d3d-hud0.txt:RESULT fps 117.73 frames 1766 interval_ms p50 3.793 p95 15.207 p99 15.546
+cap-d3d-hud1.txt:RESULT fps 119.99 frames 1800 interval_ms p50 9.770 p95 14.970 p99 15.367
+cap-metal-hud0.txt:RESULT fps 478.31 frames 7175 interval_ms p50 1.943 p95 4.186 p99 5.151
+cap-metal-hud1.txt:RESULT fps 481.59 frames 7225 interval_ms p50 2.337 p95 4.057 p99 4.773
+```
+
+## Request 10 (`pair m3sync 1600x900`, both sides sync interval 1)
+
+```
+m3sync-draws-d3d11: frames a second: 59.9; GPU time ms: p25 0.95, median 0.98, p75 1.01, p95 1.05, p99 1.10
+m3sync-draws-metal-arm64: frames a second: 60.0; GPU time ms: p25 0.76, median 0.77, p75 0.79, p95 0.82, p99 0.84
+m3sync-draws-metal-x86_64: frames a second: 60.0; GPU time ms: p25 0.76, median 0.77, p75 0.79, p95 0.82, p99 0.85
+m3sync-fill-d3d11: frames a second: 59.9; GPU time ms: p25 14.15, median 14.22, p75 14.40, p95 14.73, p99 15.60
+m3sync-fill-metal-arm64: frames a second: 60.0; GPU time ms: p25 13.93, median 14.36, p75 14.57, p95 14.81, p99 15.08
+m3sync-fill-metal-x86_64: frames a second: 60.0; GPU time ms: p25 13.91, median 14.28, p75 14.51, p95 14.71, p99 14.83
+m3sync-mix-d3d11: frames a second: 60.0; GPU time ms: p25 14.08, median 14.21, p75 14.42, p95 14.68, p99 14.86
+m3sync-mix-metal-arm64: frames a second: 60.0; GPU time ms: p25 12.97, median 13.59, p75 13.89, p95 15.09, p99 15.49
+m3sync-mix-metal-x86_64: frames a second: 60.0; GPU time ms: p25 12.94, median 13.57, p75 14.06, p95 14.49, p99 14.86
+```
+
+```
+m3sync-draws-d3d11: config api d3d11 mode draws size 1600x900 passes 0 draws 4000 sync 1;fps 60.00 frames 1200 interval_ms p50 16.664 p95 17.461 p99 18.435;
+m3sync-draws-metal-arm64: config api metal-arm64 mode draws size 1600x900 passes 0 draws 4000 sync 1;fps 60.00 frames 1201 interval_ms p50 16.677 p95 17.008 p99 17.212;gpu_ms p50 0.770 p95 0.818 frames 1201;
+m3sync-draws-metal-x86_64: config api metal-x86_64 mode draws size 1600x900 passes 0 draws 4000 sync 1;fps 60.00 frames 1201 interval_ms p50 16.682 p95 17.093 p99 17.598;gpu_ms p50 0.771 p95 0.824 frames 1201;
+m3sync-fill-d3d11: config api d3d11 mode fill size 1600x900 passes 8 draws 0 sync 1;fps 59.15 frames 1184 interval_ms p50 16.687 p95 17.530 p99 20.249;
+m3sync-fill-metal-arm64: config api metal-arm64 mode fill size 1600x900 passes 8 draws 0 sync 1;fps 60.00 frames 1200 interval_ms p50 16.658 p95 17.063 p99 17.230;gpu_ms p50 14.359 p95 14.814 frames 1200;
+m3sync-fill-metal-x86_64: config api metal-x86_64 mode fill size 1600x900 passes 8 draws 0 sync 1;fps 60.00 frames 1201 interval_ms p50 16.659 p95 17.112 p99 17.267;gpu_ms p50 14.285 p95 14.708 frames 1201;
+m3sync-mix-d3d11: config api d3d11 mode mix size 1600x900 passes 8 draws 4000 sync 1;fps 59.99 frames 1200 interval_ms p50 16.659 p95 17.515 p99 17.832;
+m3sync-mix-metal-arm64: config api metal-arm64 mode mix size 1600x900 passes 8 draws 4000 sync 1;fps 60.00 frames 1201 interval_ms p50 16.665 p95 17.175 p99 17.437;gpu_ms p50 13.596 p95 15.055 frames 1201;
+m3sync-mix-metal-x86_64: config api metal-x86_64 mode mix size 1600x900 passes 8 draws 4000 sync 1;fps 60.00 frames 1200 interval_ms p50 16.698 p95 17.169 p99 17.527;gpu_ms p50 13.569 p95 14.494 frames 1200;
+```
+
+## Request 11 (Metal System Traces)
+
+`xctrace record` attached without asking for anything. The Direct3D 11 and native traces recorded and exported (19 and 19 tables). The Superposition trace did not: `record` was still running after 90 s and was ended by my time limit (exit 142), and `export` then said "Trace is malformed; instrument run data is missing". The run it was attached to (`tr-sp`) is not in the repository.
+
+```
+trace-d3d-device-gpu-info.xml.gz
+trace-d3d-gpu-aps-stream.xml.gz
+trace-d3d-gpu-counter-info.xml.gz
+trace-d3d-gpu-counter-value.xml.gz
+trace-d3d-gpu-performance-device-state-intervals.xml.gz
+trace-d3d-gpu-performance-state-info.xml.gz
+trace-d3d-gpu-performance-state-intervals.xml.gz
+trace-d3d-gpu-shader-profiler-interval.xml.gz
+trace-d3d-gpu-shader-profiler-sample.xml.gz
+trace-d3d-metal-application-encoders-list.xml.gz
+trace-d3d-metal-gpu-counter-intervals.xml.gz
+trace-d3d-metal-gpu-counter-profile.xml.gz
+trace-d3d-metal-gpu-execution-points.xml.gz
+trace-d3d-metal-gpu-info.xml.gz
+trace-d3d-metal-gpu-intervals.xml.gz
+trace-d3d-metal-gpu-state-intervals.xml.gz
+trace-d3d-metal-gpu-submission-to-command-buffer-id.xml.gz
+trace-d3d-metal-object-dependency-chain-gpu.xml.gz
+trace-d3d-metal-visual-highlight-chain-gpu.xml.gz
+trace-metal-device-gpu-info.xml.gz
+trace-metal-gpu-aps-stream.xml.gz
+trace-metal-gpu-counter-info.xml.gz
+trace-metal-gpu-counter-value.xml.gz
+trace-metal-gpu-performance-device-state-intervals.xml.gz
+trace-metal-gpu-performance-state-info.xml.gz
+trace-metal-gpu-performance-state-intervals.xml.gz
+trace-metal-gpu-shader-profiler-interval.xml.gz
+trace-metal-gpu-shader-profiler-sample.xml.gz
+trace-metal-metal-application-encoders-list.xml.gz
+trace-metal-metal-gpu-counter-intervals.xml.gz
+trace-metal-metal-gpu-counter-profile.xml.gz
+trace-metal-metal-gpu-execution-points.xml.gz
+trace-metal-metal-gpu-info.xml.gz
+trace-metal-metal-gpu-intervals.xml.gz
+trace-metal-metal-gpu-state-intervals.xml.gz
+trace-metal-metal-gpu-submission-to-command-buffer-id.xml.gz
+trace-metal-metal-object-dependency-chain-gpu.xml.gz
+trace-metal-metal-visual-highlight-chain-gpu.xml.gz
+```
+
+## Request 12 (soak)
+
+```
+RESULT config api d3d11 mode fill size 1600x900 passes 12 draws 0 sync 1
+RESULT fps 59.99 frames 17997 interval_ms p50 16.669 p95 17.390 p99 18.265
+```
+
+## Request 13
+
+```
+2026-11-16 05:45:47.854 wine[19914:5533229] metal-HUD: 39,52.31,208.43,16.67,0.00,16.67,0.00,16.67,0.00,16.67,0.00,16.66,0.00,16.66,0.00,16.67,0.00,16.67,0.00,16.67,0.00,16.67,0.00,16.67,10.89,16.67,10.89,16.67,10.65,16.67,10.65,16.67,10.57,16.67,10.57,16.67,10.26,16.67,10.26,16.67,10.28,16.67,10.28,16.67,10.10,16.67,10.10,16.67,10.01,16.67,10.01,16.66,9.94,16.66,9.94,16.66,10.03,16.66,10.03,16.67,10.06,16.67,10.06,16.67,9.97,16.67,9.97,16.67,9.97,16.67,9.97,16.67,10.07,16.67,10.07,16.67,10.09,16.67,10.09,16.66,9.98,16.66,9.98,16.67,10.12,16.67,10.12,16.67,10.15,16.67,10.15,16.66,10.19,16.66,1
+2026-11-16 05:45:48.355 wine[19914:5533225] metal-HUD: 69,52.31,208.43,16.67,11.43,16.67,11.78,16.67,11.78,16.67,11.93,16.67,11.93,16.67,12.06,16.67,12.06,16.67,12.04,16.67,12.04,16.67,12.23,16.67,12.23,16.66,12.49,16.66,12.49,16.67,12.89,16.67,12.89,16.67,13.09,16.67,13.09,16.67,13.59,16.67,13.59,16.67,13.52,16.67,13.52,16.67,13.70,16.67,13.70,16.67,14.10,16.67,14.10,16.67,14.50,16.67,14.50,16.67,14.52,16.67,14.52,16.67,14.76,16.67,14.76,16.67,14.90,16.67,14.90,16.67,15.10,16.67,15.10,16.67,14.51,16.67,14.51,16.67,14.32,16.67,14.32,16.67,14.52,16.67,14.52,16.67,14.76,16.67,14.76,16.67,14.79,1
+2026-11-16 05:45:49.070 wine[19914:5533229] metal-HUD: 92,52.31,208.43,16.67,14.59,16.67,14.59,16.67,13.69,16.67,13.69,16.67,12.45,16.67,12.45,16.67,12.41,16.67,12.41,16.67,12.13,16.67,12.13,16.66,12.05,16.66,12.05,16.67,12.05,16.67,12.05,16.67,12.10,16.67,12.10,16.67,11.95,16.67,11.95,16.66,12.12,16.66,12.12,16.67,11.93,16.67,11.93,16.67,12.03,16.67,12.03,16.67,11.95,16.67,11.95,16.66,12.03,16.66,12.03,16.67,11.95,16.67,11.95,16.67,12.93,16.67,12.93,16.67,12.16,16.67,12.16,16.67,12.14,16.67,12.14,16.67,12.88,16.67,12.88,16.67,13.05,16.67,13.05,350.00,24.96,350.00,24.96,16.67,36.07,16.67,36.07
+```
+
+## Request 14 (800x450, ABBA)
+
+| tag | benchmark's FPS (min to max) | HUD frames a second | GPU busy | GPU time ms p25 / median / p75 / p95 | thermal levels seen |
+|---|---|---|---|---|---|
+| abba-off-1 | 91.1 (32.2 to 132.6) | 58.4 | 58% | 9.06 / 9.61 / 10.44 / 13.69 | 68 0   28 1  104 2  |
+| abba-on-1 | 85.6 (12.7 to 132.7) | 54.5 | 62% | 9.45 / 10.06 / 10.69 / 16.13 | 49 0   19 1  124 2  |
+| abba-on-2 | 81.0 (14.8 to 132.1) | 53.7 | 62% | 9.67 / 10.31 / 11.79 / 17.88 | 45 0   32 1  116 2  |
+| abba-off-2 | 84.6 (22.6 to 135.6) | 54.5 | 59% | 9.07 / 9.64 / 11.33 / 16.91 | 49 0   18 1  126 2  |
+
+`shot-abba-off-1.png` and `shot-abba-on-1.png`: the benchmark's window 90 s after the script started each run (`screencapture -l`, no permission question).

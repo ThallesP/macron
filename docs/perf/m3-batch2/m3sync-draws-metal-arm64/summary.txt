@@ -1,0 +1,19 @@
+gpuload draws, metal-arm64, 1600x900, sync 1, 2026-11-16T08:54:21Z
+macOS 26.5.2, Apple M3
+Now drawing from 'AC Power'
+waited 0 s for thermal pressure 0 before starting
+
+HUD frames logged: 2613
+frames measured: 2352 (the first 261 left out)
+frames a second: 60.0
+GPU busy: 5% (sum of GPU time over sum of intervals)
+interval ms: p25 16.67, median 16.67, p75 16.67, p95 16.67, p99 16.67
+GPU time ms: p25 0.76, median 0.77, p75 0.79, p95 0.82, p99 0.84
+thermal pressure levels seen:   22 0 
+
+benchmark's own result:
+RESULT config api metal-arm64 mode draws size 1600x900 passes 0 draws 4000 sync 1
+RESULT fps 60.00 frames 1201 interval_ms p50 16.677 p95 17.008 p99 17.212
+RESULT gpu_ms p50 0.770 p95 0.818 frames 1201
+
+DXMT and Metal lines:
