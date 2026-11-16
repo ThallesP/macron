@@ -1,0 +1,8 @@
+macron: preparing the Windows environment new games start from (once per runtime)
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+macron: preparing the Windows environment new games start from (once per runtime)
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.

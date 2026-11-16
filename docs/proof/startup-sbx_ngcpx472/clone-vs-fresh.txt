@@ -1,0 +1,19 @@
+files and links: clone 1804, fresh 1805
+== paths in one prefix only, or with another type, size or link target (path: clone | fresh)
+./keep.txt: missing | file 5
+files of the same size in both: 1802
+== system.reg, without time stamps (#time lines and the number after each key)
+50154c50154
+< "MachineGuid"="f544ac7b-215f-4fc2-971f-c4b1dce27d00"
+---
+> "MachineGuid"="3f5631b7-4fc7-4bff-a99f-ddf3808ed769"
+51085c51085
+< "MachineId"="9fc89e75-468a-41ba-9752-c941155799e2"
+---
+> "MachineId"="7868c5ce-396e-45b9-8a22-2e99742d79a6"
+66052c66052
+< "VideoID"="{594f0e8d-1d28-4d6b-83ce-5796625793e3}"
+---
+> "VideoID"="{57430ba1-f775-41b6-a1f5-309c6f7e8435}"
+== user.reg, without time stamps (#time lines and the number after each key)
+== userdef.reg, without time stamps (#time lines and the number after each key)

@@ -1,0 +1,1832 @@
+1794835931.801 window 28	25	794,0 31x30	Control Center	Item-0
+1794835931.801 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835931.801 window 26	25	867,0 157x30	Control Center	Clock
+1794835931.801 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835931.801 window 6	20	0,0 1024x768	Dock	Dock
+1794835931.801 window 9	-2147483603	0,0 1024x768	Finder	
+1794835931.801 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835931.801 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835931.801 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835932.562 window 388	2147483630	845,1 29x28	Window Server	StatusIndicator
+1794835932.562 window 387	2147483630	845,1 29x28	Window Server	StatusIndicator
+1794835932.562 window 28	25	794,0 31x30	Control Center	Item-0
+1794835932.562 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835932.562 window 26	25	867,0 157x30	Control Center	Clock
+1794835932.562 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835932.562 window 6	20	0,0 1024x768	Dock	Dock
+1794835932.562 window 9	-2147483603	0,0 1024x768	Finder	
+1794835932.562 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835932.562 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835932.562 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835933.146 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835933.146 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835933.146 window 28	25	794,0 31x30	Control Center	Item-0
+1794835933.146 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835933.146 window 26	25	867,0 157x30	Control Center	Clock
+1794835933.146 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835933.146 window 6	20	0,0 1024x768	Dock	Dock
+1794835933.146 window 9	-2147483603	0,0 1024x768	Finder	
+1794835933.146 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835933.146 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835933.146 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835933.691 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835933.691 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835933.691 window 28	25	794,0 31x30	Control Center	Item-0
+1794835933.691 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835933.691 window 26	25	867,0 157x30	Control Center	Clock
+1794835933.691 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835933.691 window 6	20	0,0 1024x768	Dock	Dock
+1794835933.691 window 9	-2147483603	0,0 1024x768	Finder	
+1794835933.691 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835933.691 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835933.691 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835934.253 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835934.253 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835934.253 window 28	25	794,0 31x30	Control Center	Item-0
+1794835934.253 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835934.253 window 26	25	867,0 157x30	Control Center	Clock
+1794835934.253 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835934.253 window 6	20	0,0 1024x768	Dock	Dock
+1794835934.253 window 9	-2147483603	0,0 1024x768	Finder	
+1794835934.253 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835934.253 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835934.253 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835934.723 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835934.723 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835934.723 window 28	25	794,0 31x30	Control Center	Item-0
+1794835934.723 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835934.723 window 26	25	867,0 157x30	Control Center	Clock
+1794835934.723 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835934.723 window 6	20	0,0 1024x768	Dock	Dock
+1794835934.723 window 9	-2147483603	0,0 1024x768	Finder	
+1794835934.723 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835934.723 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835934.723 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835935.141 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835935.141 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835935.141 window 28	25	794,0 31x30	Control Center	Item-0
+1794835935.141 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835935.141 window 26	25	867,0 157x30	Control Center	Clock
+1794835935.141 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835935.141 window 6	20	0,0 1024x768	Dock	Dock
+1794835935.141 window 9	-2147483603	0,0 1024x768	Finder	
+1794835935.141 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835935.141 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835935.141 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835935.712 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835935.712 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835935.712 window 28	25	794,0 31x30	Control Center	Item-0
+1794835935.712 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835935.712 window 26	25	867,0 157x30	Control Center	Clock
+1794835935.712 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835935.712 window 6	20	0,0 1024x768	Dock	Dock
+1794835935.712 window 9	-2147483603	0,0 1024x768	Finder	
+1794835935.712 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835935.712 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835935.712 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835936.262 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835936.262 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835936.262 window 28	25	794,0 31x30	Control Center	Item-0
+1794835936.262 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835936.262 window 26	25	867,0 157x30	Control Center	Clock
+1794835936.262 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835936.262 window 6	20	0,0 1024x768	Dock	Dock
+1794835936.262 window 9	-2147483603	0,0 1024x768	Finder	
+1794835936.262 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835936.262 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835936.262 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835936.262 dock 37) "wine" ASN:0x0-0xf20f2: 
+1794835936.743 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835936.743 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835936.743 window 28	25	794,0 31x30	Control Center	Item-0
+1794835936.743 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835936.743 window 26	25	867,0 157x30	Control Center	Clock
+1794835936.743 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835936.743 window 6	20	0,0 1024x768	Dock	Dock
+1794835936.743 window 393	0	362,305 300x113	wine	Wine
+1794835936.743 window 9	-2147483603	0,0 1024x768	Finder	
+1794835936.743 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835936.743 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835936.743 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835936.743 dock 37) "wine" ASN:0x0-0xf20f2: 
+1794835937.344 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835937.344 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835937.344 window 28	25	794,0 31x30	Control Center	Item-0
+1794835937.344 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835937.344 window 26	25	867,0 157x30	Control Center	Clock
+1794835937.344 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835937.344 window 6	20	0,0 1024x768	Dock	Dock
+1794835937.344 window 393	0	362,305 300x113	wine	Wine
+1794835937.344 window 9	-2147483603	0,0 1024x768	Finder	
+1794835937.344 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835937.344 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835937.344 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835937.344 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835937.882 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835937.882 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835937.882 window 28	25	794,0 31x30	Control Center	Item-0
+1794835937.882 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835937.882 window 26	25	867,0 157x30	Control Center	Clock
+1794835937.882 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835937.882 window 6	20	0,0 1024x768	Dock	Dock
+1794835937.882 window 393	0	362,305 300x113	wine	Wine
+1794835937.882 window 9	-2147483603	0,0 1024x768	Finder	
+1794835937.882 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835937.882 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835937.882 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835937.882 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835938.534 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835938.534 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835938.534 window 28	25	794,0 31x30	Control Center	Item-0
+1794835938.534 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835938.534 window 26	25	867,0 157x30	Control Center	Clock
+1794835938.534 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835938.534 window 6	20	0,0 1024x768	Dock	Dock
+1794835938.534 window 393	0	362,305 300x113	wine	Wine
+1794835938.534 window 9	-2147483603	0,0 1024x768	Finder	
+1794835938.534 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835938.534 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835938.534 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835938.534 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835939.010 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835939.010 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835939.010 window 28	25	794,0 31x30	Control Center	Item-0
+1794835939.010 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835939.010 window 26	25	867,0 157x30	Control Center	Clock
+1794835939.010 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835939.010 window 6	20	0,0 1024x768	Dock	Dock
+1794835939.010 window 393	0	362,305 300x113	wine	Wine
+1794835939.010 window 9	-2147483603	0,0 1024x768	Finder	
+1794835939.010 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835939.010 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835939.010 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835939.010 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835939.568 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835939.568 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835939.568 window 28	25	794,0 31x30	Control Center	Item-0
+1794835939.568 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835939.568 window 26	25	867,0 157x30	Control Center	Clock
+1794835939.568 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835939.568 window 6	20	0,0 1024x768	Dock	Dock
+1794835939.568 window 393	0	362,305 300x113	wine	Wine
+1794835939.568 window 9	-2147483603	0,0 1024x768	Finder	
+1794835939.568 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835939.568 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835939.568 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835939.568 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835940.130 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835940.130 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835940.130 window 28	25	794,0 31x30	Control Center	Item-0
+1794835940.130 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835940.130 window 26	25	867,0 157x30	Control Center	Clock
+1794835940.130 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835940.130 window 6	20	0,0 1024x768	Dock	Dock
+1794835940.130 window 393	0	362,305 300x113	wine	Wine
+1794835940.130 window 9	-2147483603	0,0 1024x768	Finder	
+1794835940.130 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835940.130 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835940.130 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835940.130 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835940.647 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835940.647 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835940.647 window 28	25	794,0 31x30	Control Center	Item-0
+1794835940.647 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835940.647 window 26	25	867,0 157x30	Control Center	Clock
+1794835940.647 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835940.647 window 6	20	0,0 1024x768	Dock	Dock
+1794835940.647 window 393	0	362,305 300x113	wine	Wine
+1794835940.647 window 9	-2147483603	0,0 1024x768	Finder	
+1794835940.647 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835940.647 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835940.647 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835940.647 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835941.239 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835941.239 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835941.239 window 28	25	794,0 31x30	Control Center	Item-0
+1794835941.239 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835941.239 window 26	25	867,0 157x30	Control Center	Clock
+1794835941.239 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835941.239 window 6	20	0,0 1024x768	Dock	Dock
+1794835941.239 window 393	0	362,305 300x113	wine	Wine
+1794835941.239 window 9	-2147483603	0,0 1024x768	Finder	
+1794835941.239 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835941.239 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835941.239 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835941.239 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835941.765 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835941.765 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835941.765 window 28	25	794,0 31x30	Control Center	Item-0
+1794835941.765 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835941.765 window 26	25	867,0 157x30	Control Center	Clock
+1794835941.765 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835941.765 window 6	20	0,0 1024x768	Dock	Dock
+1794835941.765 window 393	0	362,305 300x113	wine	Wine
+1794835941.765 window 9	-2147483603	0,0 1024x768	Finder	
+1794835941.765 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835941.765 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835941.765 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835941.765 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835942.226 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835942.226 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835942.226 window 28	25	794,0 31x30	Control Center	Item-0
+1794835942.226 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835942.226 window 26	25	867,0 157x30	Control Center	Clock
+1794835942.226 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835942.226 window 6	20	0,0 1024x768	Dock	Dock
+1794835942.226 window 393	0	362,305 300x113	wine	Wine
+1794835942.226 window 9	-2147483603	0,0 1024x768	Finder	
+1794835942.226 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835942.226 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835942.226 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835942.226 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835942.718 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835942.718 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835942.718 window 28	25	794,0 31x30	Control Center	Item-0
+1794835942.718 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835942.718 window 26	25	867,0 157x30	Control Center	Clock
+1794835942.718 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835942.718 window 6	20	0,0 1024x768	Dock	Dock
+1794835942.718 window 393	0	362,305 300x113	wine	Wine
+1794835942.718 window 9	-2147483603	0,0 1024x768	Finder	
+1794835942.718 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835942.718 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835942.718 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835942.718 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835943.243 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835943.243 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835943.243 window 28	25	794,0 31x30	Control Center	Item-0
+1794835943.243 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835943.243 window 26	25	867,0 157x30	Control Center	Clock
+1794835943.243 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835943.243 window 6	20	0,0 1024x768	Dock	Dock
+1794835943.243 window 393	0	362,305 300x113	wine	Wine
+1794835943.243 window 9	-2147483603	0,0 1024x768	Finder	
+1794835943.243 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835943.243 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835943.243 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835943.243 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835943.753 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835943.753 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835943.753 window 28	25	794,0 31x30	Control Center	Item-0
+1794835943.753 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835943.753 window 26	25	867,0 157x30	Control Center	Clock
+1794835943.753 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835943.753 window 6	20	0,0 1024x768	Dock	Dock
+1794835943.753 window 393	0	362,305 300x113	wine	Wine
+1794835943.753 window 9	-2147483603	0,0 1024x768	Finder	
+1794835943.753 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835943.753 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835943.753 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835943.753 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835944.197 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835944.197 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835944.197 window 28	25	794,0 31x30	Control Center	Item-0
+1794835944.197 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835944.197 window 26	25	867,0 157x30	Control Center	Clock
+1794835944.197 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835944.197 window 6	20	0,0 1024x768	Dock	Dock
+1794835944.197 window 393	0	362,305 300x113	wine	Wine
+1794835944.197 window 9	-2147483603	0,0 1024x768	Finder	
+1794835944.197 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835944.197 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835944.197 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835944.197 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835944.725 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835944.725 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835944.725 window 28	25	794,0 31x30	Control Center	Item-0
+1794835944.725 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835944.725 window 26	25	867,0 157x30	Control Center	Clock
+1794835944.725 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835944.725 window 6	20	0,0 1024x768	Dock	Dock
+1794835944.725 window 393	0	362,305 300x113	wine	Wine
+1794835944.725 window 9	-2147483603	0,0 1024x768	Finder	
+1794835944.725 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835944.725 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835944.725 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835944.725 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835945.257 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835945.257 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835945.257 window 28	25	794,0 31x30	Control Center	Item-0
+1794835945.257 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835945.257 window 26	25	867,0 157x30	Control Center	Clock
+1794835945.257 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835945.257 window 6	20	0,0 1024x768	Dock	Dock
+1794835945.257 window 393	0	362,305 300x113	wine	Wine
+1794835945.257 window 9	-2147483603	0,0 1024x768	Finder	
+1794835945.257 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835945.257 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835945.257 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835945.257 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835945.797 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835945.797 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835945.797 window 28	25	794,0 31x30	Control Center	Item-0
+1794835945.797 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835945.797 window 26	25	867,0 157x30	Control Center	Clock
+1794835945.797 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835945.797 window 6	20	0,0 1024x768	Dock	Dock
+1794835945.797 window 393	0	362,305 300x113	wine	Wine
+1794835945.797 window 9	-2147483603	0,0 1024x768	Finder	
+1794835945.797 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835945.797 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835945.797 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835945.797 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835946.184 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835946.184 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835946.184 window 28	25	794,0 31x30	Control Center	Item-0
+1794835946.184 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835946.184 window 26	25	867,0 157x30	Control Center	Clock
+1794835946.184 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835946.184 window 6	20	0,0 1024x768	Dock	Dock
+1794835946.184 window 393	0	362,305 300x113	wine	Wine
+1794835946.184 window 9	-2147483603	0,0 1024x768	Finder	
+1794835946.184 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835946.184 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835946.184 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835946.184 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835946.773 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835946.773 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835946.773 window 28	25	794,0 31x30	Control Center	Item-0
+1794835946.773 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835946.773 window 26	25	867,0 157x30	Control Center	Clock
+1794835946.773 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835946.773 window 6	20	0,0 1024x768	Dock	Dock
+1794835946.773 window 393	0	362,305 300x113	wine	Wine
+1794835946.773 window 9	-2147483603	0,0 1024x768	Finder	
+1794835946.773 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835946.773 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835946.773 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835946.773 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835947.333 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835947.333 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835947.333 window 28	25	794,0 31x30	Control Center	Item-0
+1794835947.333 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835947.333 window 26	25	867,0 157x30	Control Center	Clock
+1794835947.333 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835947.333 window 6	20	0,0 1024x768	Dock	Dock
+1794835947.333 window 393	0	362,305 300x113	wine	Wine
+1794835947.333 window 9	-2147483603	0,0 1024x768	Finder	
+1794835947.333 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835947.333 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835947.333 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835947.333 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835947.833 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835947.833 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835947.833 window 28	25	794,0 31x30	Control Center	Item-0
+1794835947.833 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835947.833 window 26	25	867,0 157x30	Control Center	Clock
+1794835947.833 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835947.833 window 6	20	0,0 1024x768	Dock	Dock
+1794835947.833 window 393	0	362,305 300x113	wine	Wine
+1794835947.833 window 9	-2147483603	0,0 1024x768	Finder	
+1794835947.833 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835947.833 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835947.833 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835947.833 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835948.372 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835948.372 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835948.372 window 28	25	794,0 31x30	Control Center	Item-0
+1794835948.372 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835948.372 window 26	25	867,0 157x30	Control Center	Clock
+1794835948.372 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835948.372 window 6	20	0,0 1024x768	Dock	Dock
+1794835948.372 window 393	0	362,305 300x113	wine	Wine
+1794835948.372 window 9	-2147483603	0,0 1024x768	Finder	
+1794835948.372 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835948.372 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835948.372 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835948.372 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835948.941 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835948.941 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835948.941 window 28	25	794,0 31x30	Control Center	Item-0
+1794835948.941 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835948.941 window 26	25	867,0 157x30	Control Center	Clock
+1794835948.941 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835948.941 window 6	20	0,0 1024x768	Dock	Dock
+1794835948.941 window 393	0	362,305 300x113	wine	Wine
+1794835948.941 window 9	-2147483603	0,0 1024x768	Finder	
+1794835948.941 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835948.941 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835948.941 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835948.941 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835949.312 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835949.312 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835949.312 window 28	25	794,0 31x30	Control Center	Item-0
+1794835949.312 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835949.312 window 26	25	867,0 157x30	Control Center	Clock
+1794835949.312 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835949.312 window 6	20	0,0 1024x768	Dock	Dock
+1794835949.312 window 393	0	362,305 300x113	wine	Wine
+1794835949.312 window 9	-2147483603	0,0 1024x768	Finder	
+1794835949.312 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835949.312 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835949.312 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835949.312 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835949.763 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835949.763 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835949.763 window 28	25	794,0 31x30	Control Center	Item-0
+1794835949.763 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835949.763 window 26	25	867,0 157x30	Control Center	Clock
+1794835949.763 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835949.763 window 6	20	0,0 1024x768	Dock	Dock
+1794835949.763 window 393	0	362,305 300x113	wine	Wine
+1794835949.763 window 9	-2147483603	0,0 1024x768	Finder	
+1794835949.763 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835949.763 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835949.763 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835949.763 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835950.276 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835950.276 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835950.276 window 28	25	794,0 31x30	Control Center	Item-0
+1794835950.276 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835950.276 window 26	25	867,0 157x30	Control Center	Clock
+1794835950.276 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835950.276 window 6	20	0,0 1024x768	Dock	Dock
+1794835950.276 window 393	0	362,305 300x113	wine	Wine
+1794835950.276 window 9	-2147483603	0,0 1024x768	Finder	
+1794835950.276 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835950.276 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835950.276 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835950.276 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835950.765 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835950.765 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835950.765 window 28	25	794,0 31x30	Control Center	Item-0
+1794835950.765 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835950.765 window 26	25	867,0 157x30	Control Center	Clock
+1794835950.765 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835950.765 window 6	20	0,0 1024x768	Dock	Dock
+1794835950.765 window 393	0	362,305 300x113	wine	Wine
+1794835950.765 window 9	-2147483603	0,0 1024x768	Finder	
+1794835950.765 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835950.765 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835950.765 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835950.765 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835951.247 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835951.247 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835951.247 window 28	25	794,0 31x30	Control Center	Item-0
+1794835951.247 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835951.247 window 26	25	867,0 157x30	Control Center	Clock
+1794835951.247 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835951.247 window 6	20	0,0 1024x768	Dock	Dock
+1794835951.247 window 393	0	362,305 300x113	wine	Wine
+1794835951.247 window 9	-2147483603	0,0 1024x768	Finder	
+1794835951.247 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835951.247 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835951.247 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835951.247 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835951.719 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835951.719 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835951.719 window 28	25	794,0 31x30	Control Center	Item-0
+1794835951.719 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835951.719 window 26	25	867,0 157x30	Control Center	Clock
+1794835951.719 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835951.719 window 6	20	0,0 1024x768	Dock	Dock
+1794835951.719 window 393	0	362,305 300x113	wine	Wine
+1794835951.719 window 9	-2147483603	0,0 1024x768	Finder	
+1794835951.719 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835951.719 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835951.719 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835951.719 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835952.151 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835952.151 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835952.151 window 28	25	794,0 31x30	Control Center	Item-0
+1794835952.151 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835952.151 window 26	25	867,0 157x30	Control Center	Clock
+1794835952.151 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835952.151 window 6	20	0,0 1024x768	Dock	Dock
+1794835952.151 window 393	0	362,305 300x113	wine	Wine
+1794835952.151 window 9	-2147483603	0,0 1024x768	Finder	
+1794835952.151 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835952.151 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835952.151 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835952.151 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835952.680 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835952.680 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835952.680 window 28	25	794,0 31x30	Control Center	Item-0
+1794835952.680 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835952.680 window 26	25	867,0 157x30	Control Center	Clock
+1794835952.680 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835952.680 window 6	20	0,0 1024x768	Dock	Dock
+1794835952.680 window 393	0	362,305 300x113	wine	Wine
+1794835952.680 window 9	-2147483603	0,0 1024x768	Finder	
+1794835952.680 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835952.680 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835952.680 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835952.680 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835953.195 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835953.195 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835953.195 window 28	25	794,0 31x30	Control Center	Item-0
+1794835953.195 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835953.195 window 26	25	867,0 157x30	Control Center	Clock
+1794835953.195 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835953.195 window 6	20	0,0 1024x768	Dock	Dock
+1794835953.195 window 393	0	362,305 300x113	wine	Wine
+1794835953.195 window 9	-2147483603	0,0 1024x768	Finder	
+1794835953.195 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835953.195 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835953.195 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835953.195 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835953.693 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835953.693 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835953.693 window 28	25	794,0 31x30	Control Center	Item-0
+1794835953.693 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835953.693 window 26	25	867,0 157x30	Control Center	Clock
+1794835953.693 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835953.693 window 6	20	0,0 1024x768	Dock	Dock
+1794835953.693 window 393	0	362,305 300x113	wine	Wine
+1794835953.693 window 9	-2147483603	0,0 1024x768	Finder	
+1794835953.693 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835953.693 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835953.693 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835953.693 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835954.204 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835954.204 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835954.204 window 28	25	794,0 31x30	Control Center	Item-0
+1794835954.204 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835954.204 window 26	25	867,0 157x30	Control Center	Clock
+1794835954.204 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835954.204 window 6	20	0,0 1024x768	Dock	Dock
+1794835954.204 window 393	0	362,305 300x113	wine	Wine
+1794835954.204 window 9	-2147483603	0,0 1024x768	Finder	
+1794835954.204 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835954.204 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835954.204 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835954.204 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835954.711 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835954.711 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835954.711 window 28	25	794,0 31x30	Control Center	Item-0
+1794835954.711 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835954.711 window 26	25	867,0 157x30	Control Center	Clock
+1794835954.711 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835954.711 window 6	20	0,0 1024x768	Dock	Dock
+1794835954.711 window 393	0	362,305 300x113	wine	Wine
+1794835954.711 window 9	-2147483603	0,0 1024x768	Finder	
+1794835954.711 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835954.711 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835954.711 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835954.711 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835955.230 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835955.230 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835955.230 window 28	25	794,0 31x30	Control Center	Item-0
+1794835955.230 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835955.230 window 26	25	867,0 157x30	Control Center	Clock
+1794835955.230 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835955.230 window 6	20	0,0 1024x768	Dock	Dock
+1794835955.230 window 393	0	362,305 300x113	wine	Wine
+1794835955.230 window 9	-2147483603	0,0 1024x768	Finder	
+1794835955.230 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835955.230 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835955.230 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835955.230 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835955.600 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835955.600 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835955.600 window 28	25	794,0 31x30	Control Center	Item-0
+1794835955.600 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835955.600 window 26	25	867,0 157x30	Control Center	Clock
+1794835955.600 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835955.600 window 6	20	0,0 1024x768	Dock	Dock
+1794835955.600 window 393	0	362,305 300x113	wine	Wine
+1794835955.600 window 9	-2147483603	0,0 1024x768	Finder	
+1794835955.600 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835955.600 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835955.600 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835955.600 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835956.113 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835956.113 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835956.113 window 28	25	794,0 31x30	Control Center	Item-0
+1794835956.113 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835956.113 window 26	25	867,0 157x30	Control Center	Clock
+1794835956.113 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835956.113 window 6	20	0,0 1024x768	Dock	Dock
+1794835956.113 window 393	0	362,305 300x113	wine	Wine
+1794835956.113 window 9	-2147483603	0,0 1024x768	Finder	
+1794835956.113 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835956.113 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835956.113 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835956.113 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835956.621 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835956.621 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835956.621 window 28	25	794,0 31x30	Control Center	Item-0
+1794835956.621 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835956.621 window 26	25	867,0 157x30	Control Center	Clock
+1794835956.621 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835956.621 window 6	20	0,0 1024x768	Dock	Dock
+1794835956.621 window 393	0	362,305 300x113	wine	Wine
+1794835956.621 window 9	-2147483603	0,0 1024x768	Finder	
+1794835956.621 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835956.621 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835956.621 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835956.621 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835957.032 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835957.032 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835957.032 window 28	25	794,0 31x30	Control Center	Item-0
+1794835957.032 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835957.032 window 26	25	867,0 157x30	Control Center	Clock
+1794835957.032 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835957.032 window 6	20	0,0 1024x768	Dock	Dock
+1794835957.032 window 393	0	362,305 300x113	wine	Wine
+1794835957.032 window 9	-2147483603	0,0 1024x768	Finder	
+1794835957.032 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835957.032 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835957.032 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835957.032 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835957.572 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835957.572 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835957.572 window 28	25	794,0 31x30	Control Center	Item-0
+1794835957.572 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835957.572 window 26	25	867,0 157x30	Control Center	Clock
+1794835957.572 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835957.572 window 6	20	0,0 1024x768	Dock	Dock
+1794835957.572 window 393	0	362,305 300x113	wine	Wine
+1794835957.572 window 9	-2147483603	0,0 1024x768	Finder	
+1794835957.572 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835957.572 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835957.572 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835957.572 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835958.109 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835958.109 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835958.109 window 28	25	794,0 31x30	Control Center	Item-0
+1794835958.109 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835958.109 window 26	25	867,0 157x30	Control Center	Clock
+1794835958.109 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835958.109 window 6	20	0,0 1024x768	Dock	Dock
+1794835958.109 window 393	0	362,305 300x113	wine	Wine
+1794835958.109 window 9	-2147483603	0,0 1024x768	Finder	
+1794835958.109 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835958.109 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835958.109 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835958.109 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835958.532 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835958.532 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835958.532 window 28	25	794,0 31x30	Control Center	Item-0
+1794835958.532 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835958.532 window 26	25	867,0 157x30	Control Center	Clock
+1794835958.532 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835958.532 window 6	20	0,0 1024x768	Dock	Dock
+1794835958.532 window 393	0	362,305 300x113	wine	Wine
+1794835958.532 window 9	-2147483603	0,0 1024x768	Finder	
+1794835958.532 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835958.532 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835958.532 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835958.532 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835958.949 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835958.949 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835958.949 window 28	25	794,0 31x30	Control Center	Item-0
+1794835958.949 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835958.949 window 26	25	867,0 157x30	Control Center	Clock
+1794835958.949 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835958.949 window 6	20	0,0 1024x768	Dock	Dock
+1794835958.949 window 393	0	362,305 300x113	wine	Wine
+1794835958.949 window 9	-2147483603	0,0 1024x768	Finder	
+1794835958.949 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835958.949 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835958.949 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835958.949 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835959.558 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835959.558 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835959.558 window 28	25	794,0 31x30	Control Center	Item-0
+1794835959.558 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835959.558 window 26	25	867,0 157x30	Control Center	Clock
+1794835959.558 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835959.558 window 6	20	0,0 1024x768	Dock	Dock
+1794835959.558 window 393	0	362,305 300x113	wine	Wine
+1794835959.558 window 9	-2147483603	0,0 1024x768	Finder	
+1794835959.558 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835959.558 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835959.558 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835959.558 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835959.955 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835959.955 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835959.955 window 28	25	794,0 31x30	Control Center	Item-0
+1794835959.955 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835959.955 window 26	25	867,0 157x30	Control Center	Clock
+1794835959.955 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835959.955 window 6	20	0,0 1024x768	Dock	Dock
+1794835959.955 window 393	0	362,305 300x113	wine	Wine
+1794835959.955 window 9	-2147483603	0,0 1024x768	Finder	
+1794835959.955 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835959.955 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835959.955 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835959.955 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835960.349 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835960.349 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835960.349 window 28	25	794,0 31x30	Control Center	Item-0
+1794835960.349 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835960.349 window 26	25	867,0 157x30	Control Center	Clock
+1794835960.349 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835960.349 window 6	20	0,0 1024x768	Dock	Dock
+1794835960.349 window 393	0	362,305 300x113	wine	Wine
+1794835960.349 window 9	-2147483603	0,0 1024x768	Finder	
+1794835960.349 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835960.349 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835960.349 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835960.349 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835960.794 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835960.794 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835960.794 window 28	25	794,0 31x30	Control Center	Item-0
+1794835960.794 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835960.794 window 26	25	867,0 157x30	Control Center	Clock
+1794835960.794 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835960.794 window 6	20	0,0 1024x768	Dock	Dock
+1794835960.794 window 393	0	362,305 300x113	wine	Wine
+1794835960.794 window 9	-2147483603	0,0 1024x768	Finder	
+1794835960.794 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835960.794 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835960.794 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835960.794 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835961.313 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835961.313 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835961.313 window 28	25	794,0 31x30	Control Center	Item-0
+1794835961.313 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835961.313 window 26	25	867,0 157x30	Control Center	Clock
+1794835961.313 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835961.313 window 6	20	0,0 1024x768	Dock	Dock
+1794835961.313 window 393	0	362,305 300x113	wine	Wine
+1794835961.313 window 9	-2147483603	0,0 1024x768	Finder	
+1794835961.313 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835961.313 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835961.313 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835961.313 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835961.816 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835961.816 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835961.816 window 28	25	794,0 31x30	Control Center	Item-0
+1794835961.816 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835961.816 window 26	25	867,0 157x30	Control Center	Clock
+1794835961.816 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835961.816 window 6	20	0,0 1024x768	Dock	Dock
+1794835961.816 window 393	0	362,305 300x113	wine	Wine
+1794835961.816 window 9	-2147483603	0,0 1024x768	Finder	
+1794835961.816 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835961.816 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835961.816 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835961.816 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835962.293 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835962.293 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835962.293 window 28	25	794,0 31x30	Control Center	Item-0
+1794835962.293 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835962.293 window 26	25	867,0 157x30	Control Center	Clock
+1794835962.293 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835962.293 window 6	20	0,0 1024x768	Dock	Dock
+1794835962.293 window 393	0	362,305 300x113	wine	Wine
+1794835962.293 window 9	-2147483603	0,0 1024x768	Finder	
+1794835962.293 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835962.293 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835962.293 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835962.293 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835962.839 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835962.839 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835962.839 window 28	25	794,0 31x30	Control Center	Item-0
+1794835962.839 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835962.839 window 26	25	867,0 157x30	Control Center	Clock
+1794835962.839 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835962.839 window 6	20	0,0 1024x768	Dock	Dock
+1794835962.839 window 393	0	362,305 300x113	wine	Wine
+1794835962.839 window 9	-2147483603	0,0 1024x768	Finder	
+1794835962.839 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835962.839 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835962.839 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835962.839 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835963.369 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835963.369 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835963.369 window 28	25	794,0 31x30	Control Center	Item-0
+1794835963.369 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835963.369 window 26	25	867,0 157x30	Control Center	Clock
+1794835963.369 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835963.369 window 6	20	0,0 1024x768	Dock	Dock
+1794835963.369 window 393	0	362,305 300x113	wine	Wine
+1794835963.369 window 9	-2147483603	0,0 1024x768	Finder	
+1794835963.369 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835963.369 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835963.369 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835963.369 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835963.806 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835963.806 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835963.806 window 28	25	794,0 31x30	Control Center	Item-0
+1794835963.806 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835963.806 window 26	25	867,0 157x30	Control Center	Clock
+1794835963.806 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835963.806 window 6	20	0,0 1024x768	Dock	Dock
+1794835963.806 window 393	0	362,305 300x113	wine	Wine
+1794835963.806 window 9	-2147483603	0,0 1024x768	Finder	
+1794835963.806 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835963.806 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835963.806 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835963.806 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835964.367 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835964.367 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835964.367 window 28	25	794,0 31x30	Control Center	Item-0
+1794835964.367 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835964.367 window 26	25	867,0 157x30	Control Center	Clock
+1794835964.367 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835964.367 window 6	20	0,0 1024x768	Dock	Dock
+1794835964.367 window 393	0	362,305 300x113	wine	Wine
+1794835964.367 window 9	-2147483603	0,0 1024x768	Finder	
+1794835964.367 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835964.367 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835964.367 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835964.367 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835964.836 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835964.836 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835964.836 window 28	25	794,0 31x30	Control Center	Item-0
+1794835964.836 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835964.836 window 26	25	867,0 157x30	Control Center	Clock
+1794835964.836 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835964.836 window 6	20	0,0 1024x768	Dock	Dock
+1794835964.836 window 393	0	362,305 300x113	wine	Wine
+1794835964.836 window 9	-2147483603	0,0 1024x768	Finder	
+1794835964.836 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835964.836 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835964.836 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835964.836 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835965.339 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835965.339 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835965.339 window 28	25	794,0 31x30	Control Center	Item-0
+1794835965.339 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835965.339 window 26	25	867,0 157x30	Control Center	Clock
+1794835965.339 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835965.339 window 6	20	0,0 1024x768	Dock	Dock
+1794835965.339 window 393	0	362,305 300x113	wine	Wine
+1794835965.339 window 9	-2147483603	0,0 1024x768	Finder	
+1794835965.339 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835965.339 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835965.339 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835965.339 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835965.848 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835965.848 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835965.848 window 28	25	794,0 31x30	Control Center	Item-0
+1794835965.848 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835965.848 window 26	25	867,0 157x30	Control Center	Clock
+1794835965.848 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835965.848 window 6	20	0,0 1024x768	Dock	Dock
+1794835965.848 window 393	0	362,305 300x113	wine	Wine
+1794835965.848 window 9	-2147483603	0,0 1024x768	Finder	
+1794835965.848 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835965.848 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835965.848 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835965.848 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835966.378 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835966.378 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835966.378 window 28	25	794,0 31x30	Control Center	Item-0
+1794835966.378 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835966.378 window 26	25	867,0 157x30	Control Center	Clock
+1794835966.378 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835966.378 window 6	20	0,0 1024x768	Dock	Dock
+1794835966.378 window 393	0	362,305 300x113	wine	Wine
+1794835966.378 window 9	-2147483603	0,0 1024x768	Finder	
+1794835966.378 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835966.378 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835966.378 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835966.378 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835966.921 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835966.921 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835966.921 window 28	25	794,0 31x30	Control Center	Item-0
+1794835966.921 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835966.921 window 26	25	867,0 157x30	Control Center	Clock
+1794835966.921 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835966.921 window 6	20	0,0 1024x768	Dock	Dock
+1794835966.921 window 393	0	362,305 300x113	wine	Wine
+1794835966.921 window 9	-2147483603	0,0 1024x768	Finder	
+1794835966.921 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835966.921 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835966.921 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835966.921 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835967.447 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835967.447 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835967.447 window 28	25	794,0 31x30	Control Center	Item-0
+1794835967.447 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835967.447 window 26	25	867,0 157x30	Control Center	Clock
+1794835967.447 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835967.447 window 6	20	0,0 1024x768	Dock	Dock
+1794835967.447 window 393	0	362,305 300x113	wine	Wine
+1794835967.447 window 9	-2147483603	0,0 1024x768	Finder	
+1794835967.447 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835967.447 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835967.447 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835967.447 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835967.870 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835967.870 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835967.870 window 28	25	794,0 31x30	Control Center	Item-0
+1794835967.870 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835967.870 window 26	25	867,0 157x30	Control Center	Clock
+1794835967.870 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835967.870 window 6	20	0,0 1024x768	Dock	Dock
+1794835967.870 window 9	-2147483603	0,0 1024x768	Finder	
+1794835967.870 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835967.870 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835967.870 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835967.870 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835968.377 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835968.377 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835968.377 window 28	25	794,0 31x30	Control Center	Item-0
+1794835968.377 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835968.377 window 26	25	867,0 157x30	Control Center	Clock
+1794835968.377 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835968.377 window 6	20	0,0 1024x768	Dock	Dock
+1794835968.377 window 9	-2147483603	0,0 1024x768	Finder	
+1794835968.377 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835968.377 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835968.377 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835968.377 dock 36) "wine" ASN:0x0-0xf20f2: 
+1794835968.892 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835968.892 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835968.892 window 28	25	794,0 31x30	Control Center	Item-0
+1794835968.892 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835968.892 window 26	25	867,0 157x30	Control Center	Clock
+1794835968.892 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835968.892 window 6	20	0,0 1024x768	Dock	Dock
+1794835968.892 window 9	-2147483603	0,0 1024x768	Finder	
+1794835968.892 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835968.892 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835968.892 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835969.315 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835969.315 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835969.315 window 28	25	794,0 31x30	Control Center	Item-0
+1794835969.315 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835969.315 window 26	25	867,0 157x30	Control Center	Clock
+1794835969.315 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835969.315 window 6	20	0,0 1024x768	Dock	Dock
+1794835969.315 window 9	-2147483603	0,0 1024x768	Finder	
+1794835969.315 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835969.315 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835969.315 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835969.835 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835969.835 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835969.835 window 28	25	794,0 31x30	Control Center	Item-0
+1794835969.835 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835969.835 window 26	25	867,0 157x30	Control Center	Clock
+1794835969.835 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835969.835 window 6	20	0,0 1024x768	Dock	Dock
+1794835969.835 window 9	-2147483603	0,0 1024x768	Finder	
+1794835969.835 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835969.835 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835969.835 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835970.318 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835970.318 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835970.318 window 28	25	794,0 31x30	Control Center	Item-0
+1794835970.318 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835970.318 window 26	25	867,0 157x30	Control Center	Clock
+1794835970.318 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835970.318 window 6	20	0,0 1024x768	Dock	Dock
+1794835970.318 window 402	0	362,308 300x113	wine	Wine
+1794835970.318 window 9	-2147483603	0,0 1024x768	Finder	
+1794835970.318 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835970.318 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835970.318 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835970.318 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835970.855 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835970.855 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835970.855 window 28	25	794,0 31x30	Control Center	Item-0
+1794835970.855 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835970.855 window 26	25	867,0 157x30	Control Center	Clock
+1794835970.855 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835970.855 window 6	20	0,0 1024x768	Dock	Dock
+1794835970.855 window 402	0	362,308 300x113	wine	Wine
+1794835970.855 window 9	-2147483603	0,0 1024x768	Finder	
+1794835970.855 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835970.855 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835970.855 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835970.855 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835971.376 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835971.376 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835971.376 window 28	25	794,0 31x30	Control Center	Item-0
+1794835971.376 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835971.376 window 26	25	867,0 157x30	Control Center	Clock
+1794835971.376 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835971.376 window 6	20	0,0 1024x768	Dock	Dock
+1794835971.376 window 402	0	362,308 300x113	wine	Wine
+1794835971.376 window 9	-2147483603	0,0 1024x768	Finder	
+1794835971.376 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835971.376 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835971.376 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835971.376 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835971.867 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835971.867 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835971.867 window 28	25	794,0 31x30	Control Center	Item-0
+1794835971.867 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835971.867 window 26	25	867,0 157x30	Control Center	Clock
+1794835971.867 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835971.867 window 6	20	0,0 1024x768	Dock	Dock
+1794835971.867 window 402	0	362,308 300x113	wine	Wine
+1794835971.867 window 9	-2147483603	0,0 1024x768	Finder	
+1794835971.867 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835971.867 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835971.867 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835971.867 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835972.367 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835972.367 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835972.367 window 28	25	794,0 31x30	Control Center	Item-0
+1794835972.367 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835972.367 window 26	25	867,0 157x30	Control Center	Clock
+1794835972.367 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835972.367 window 6	20	0,0 1024x768	Dock	Dock
+1794835972.367 window 402	0	362,308 300x113	wine	Wine
+1794835972.367 window 9	-2147483603	0,0 1024x768	Finder	
+1794835972.367 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835972.367 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835972.367 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835972.367 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835972.800 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835972.800 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835972.800 window 28	25	794,0 31x30	Control Center	Item-0
+1794835972.800 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835972.800 window 26	25	867,0 157x30	Control Center	Clock
+1794835972.800 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835972.800 window 6	20	0,0 1024x768	Dock	Dock
+1794835972.800 window 402	0	362,308 300x113	wine	Wine
+1794835972.800 window 9	-2147483603	0,0 1024x768	Finder	
+1794835972.800 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835972.800 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835972.800 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835972.800 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835973.347 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835973.347 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835973.347 window 28	25	794,0 31x30	Control Center	Item-0
+1794835973.347 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835973.347 window 26	25	867,0 157x30	Control Center	Clock
+1794835973.347 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835973.347 window 6	20	0,0 1024x768	Dock	Dock
+1794835973.347 window 402	0	362,308 300x113	wine	Wine
+1794835973.347 window 9	-2147483603	0,0 1024x768	Finder	
+1794835973.347 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835973.347 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835973.347 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835973.347 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835973.816 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835973.816 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835973.816 window 28	25	794,0 31x30	Control Center	Item-0
+1794835973.816 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835973.816 window 26	25	867,0 157x30	Control Center	Clock
+1794835973.816 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835973.816 window 6	20	0,0 1024x768	Dock	Dock
+1794835973.816 window 402	0	362,308 300x113	wine	Wine
+1794835973.816 window 9	-2147483603	0,0 1024x768	Finder	
+1794835973.816 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835973.816 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835973.816 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835973.816 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835974.235 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835974.235 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835974.235 window 28	25	794,0 31x30	Control Center	Item-0
+1794835974.235 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835974.235 window 26	25	867,0 157x30	Control Center	Clock
+1794835974.235 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835974.235 window 6	20	0,0 1024x768	Dock	Dock
+1794835974.235 window 402	0	362,308 300x113	wine	Wine
+1794835974.235 window 9	-2147483603	0,0 1024x768	Finder	
+1794835974.235 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835974.235 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835974.235 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835974.235 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835974.668 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835974.668 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835974.668 window 28	25	794,0 31x30	Control Center	Item-0
+1794835974.668 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835974.668 window 26	25	867,0 157x30	Control Center	Clock
+1794835974.668 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835974.668 window 6	20	0,0 1024x768	Dock	Dock
+1794835974.668 window 402	0	362,308 300x113	wine	Wine
+1794835974.668 window 9	-2147483603	0,0 1024x768	Finder	
+1794835974.668 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835974.668 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835974.668 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835974.668 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835975.198 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835975.198 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835975.198 window 28	25	794,0 31x30	Control Center	Item-0
+1794835975.198 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835975.198 window 26	25	867,0 157x30	Control Center	Clock
+1794835975.198 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835975.198 window 6	20	0,0 1024x768	Dock	Dock
+1794835975.198 window 402	0	362,308 300x113	wine	Wine
+1794835975.198 window 9	-2147483603	0,0 1024x768	Finder	
+1794835975.198 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835975.198 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835975.198 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835975.198 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835975.590 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835975.590 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835975.590 window 28	25	794,0 31x30	Control Center	Item-0
+1794835975.590 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835975.590 window 26	25	867,0 157x30	Control Center	Clock
+1794835975.590 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835975.590 window 6	20	0,0 1024x768	Dock	Dock
+1794835975.590 window 402	0	362,308 300x113	wine	Wine
+1794835975.590 window 9	-2147483603	0,0 1024x768	Finder	
+1794835975.590 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835975.590 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835975.590 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835975.590 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835976.118 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835976.118 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835976.118 window 28	25	794,0 31x30	Control Center	Item-0
+1794835976.118 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835976.118 window 26	25	867,0 157x30	Control Center	Clock
+1794835976.118 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835976.118 window 6	20	0,0 1024x768	Dock	Dock
+1794835976.118 window 402	0	362,308 300x113	wine	Wine
+1794835976.118 window 9	-2147483603	0,0 1024x768	Finder	
+1794835976.118 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835976.118 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835976.118 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835976.118 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835976.476 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835976.476 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835976.476 window 28	25	794,0 31x30	Control Center	Item-0
+1794835976.476 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835976.476 window 26	25	867,0 157x30	Control Center	Clock
+1794835976.476 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835976.476 window 6	20	0,0 1024x768	Dock	Dock
+1794835976.476 window 402	0	362,308 300x113	wine	Wine
+1794835976.476 window 9	-2147483603	0,0 1024x768	Finder	
+1794835976.476 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835976.476 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835976.476 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835976.476 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835976.982 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835976.982 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835976.982 window 28	25	794,0 31x30	Control Center	Item-0
+1794835976.982 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835976.982 window 26	25	867,0 157x30	Control Center	Clock
+1794835976.982 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835976.982 window 6	20	0,0 1024x768	Dock	Dock
+1794835976.982 window 402	0	362,308 300x113	wine	Wine
+1794835976.982 window 9	-2147483603	0,0 1024x768	Finder	
+1794835976.982 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835976.982 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835976.982 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835976.982 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835977.402 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835977.402 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835977.402 window 28	25	794,0 31x30	Control Center	Item-0
+1794835977.402 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835977.402 window 26	25	867,0 157x30	Control Center	Clock
+1794835977.402 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835977.402 window 6	20	0,0 1024x768	Dock	Dock
+1794835977.402 window 402	0	362,308 300x113	wine	Wine
+1794835977.402 window 9	-2147483603	0,0 1024x768	Finder	
+1794835977.402 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835977.402 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835977.402 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835977.402 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835977.966 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835977.966 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835977.966 window 28	25	794,0 31x30	Control Center	Item-0
+1794835977.966 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835977.966 window 26	25	867,0 157x30	Control Center	Clock
+1794835977.966 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835977.966 window 6	20	0,0 1024x768	Dock	Dock
+1794835977.966 window 402	0	362,308 300x113	wine	Wine
+1794835977.966 window 9	-2147483603	0,0 1024x768	Finder	
+1794835977.966 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835977.966 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835977.966 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835977.966 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835978.391 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835978.391 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835978.391 window 28	25	794,0 31x30	Control Center	Item-0
+1794835978.391 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835978.391 window 26	25	867,0 157x30	Control Center	Clock
+1794835978.391 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835978.391 window 6	20	0,0 1024x768	Dock	Dock
+1794835978.391 window 402	0	362,308 300x113	wine	Wine
+1794835978.391 window 9	-2147483603	0,0 1024x768	Finder	
+1794835978.391 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835978.391 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835978.391 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835978.391 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835978.898 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835978.898 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835978.898 window 28	25	794,0 31x30	Control Center	Item-0
+1794835978.898 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835978.898 window 26	25	867,0 157x30	Control Center	Clock
+1794835978.898 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835978.898 window 6	20	0,0 1024x768	Dock	Dock
+1794835978.898 window 402	0	362,308 300x113	wine	Wine
+1794835978.898 window 9	-2147483603	0,0 1024x768	Finder	
+1794835978.898 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835978.898 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835978.898 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835978.898 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835979.418 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835979.418 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835979.418 window 28	25	794,0 31x30	Control Center	Item-0
+1794835979.418 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835979.418 window 26	25	867,0 157x30	Control Center	Clock
+1794835979.418 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835979.418 window 6	20	0,0 1024x768	Dock	Dock
+1794835979.418 window 402	0	362,308 300x113	wine	Wine
+1794835979.418 window 9	-2147483603	0,0 1024x768	Finder	
+1794835979.418 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835979.418 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835979.418 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835979.418 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835979.894 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835979.894 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835979.894 window 28	25	794,0 31x30	Control Center	Item-0
+1794835979.894 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835979.894 window 26	25	867,0 157x30	Control Center	Clock
+1794835979.894 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835979.894 window 6	20	0,0 1024x768	Dock	Dock
+1794835979.894 window 402	0	362,308 300x113	wine	Wine
+1794835979.894 window 9	-2147483603	0,0 1024x768	Finder	
+1794835979.894 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835979.894 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835979.894 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835979.894 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835980.412 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835980.412 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835980.412 window 28	25	794,0 31x30	Control Center	Item-0
+1794835980.412 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835980.412 window 26	25	867,0 157x30	Control Center	Clock
+1794835980.412 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835980.412 window 6	20	0,0 1024x768	Dock	Dock
+1794835980.412 window 402	0	362,308 300x113	wine	Wine
+1794835980.412 window 9	-2147483603	0,0 1024x768	Finder	
+1794835980.412 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835980.412 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835980.412 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835980.412 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835980.951 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835980.951 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835980.951 window 28	25	794,0 31x30	Control Center	Item-0
+1794835980.951 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835980.951 window 26	25	867,0 157x30	Control Center	Clock
+1794835980.951 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835980.951 window 6	20	0,0 1024x768	Dock	Dock
+1794835980.951 window 402	0	362,308 300x113	wine	Wine
+1794835980.951 window 9	-2147483603	0,0 1024x768	Finder	
+1794835980.951 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835980.951 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835980.951 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835980.951 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835981.364 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835981.364 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835981.364 window 28	25	794,0 31x30	Control Center	Item-0
+1794835981.364 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835981.364 window 26	25	867,0 157x30	Control Center	Clock
+1794835981.364 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835981.364 window 6	20	0,0 1024x768	Dock	Dock
+1794835981.364 window 402	0	362,308 300x113	wine	Wine
+1794835981.364 window 9	-2147483603	0,0 1024x768	Finder	
+1794835981.364 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835981.364 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835981.364 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835981.364 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835981.888 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835981.888 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835981.888 window 28	25	794,0 31x30	Control Center	Item-0
+1794835981.888 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835981.888 window 26	25	867,0 157x30	Control Center	Clock
+1794835981.888 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835981.888 window 6	20	0,0 1024x768	Dock	Dock
+1794835981.888 window 402	0	362,308 300x113	wine	Wine
+1794835981.888 window 9	-2147483603	0,0 1024x768	Finder	
+1794835981.888 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835981.888 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835981.888 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835981.888 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835982.365 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835982.365 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835982.365 window 28	25	794,0 31x30	Control Center	Item-0
+1794835982.365 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835982.365 window 26	25	867,0 157x30	Control Center	Clock
+1794835982.365 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835982.365 window 6	20	0,0 1024x768	Dock	Dock
+1794835982.365 window 402	0	362,308 300x113	wine	Wine
+1794835982.365 window 9	-2147483603	0,0 1024x768	Finder	
+1794835982.365 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835982.365 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835982.365 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835982.365 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835982.853 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835982.853 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835982.853 window 28	25	794,0 31x30	Control Center	Item-0
+1794835982.853 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835982.853 window 26	25	867,0 157x30	Control Center	Clock
+1794835982.853 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835982.853 window 6	20	0,0 1024x768	Dock	Dock
+1794835982.853 window 402	0	362,308 300x113	wine	Wine
+1794835982.853 window 9	-2147483603	0,0 1024x768	Finder	
+1794835982.853 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835982.853 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835982.853 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835982.853 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835983.362 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835983.362 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835983.362 window 28	25	794,0 31x30	Control Center	Item-0
+1794835983.362 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835983.362 window 26	25	867,0 157x30	Control Center	Clock
+1794835983.362 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835983.362 window 6	20	0,0 1024x768	Dock	Dock
+1794835983.362 window 402	0	362,308 300x113	wine	Wine
+1794835983.362 window 9	-2147483603	0,0 1024x768	Finder	
+1794835983.362 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835983.362 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835983.362 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835983.362 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835983.865 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835983.865 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835983.865 window 28	25	794,0 31x30	Control Center	Item-0
+1794835983.865 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835983.865 window 26	25	867,0 157x30	Control Center	Clock
+1794835983.865 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835983.865 window 6	20	0,0 1024x768	Dock	Dock
+1794835983.865 window 402	0	362,308 300x113	wine	Wine
+1794835983.865 window 9	-2147483603	0,0 1024x768	Finder	
+1794835983.865 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835983.865 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835983.865 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835983.865 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835984.391 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835984.391 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835984.391 window 28	25	794,0 31x30	Control Center	Item-0
+1794835984.391 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835984.391 window 26	25	867,0 157x30	Control Center	Clock
+1794835984.391 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835984.391 window 6	20	0,0 1024x768	Dock	Dock
+1794835984.391 window 402	0	362,308 300x113	wine	Wine
+1794835984.391 window 9	-2147483603	0,0 1024x768	Finder	
+1794835984.391 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835984.391 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835984.391 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835984.391 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835984.892 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835984.892 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835984.892 window 28	25	794,0 31x30	Control Center	Item-0
+1794835984.892 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835984.892 window 26	25	867,0 157x30	Control Center	Clock
+1794835984.892 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835984.892 window 6	20	0,0 1024x768	Dock	Dock
+1794835984.892 window 402	0	362,308 300x113	wine	Wine
+1794835984.892 window 9	-2147483603	0,0 1024x768	Finder	
+1794835984.892 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835984.892 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835984.892 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835984.892 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835985.447 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835985.447 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835985.447 window 28	25	794,0 31x30	Control Center	Item-0
+1794835985.447 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835985.447 window 26	25	867,0 157x30	Control Center	Clock
+1794835985.447 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835985.447 window 6	20	0,0 1024x768	Dock	Dock
+1794835985.447 window 402	0	362,308 300x113	wine	Wine
+1794835985.447 window 9	-2147483603	0,0 1024x768	Finder	
+1794835985.447 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835985.447 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835985.447 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835985.447 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835985.871 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835985.871 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835985.871 window 28	25	794,0 31x30	Control Center	Item-0
+1794835985.871 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835985.871 window 26	25	867,0 157x30	Control Center	Clock
+1794835985.871 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835985.871 window 6	20	0,0 1024x768	Dock	Dock
+1794835985.871 window 402	0	362,308 300x113	wine	Wine
+1794835985.871 window 9	-2147483603	0,0 1024x768	Finder	
+1794835985.871 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835985.871 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835985.871 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835985.871 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835986.372 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835986.372 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835986.372 window 28	25	794,0 31x30	Control Center	Item-0
+1794835986.372 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835986.372 window 26	25	867,0 157x30	Control Center	Clock
+1794835986.372 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835986.372 window 6	20	0,0 1024x768	Dock	Dock
+1794835986.372 window 402	0	362,308 300x113	wine	Wine
+1794835986.372 window 9	-2147483603	0,0 1024x768	Finder	
+1794835986.372 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835986.372 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835986.372 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835986.372 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835986.928 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835986.928 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835986.928 window 28	25	794,0 31x30	Control Center	Item-0
+1794835986.928 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835986.928 window 26	25	867,0 157x30	Control Center	Clock
+1794835986.928 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835986.928 window 6	20	0,0 1024x768	Dock	Dock
+1794835986.928 window 402	0	362,308 300x113	wine	Wine
+1794835986.928 window 9	-2147483603	0,0 1024x768	Finder	
+1794835986.928 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835986.928 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835986.928 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835986.928 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835987.416 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835987.416 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835987.416 window 28	25	794,0 31x30	Control Center	Item-0
+1794835987.416 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835987.416 window 26	25	867,0 157x30	Control Center	Clock
+1794835987.416 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835987.416 window 6	20	0,0 1024x768	Dock	Dock
+1794835987.416 window 402	0	362,308 300x113	wine	Wine
+1794835987.416 window 9	-2147483603	0,0 1024x768	Finder	
+1794835987.416 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835987.416 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835987.416 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835987.416 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835987.950 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835987.950 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835987.950 window 28	25	794,0 31x30	Control Center	Item-0
+1794835987.950 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835987.950 window 26	25	867,0 157x30	Control Center	Clock
+1794835987.950 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835987.950 window 6	20	0,0 1024x768	Dock	Dock
+1794835987.950 window 402	0	362,308 300x113	wine	Wine
+1794835987.950 window 9	-2147483603	0,0 1024x768	Finder	
+1794835987.950 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835987.950 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835987.950 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835987.950 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835988.431 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835988.431 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835988.431 window 28	25	794,0 31x30	Control Center	Item-0
+1794835988.431 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835988.431 window 26	25	867,0 157x30	Control Center	Clock
+1794835988.431 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835988.431 window 6	20	0,0 1024x768	Dock	Dock
+1794835988.431 window 402	0	362,308 300x113	wine	Wine
+1794835988.431 window 9	-2147483603	0,0 1024x768	Finder	
+1794835988.431 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835988.431 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835988.431 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835988.431 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835988.951 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835988.951 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835988.951 window 28	25	794,0 31x30	Control Center	Item-0
+1794835988.951 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835988.951 window 26	25	867,0 157x30	Control Center	Clock
+1794835988.951 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835988.951 window 6	20	0,0 1024x768	Dock	Dock
+1794835988.951 window 402	0	362,308 300x113	wine	Wine
+1794835988.951 window 9	-2147483603	0,0 1024x768	Finder	
+1794835988.951 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835988.951 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835988.951 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835988.951 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835989.411 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835989.411 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835989.411 window 28	25	794,0 31x30	Control Center	Item-0
+1794835989.411 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835989.411 window 26	25	867,0 157x30	Control Center	Clock
+1794835989.411 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835989.411 window 6	20	0,0 1024x768	Dock	Dock
+1794835989.411 window 402	0	362,308 300x113	wine	Wine
+1794835989.411 window 9	-2147483603	0,0 1024x768	Finder	
+1794835989.411 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835989.411 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835989.411 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835989.411 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835989.909 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835989.909 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835989.909 window 28	25	794,0 31x30	Control Center	Item-0
+1794835989.909 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835989.909 window 26	25	867,0 157x30	Control Center	Clock
+1794835989.909 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835989.909 window 6	20	0,0 1024x768	Dock	Dock
+1794835989.909 window 402	0	362,308 300x113	wine	Wine
+1794835989.909 window 9	-2147483603	0,0 1024x768	Finder	
+1794835989.909 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835989.909 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835989.909 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835989.909 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835990.328 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835990.328 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835990.328 window 28	25	794,0 31x30	Control Center	Item-0
+1794835990.328 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835990.328 window 26	25	867,0 157x30	Control Center	Clock
+1794835990.328 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835990.328 window 6	20	0,0 1024x768	Dock	Dock
+1794835990.328 window 402	0	362,308 300x113	wine	Wine
+1794835990.328 window 9	-2147483603	0,0 1024x768	Finder	
+1794835990.328 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835990.328 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835990.328 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835990.328 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835990.851 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835990.851 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835990.851 window 28	25	794,0 31x30	Control Center	Item-0
+1794835990.851 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835990.851 window 26	25	867,0 157x30	Control Center	Clock
+1794835990.851 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835990.851 window 6	20	0,0 1024x768	Dock	Dock
+1794835990.851 window 402	0	362,308 300x113	wine	Wine
+1794835990.851 window 9	-2147483603	0,0 1024x768	Finder	
+1794835990.851 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835990.851 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835990.851 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835990.851 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835991.253 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835991.253 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835991.253 window 28	25	794,0 31x30	Control Center	Item-0
+1794835991.253 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835991.253 window 26	25	867,0 157x30	Control Center	Clock
+1794835991.253 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835991.253 window 6	20	0,0 1024x768	Dock	Dock
+1794835991.253 window 402	0	362,308 300x113	wine	Wine
+1794835991.253 window 9	-2147483603	0,0 1024x768	Finder	
+1794835991.253 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835991.253 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835991.253 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835991.253 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835991.661 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835991.661 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835991.661 window 28	25	794,0 31x30	Control Center	Item-0
+1794835991.661 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835991.661 window 26	25	867,0 157x30	Control Center	Clock
+1794835991.661 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835991.661 window 6	20	0,0 1024x768	Dock	Dock
+1794835991.661 window 402	0	362,308 300x113	wine	Wine
+1794835991.661 window 9	-2147483603	0,0 1024x768	Finder	
+1794835991.661 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835991.661 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835991.661 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835991.661 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835992.209 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835992.209 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835992.209 window 28	25	794,0 31x30	Control Center	Item-0
+1794835992.209 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835992.209 window 26	25	867,0 157x30	Control Center	Clock
+1794835992.209 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835992.209 window 6	20	0,0 1024x768	Dock	Dock
+1794835992.209 window 402	0	362,308 300x113	wine	Wine
+1794835992.209 window 9	-2147483603	0,0 1024x768	Finder	
+1794835992.209 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835992.209 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835992.209 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835992.209 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835992.708 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835992.708 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835992.708 window 28	25	794,0 31x30	Control Center	Item-0
+1794835992.708 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835992.708 window 26	25	867,0 157x30	Control Center	Clock
+1794835992.708 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835992.708 window 6	20	0,0 1024x768	Dock	Dock
+1794835992.708 window 402	0	362,308 300x113	wine	Wine
+1794835992.708 window 9	-2147483603	0,0 1024x768	Finder	
+1794835992.708 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835992.708 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835992.708 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835992.708 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835993.114 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835993.114 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835993.114 window 28	25	794,0 31x30	Control Center	Item-0
+1794835993.114 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835993.114 window 26	25	867,0 157x30	Control Center	Clock
+1794835993.114 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835993.114 window 6	20	0,0 1024x768	Dock	Dock
+1794835993.114 window 402	0	362,308 300x113	wine	Wine
+1794835993.114 window 9	-2147483603	0,0 1024x768	Finder	
+1794835993.114 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835993.114 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835993.114 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835993.114 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835993.612 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835993.612 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835993.612 window 28	25	794,0 31x30	Control Center	Item-0
+1794835993.612 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835993.612 window 26	25	867,0 157x30	Control Center	Clock
+1794835993.612 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835993.612 window 6	20	0,0 1024x768	Dock	Dock
+1794835993.612 window 402	0	362,308 300x113	wine	Wine
+1794835993.612 window 9	-2147483603	0,0 1024x768	Finder	
+1794835993.612 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835993.612 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835993.612 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835993.612 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835993.975 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835993.975 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835993.975 window 28	25	794,0 31x30	Control Center	Item-0
+1794835993.975 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835993.975 window 26	25	867,0 157x30	Control Center	Clock
+1794835993.975 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835993.975 window 6	20	0,0 1024x768	Dock	Dock
+1794835993.975 window 402	0	362,308 300x113	wine	Wine
+1794835993.975 window 9	-2147483603	0,0 1024x768	Finder	
+1794835993.975 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835993.975 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835993.975 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835993.975 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835994.531 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835994.531 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835994.531 window 28	25	794,0 31x30	Control Center	Item-0
+1794835994.531 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835994.531 window 26	25	867,0 157x30	Control Center	Clock
+1794835994.531 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835994.531 window 6	20	0,0 1024x768	Dock	Dock
+1794835994.531 window 402	0	362,308 300x113	wine	Wine
+1794835994.531 window 9	-2147483603	0,0 1024x768	Finder	
+1794835994.531 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835994.531 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835994.531 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835994.531 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835995.031 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835995.031 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835995.031 window 28	25	794,0 31x30	Control Center	Item-0
+1794835995.031 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835995.031 window 26	25	867,0 157x30	Control Center	Clock
+1794835995.031 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835995.031 window 6	20	0,0 1024x768	Dock	Dock
+1794835995.031 window 402	0	362,308 300x113	wine	Wine
+1794835995.031 window 9	-2147483603	0,0 1024x768	Finder	
+1794835995.031 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835995.031 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835995.031 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835995.031 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835995.489 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835995.489 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835995.489 window 28	25	794,0 31x30	Control Center	Item-0
+1794835995.489 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835995.489 window 26	25	867,0 157x30	Control Center	Clock
+1794835995.489 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835995.489 window 6	20	0,0 1024x768	Dock	Dock
+1794835995.489 window 402	0	362,308 300x113	wine	Wine
+1794835995.489 window 9	-2147483603	0,0 1024x768	Finder	
+1794835995.489 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835995.489 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835995.489 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835995.489 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835995.913 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835995.913 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835995.913 window 28	25	794,0 31x30	Control Center	Item-0
+1794835995.913 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835995.913 window 26	25	867,0 157x30	Control Center	Clock
+1794835995.913 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835995.913 window 6	20	0,0 1024x768	Dock	Dock
+1794835995.913 window 402	0	362,308 300x113	wine	Wine
+1794835995.913 window 9	-2147483603	0,0 1024x768	Finder	
+1794835995.913 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835995.913 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835995.913 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835995.913 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835996.314 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835996.314 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835996.314 window 28	25	794,0 31x30	Control Center	Item-0
+1794835996.314 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835996.314 window 26	25	867,0 157x30	Control Center	Clock
+1794835996.314 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835996.314 window 6	20	0,0 1024x768	Dock	Dock
+1794835996.314 window 402	0	362,308 300x113	wine	Wine
+1794835996.314 window 9	-2147483603	0,0 1024x768	Finder	
+1794835996.314 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835996.314 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835996.314 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835996.314 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835996.687 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835996.687 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835996.687 window 28	25	794,0 31x30	Control Center	Item-0
+1794835996.687 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835996.687 window 26	25	867,0 157x30	Control Center	Clock
+1794835996.687 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835996.687 window 6	20	0,0 1024x768	Dock	Dock
+1794835996.687 window 402	0	362,308 300x113	wine	Wine
+1794835996.687 window 9	-2147483603	0,0 1024x768	Finder	
+1794835996.687 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835996.687 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835996.687 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835996.687 dock 36) "wine" ASN:0x0-0xfa0fa: 
+1794835997.216 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835997.216 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835997.216 window 28	25	794,0 31x30	Control Center	Item-0
+1794835997.216 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835997.216 window 26	25	867,0 157x30	Control Center	Clock
+1794835997.216 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835997.216 window 6	20	0,0 1024x768	Dock	Dock
+1794835997.216 window 9	-2147483603	0,0 1024x768	Finder	
+1794835997.216 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835997.216 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835997.216 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835997.670 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835997.670 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835997.670 window 28	25	794,0 31x30	Control Center	Item-0
+1794835997.670 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835997.670 window 26	25	867,0 157x30	Control Center	Clock
+1794835997.670 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835997.670 window 6	20	0,0 1024x768	Dock	Dock
+1794835997.670 window 9	-2147483603	0,0 1024x768	Finder	
+1794835997.670 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835997.670 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835997.670 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835998.122 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835998.122 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835998.122 window 28	25	794,0 31x30	Control Center	Item-0
+1794835998.122 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835998.122 window 26	25	867,0 157x30	Control Center	Clock
+1794835998.122 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835998.122 window 6	20	0,0 1024x768	Dock	Dock
+1794835998.122 window 9	-2147483603	0,0 1024x768	Finder	
+1794835998.122 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835998.122 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835998.122 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835998.585 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835998.585 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835998.585 window 28	25	794,0 31x30	Control Center	Item-0
+1794835998.585 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835998.585 window 26	25	867,0 157x30	Control Center	Clock
+1794835998.585 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835998.585 window 6	20	0,0 1024x768	Dock	Dock
+1794835998.585 window 9	-2147483603	0,0 1024x768	Finder	
+1794835998.585 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835998.585 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835998.585 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835999.020 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835999.020 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794835999.020 window 28	25	794,0 31x30	Control Center	Item-0
+1794835999.020 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835999.020 window 26	25	867,0 157x30	Control Center	Clock
+1794835999.020 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835999.020 window 6	20	0,0 1024x768	Dock	Dock
+1794835999.020 window 9	-2147483603	0,0 1024x768	Finder	
+1794835999.020 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835999.020 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835999.020 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835999.399 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835999.399 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835999.399 window 28	25	794,0 31x30	Control Center	Item-0
+1794835999.399 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835999.399 window 26	25	867,0 157x30	Control Center	Clock
+1794835999.399 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835999.399 window 6	20	0,0 1024x768	Dock	Dock
+1794835999.399 window 9	-2147483603	0,0 1024x768	Finder	
+1794835999.399 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835999.399 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835999.399 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794835999.927 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835999.927 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794835999.927 window 28	25	794,0 31x30	Control Center	Item-0
+1794835999.927 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794835999.927 window 26	25	867,0 157x30	Control Center	Clock
+1794835999.927 window 16	24	0,0 1024x30	Window Server	Menubar
+1794835999.927 window 6	20	0,0 1024x768	Dock	Dock
+1794835999.927 window 9	-2147483603	0,0 1024x768	Finder	
+1794835999.927 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794835999.927 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794835999.927 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794836000.338 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794836000.338 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794836000.338 window 28	25	794,0 31x30	Control Center	Item-0
+1794836000.338 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794836000.338 window 26	25	867,0 157x30	Control Center	Clock
+1794836000.338 window 16	24	0,0 1024x30	Window Server	Menubar
+1794836000.338 window 6	20	0,0 1024x768	Dock	Dock
+1794836000.338 window 9	-2147483603	0,0 1024x768	Finder	
+1794836000.338 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794836000.338 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794836000.338 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794836000.862 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794836000.862 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794836000.862 window 28	25	794,0 31x30	Control Center	Item-0
+1794836000.862 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794836000.862 window 26	25	867,0 157x30	Control Center	Clock
+1794836000.862 window 16	24	0,0 1024x30	Window Server	Menubar
+1794836000.862 window 6	20	0,0 1024x768	Dock	Dock
+1794836000.862 window 9	-2147483603	0,0 1024x768	Finder	
+1794836000.862 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794836000.862 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794836000.862 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794836001.312 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794836001.312 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794836001.312 window 28	25	794,0 31x30	Control Center	Item-0
+1794836001.312 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794836001.312 window 26	25	867,0 157x30	Control Center	Clock
+1794836001.312 window 16	24	0,0 1024x30	Window Server	Menubar
+1794836001.312 window 6	20	0,0 1024x768	Dock	Dock
+1794836001.312 window 9	-2147483603	0,0 1024x768	Finder	
+1794836001.312 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794836001.312 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794836001.312 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794836001.703 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794836001.703 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794836001.703 window 28	25	794,0 31x30	Control Center	Item-0
+1794836001.703 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794836001.703 window 26	25	867,0 157x30	Control Center	Clock
+1794836001.703 window 16	24	0,0 1024x30	Window Server	Menubar
+1794836001.703 window 6	20	0,0 1024x768	Dock	Dock
+1794836001.703 window 9	-2147483603	0,0 1024x768	Finder	
+1794836001.703 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794836001.703 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794836001.703 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794836002.262 window 388	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794836002.262 window 387	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794836002.262 window 28	25	794,0 31x30	Control Center	Item-0
+1794836002.262 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794836002.262 window 26	25	867,0 157x30	Control Center	Clock
+1794836002.262 window 16	24	0,0 1024x30	Window Server	Menubar
+1794836002.262 window 6	20	0,0 1024x768	Dock	Dock
+1794836002.262 window 9	-2147483603	0,0 1024x768	Finder	
+1794836002.262 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794836002.262 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794836002.262 dock 13) "Finder" ASN:0x0-0x11011: (in front) 
+1794836002.761 window 388	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794836002.761 window 387	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794836002.761 window 28	25	794,0 31x30	Control Center	Item-0
+1794836002.761 window 27	25	825,0 42x30	Control Center	BentoBox-0
+1794836002.761 window 26	25	867,0 157x30	Control Center	Clock
+1794836002.761 window 16	24	0,0 1024x30	Window Server	Menubar
+1794836002.761 window 6	20	0,0 1024x768	Dock	Dock
+1794836002.761 window 9	-2147483603	0,0 1024x768	Finder	
+1794836002.761 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794836002.761 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794836002.761 dock 13) "Finder" ASN:0x0-0x11011: (in front) 

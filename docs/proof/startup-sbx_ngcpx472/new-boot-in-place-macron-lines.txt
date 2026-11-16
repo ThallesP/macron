@@ -1,0 +1,12 @@
+macron: 13:29:56.637Z +0.00s game steam-1004, log ~/Library/Application Support/Macron/logs/steam-1004/20261116T132956Z.log
+macron: 13:29:56.638Z +0.00s preparing the Windows environment at ~/s/compat/1004/pfx
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+macron: 13:30:50.380Z +53.74s prefix ready
+macron: 13:30:50.381Z +53.74s starting startup.exe with the dxmt backend
+macron: 13:30:50.484Z +53.85s writing the registry keys games read to find Steam
+macron: 13:30:52.687Z +56.05s starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+macron: 13:30:52.687Z +56.05s Steam bridge ready
+macron: 13:30:52.689Z +56.05s game process started (Wine process 36063)
+macron: 13:31:03.717Z +67.08s startup.exe exited with 0

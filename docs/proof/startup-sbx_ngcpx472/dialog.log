@@ -1,0 +1,44 @@
+gcenx-new-prefix: exit 0 in 71.3429999351501 s, 57 screenshots
+  windows not owned by macOS's own apps:
+  62 393	0	362,305 300x113	wine	Wine
+  56 402	0	362,308 300x113	wine	Wine
+  Dock apps seen:
+ 145 13) "Finder" ASN:0x0-0x11011: (in front) 
+  63 36) "wine" ASN:0x0-0xf20f2: 
+  56 36) "wine" ASN:0x0-0xfa0fa: 
+   2 37) "wine" ASN:0x0-0xf20f2: 
+gcenx-automatic-update: exit 0 in 41.1280000209808 s, 33 screenshots
+  windows not owned by macOS's own apps:
+  55 415	0	362,308 300x113	wine	Wine
+  Dock apps seen:
+  82 13) "Finder" ASN:0x0-0x11011: (in front) 
+  56 36) "wine" ASN:0x0-0x102102: 
+  .update-timestamp now 1793450195
+gcenx-forced-update: exit 0 in 34.8770000934601 s, 29 screenshots
+  windows not owned by macOS's own apps:
+  49 428	0	362,308 300x113	wine	Wine
+  Dock apps seen:
+  75 13) "Finder" ASN:0x0-0x11011: (in front) 
+  49 36) "wine" ASN:0x0-0x10b10b: 
+   1 37) "wine" ASN:0x0-0x10b10b: 
+macron13-new-prefix: exit 0 in 67.2699999809265 s, 55 screenshots
+  windows not owned by macOS's own apps:
+  Dock apps seen:
+ 138 13) "Finder" ASN:0x0-0x11011: (in front) 
+macron13-automatic-update: exit 0 in 36.5410001277924 s, 30 screenshots
+  windows not owned by macOS's own apps:
+  Dock apps seen:
+  74 13) "Finder" ASN:0x0-0x11011: (in front) 
+  .update-timestamp now 1793450195
+macron13-forced-update: exit 0 in 32.2379999160767 s, 27 screenshots
+  windows not owned by macOS's own apps:
+  Dock apps seen:
+  69 13) "Finder" ASN:0x0-0x11011: (in front) 
+== control: patch 0013's wineboot with MACRON_WINEBOOT_WAIT_WINDOW=1
+macron13-control-forced-update: exit 0 in 37.7890000343323 s, 31 screenshots
+  windows not owned by macOS's own apps:
+  54 454	0	362,308 300x113	wine	Wine
+  Dock apps seen:
+  81 13) "Finder" ASN:0x0-0x11011: (in front) 
+  55 36) "wine" ASN:0x0-0x12d12d: 
+DIALOG-DONE

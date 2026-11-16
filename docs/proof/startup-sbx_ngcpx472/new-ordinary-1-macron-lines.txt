@@ -1,0 +1,7 @@
+macron: 13:26:33.958Z +0.00s game steam-1001, log ~/Library/Application Support/Macron/logs/steam-1001/20261116T132633Z.log
+macron: 13:26:33.959Z +0.00s prefix ready
+macron: 13:26:33.959Z +0.00s starting startup.exe with the dxmt backend
+macron: 13:26:34.078Z +0.12s starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+macron: 13:26:34.079Z +0.12s Steam bridge ready
+macron: 13:26:34.081Z +0.12s game process started (Wine process 24669)
+macron: 13:26:46.943Z +12.99s startup.exe exited with 0

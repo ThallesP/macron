@@ -1,0 +1,4 @@
+macron: game steam-1001, log ~/Library/Application Support/Macron/logs/steam-1001/20261116T132503Z.log
+macron: starting startup.exe with the dxmt backend
+macron: starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+macron: startup.exe exited with 0

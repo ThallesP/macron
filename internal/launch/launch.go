@@ -46,7 +46,9 @@ var backendDLLOverrides = map[fixes.Backend]map[string]string{
 	fixes.BackendWineD3D: {},
 }
 
-var alwaysDisabledDLLs = map[string]string{"mscoree": "", "mshtml": "", "winedbg.exe": ""}
+// winemenubuilder.exe would make Mac menu entries and file associations for
+// what games install, under Wine's name; it starts with every cold start.
+var alwaysDisabledDLLs = map[string]string{"mscoree": "", "mshtml": "", "winedbg.exe": "", "winemenubuilder.exe": ""}
 
 const ExitStopped = 130
 

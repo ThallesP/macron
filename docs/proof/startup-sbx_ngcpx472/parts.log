@@ -1,0 +1,17 @@
+cold, the program alone:               to main() 3.48 s, to its exit 6.24 s
+cold, through steam.exe:               to main() 4.79 s, to its exit 6.66 s
+  then wineserver -w:                   4.18 s
+warm (server and services running):    to main() 0.43 s, to its exit 2.95 s
+  cold-ish wine cmd /c exit right after: 0.85 s
+cold, the program alone:               to main() 2.72 s, to its exit 5.20 s
+cold, through steam.exe:               to main() 4.77 s, to its exit 6.96 s
+  then wineserver -w:                   4.20 s
+warm (server and services running):    to main() 0.35 s, to its exit 2.77 s
+  cold-ish wine cmd /c exit right after: 0.76 s
+cold, the program alone:               to main() 2.90 s, to its exit 5.41 s
+cold, through steam.exe:               to main() 4.54 s, to its exit 6.34 s
+  then wineserver -w:                   4.16 s
+warm (server and services running):    to main() 0.37 s, to its exit 2.77 s
+  cold-ish wine cmd /c exit right after: 0.95 s
+== a cold start's processes, WINEDEBUG=+process,+timestamp (first lines)
+PARTS-DONE

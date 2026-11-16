@@ -34,7 +34,7 @@ const gameModeInfoPlist = `<?xml version="1.0" encoding="UTF-8"?>
   <key>CFBundleExecutable</key><string>wine</string>
   <key>CFBundleIdentifier</key><string>org.winehq.wine</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
-  <key>CFBundleName</key><string>Wine</string>
+  <key>CFBundleName</key><string>Macron</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>11.21</string>
   <key>CFBundleVersion</key><string>11.21</string>

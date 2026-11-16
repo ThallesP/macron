@@ -1,0 +1,9 @@
+macron: 13:29:24.297Z +0.00s game steam-1002, log ~/Library/Application Support/Macron/logs/steam-1002/20261116T132924Z.log
+macron: 13:29:24.629Z +0.33s made the Windows environment at ~/s/compat/1002/pfx from the runtime's template
+macron: 13:29:24.629Z +0.33s prefix ready
+macron: 13:29:24.629Z +0.33s starting startup.exe with the dxmt backend
+macron: 13:29:24.674Z +0.38s writing the registry keys games read to find Steam
+macron: 13:29:26.888Z +2.59s starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+macron: 13:29:26.888Z +2.59s Steam bridge ready
+macron: 13:29:26.889Z +2.59s game process started (Wine process 32432)
+macron: 13:29:38.301Z +14.00s startup.exe exited with 0

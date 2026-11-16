@@ -1,0 +1,8 @@
+macron: 13:27:12.770Z +0.00s game steam-1001, log ~/Library/Application Support/Macron/logs/steam-1001/20261116T132712Z.log
+macron: 13:27:12.771Z +0.00s the Windows environment at ~/s/compat/1001/pfx needs no update for this runtime
+macron: 13:27:12.771Z +0.00s prefix ready
+macron: 13:27:12.771Z +0.00s starting startup.exe with the dxmt backend
+macron: 13:27:12.877Z +0.11s starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+macron: 13:27:12.877Z +0.11s Steam bridge ready
+macron: 13:27:12.879Z +0.11s game process started (Wine process 26434)
+macron: 13:27:25.639Z +12.87s startup.exe exited with 0

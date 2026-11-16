@@ -1,0 +1,25 @@
+== runtime install (rc3's macron)
+exit 0 in 0.0499999523162842 s
+== rc3
+rc3-new-prefix               exit 0  to main()  58.67 s  to macron exit  66.13 s
+rc3-ordinary-1               exit 0  to main()   5.46 s  to macron exit  13.65 s
+rc3-ordinary-2               exit 0  to main()   5.90 s  to macron exit  13.58 s
+rc3-ordinary-3               exit 0  to main()   5.36 s  to macron exit  13.25 s
+{"runtime":"an-older-runtime","backend":"dxmt"}
+rc3-after-update             exit 0  to main()  41.53 s  to macron exit  49.22 s
+== this branch
+new-ordinary-1               exit 0  to main()   5.63 s  to macron exit  13.12 s
+new-ordinary-2               exit 0  to main()   5.21 s  to macron exit  12.63 s
+new-ordinary-3               exit 0  to main()   5.44 s  to macron exit  12.97 s
+{"runtime":"an-older-runtime","backend":"dxmt"}
+new-after-update             exit 0  to main()   5.27 s  to macron exit  13.01 s
+new-ordinary-after-update    exit 0  to main()   5.30 s  to macron exit  12.80 s
+== templates (macron runtime install)
+exit 0 in 105.605000019073 s
+new-new-game-1               exit 0  to main()   6.35 s  to macron exit  14.19 s
+new-new-game-2               exit 0  to main()   8.40 s  to macron exit  17.98 s
+new-boot-in-place            exit 0  to main()  59.46 s  to macron exit  67.19 s
+== the server's linger
+wineserver -w after a program, server started by Wine: 3.15200018882751 s
+wineserver -w after a program, server started with -p0: 0.157999992370605 s
+SEQ-DONE

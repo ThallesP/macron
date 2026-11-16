@@ -1,0 +1,20 @@
+1552.003:002c:trace:process:CreateProcessInternalW app (null) cmdline L"C:\\windows\\system32\\winemenubuilder.exe -a -r"
+1552.061:002c:trace:process:CreateProcessInternalW started process pid 0034 tid 0038
+1552.063:002c:trace:process:CreateProcessInternalW app L"C:\\windows\\system32\\services.exe" cmdline (null)
+1552.127:002c:trace:process:CreateProcessInternalW started process pid 0040 tid 0044
+1552.250:0044:trace:process:ExpandEnvironmentStringsW (L"C:\\windows\\system32\\msiexec.exe /V" 0000000000000000 0)
+1552.250:0044:trace:process:ExpandEnvironmentStringsW (L"C:\\windows\\system32\\msiexec.exe /V" 0000000000700220 35)
+1552.339:0044:trace:process:CreateProcessInternalW app (null) cmdline L"C:\\windows\\system32\\winedevice.exe"
+1552.407:0044:trace:process:CreateProcessInternalW started process pid 0050 tid 0054
+1552.578:0044:trace:process:CreateProcessInternalW app (null) cmdline L"C:\\windows\\system32\\plugplay.exe"
+1552.636:0044:trace:process:CreateProcessInternalW started process pid 0078 tid 007c
+1552.917:0044:trace:process:CreateProcessInternalW app (null) cmdline L"C:\\windows\\system32\\svchost.exe -k LocalServiceNetworkRestricted"
+1552.979:0044:trace:process:CreateProcessInternalW started process pid 0094 tid 0098
+1553.238:0044:trace:process:CreateProcessInternalW app (null) cmdline L"C:\\windows\\system32\\winedevice.exe"
+1553.306:0044:trace:process:CreateProcessInternalW started process pid 00b0 tid 00b4
+1555.179:0060:trace:process:CreateProcessInternalW app (null) cmdline L"C:\\windows\\system32\\rpcss.exe"
+1555.243:0060:trace:process:CreateProcessInternalW started process pid 010c tid 0110
+1555.483:0024:trace:process:CreateProcessInternalW app (null) cmdline L"\"Z:\\Users\\<user>\\s\\startup.exe\" 1"
+1555.551:0024:trace:process:CreateProcessInternalW started process pid 0138 tid 013c
+1555.632:013c:trace:process:CreateProcessInternalW app L"C:\\windows\\system32\\conhost.exe" cmdline L"\"C:\\windows\\system32\\conhost.exe\" --server 0x30"
+1555.697:013c:trace:process:CreateProcessInternalW started process pid 0144 tid 0148

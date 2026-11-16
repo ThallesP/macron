@@ -191,7 +191,7 @@ func TestRunPassesTheGamesExitCodeAndProfile(t *testing.T) {
 		t.Errorf("wine calls:\n%s", calls)
 	}
 	env := g.read(t, "game-env.txt")
-	for _, want := range []string{"WINEDLLOVERRIDES=d3d9=n,b;mscoree=;mshtml=;winedbg.exe=", "WINEPREFIX=" + g.prefix, "DXMT_LOG_LEVEL=info", "WINEDEBUG=-all"} {
+	for _, want := range []string{"WINEDLLOVERRIDES=d3d9=n,b;mscoree=;mshtml=;winedbg.exe=;winemenubuilder.exe=", "WINEPREFIX=" + g.prefix, "DXMT_LOG_LEVEL=info", "WINEDEBUG=-all"} {
 		if !strings.Contains(env, want) {
 			t.Errorf("game environment lacks %s:\n%s", want, env)
 		}
@@ -387,7 +387,7 @@ func TestDXVKBackendPutsItsDLLsInThePrefix(t *testing.T) {
 	if got := g.read(t, "prefix/drive_c/windows/syswow64/d3d11.dll"); got != "dxvk 32" {
 		t.Errorf("syswow64/d3d11.dll = %q", got)
 	}
-	if env := g.read(t, "game-env.txt"); !strings.Contains(env, "WINEDLLOVERRIDES=d3d10core=n;d3d11=n;d3d9=n;dxgi=n;mscoree=;mshtml=;winedbg.exe=") {
+	if env := g.read(t, "game-env.txt"); !strings.Contains(env, "WINEDLLOVERRIDES=d3d10core=n;d3d11=n;d3d9=n;dxgi=n;mscoree=;mshtml=;winedbg.exe=;winemenubuilder.exe=") {
 		t.Errorf("DXVK overrides missing:\n%s", env)
 	}
 }
