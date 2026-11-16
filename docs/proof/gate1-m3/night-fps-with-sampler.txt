@@ -1,0 +1,40 @@
+0140:trace:fps:wglSwapBuffers @ approx 0.00fps, total 0.00fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 0.00fps
+0140:trace:fps:wglSwapBuffers @ approx 3.11fps, total 3.74fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 3.11fps
+0140:trace:fps:wglSwapBuffers @ approx 4.62fps, total 4.19fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 4.62fps
+0140:trace:fps:wglSwapBuffers @ approx 5.32fps, total 4.54fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 5.32fps
+0140:trace:fps:wglSwapBuffers @ approx 5.38fps, total 4.76fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 5.38fps
+0140:trace:fps:wglSwapBuffers @ approx 5.11fps, total 4.83fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 5.11fps
+0140:trace:fps:wglSwapBuffers @ approx 5.06fps, total 4.86fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 5.06fps
+0140:trace:fps:wglSwapBuffers @ approx 4.95fps, total 4.88fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 4.95fps
+0140:trace:fps:wglSwapBuffers @ approx 5.14fps, total 4.91fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 5.14fps
+0140:trace:fps:wglSwapBuffers @ approx 13.20fps, total 5.78fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 13.20fps
+0140:trace:fps:wglSwapBuffers @ approx 59.37fps, total 10.90fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 59.37fps
+0140:trace:fps:wglSwapBuffers @ approx 2.01fps, total 8.06fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 2.01fps
+0140:trace:fps:wglSwapBuffers @ approx 2.97fps, total 7.72fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 2.97fps
+0140:trace:fps:wglSwapBuffers @ approx 3.00fps, total 7.42fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 3.00fps
+0140:trace:fps:wglSwapBuffers @ approx 3.00fps, total 7.16fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 3.00fps
+0140:trace:fps:wglSwapBuffers @ approx 3.01fps, total 6.93fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 3.01fps
+0140:trace:fps:wglSwapBuffers @ approx 2.99fps, total 6.72fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 2.99fps
+0140:trace:fps:wglSwapBuffers @ approx 2.38fps, total 6.51fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 2.38fps
+0140:trace:fps:wglSwapBuffers @ approx 1.98fps, total 6.25fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 1.98fps
+0140:trace:fps:wglSwapBuffers @ approx 3.00fps, total 6.10fps
+0140:trace:fps:wined3d_cs_exec_present 00E8F528 @ approx 3.00fps

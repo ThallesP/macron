@@ -1,0 +1,62 @@
+sample of the game process (wine, pid 8256), 10 s at 5 ms, inside a night, Macron 0.4.0 (runtime macron.6), Apple M3, macOS 26.5.2
+game thread: 1163 samples; the largest frames, by samples:
+ 1163  Thread_4764197
+  593  wow64_flush_batch (in opengl32.so) + 69
+  576  glBufferSubData_Exec (in GLEngine) + 592
+  576  wow64_ext_glBufferSubData (in opengl32.so) + 50
+  574  -[AGXG15GFamilyCommandBuffer initWithQueue:retainedReferences:] (in AGXMetalG15G_C0) + 51
+  574  -[AGXG15GFamilyCommandQueue commandBufferWithUnretainedReferences] (in AGXMetalG15G_C0) + 42
+  574  -[IOGPUMetalCommandBuffer initWithQueue:retainedReferences:synchronousDebugMode:] (in IOGPU) + 103
+  574  -[_MTLCommandBuffer initWithQueue:retainedReferences:synchronousDebugMode:] (in Metal) + 186
+  574  GLDContextRec::getPreprocessingCommandBuffer() (in AppleMetalOpenGLRenderer) + 45
+  574  MTLCommandQueue_commandBufferWithUnretainedReferences(void (*)(), objc_object*, objc_selector*) (in libMTLHud.dylib) + 18
+  574  _dispatch_sema4_wait (in libdispatch.dylib) + 16
+  574  _dispatch_semaphore_wait_slow (in libdispatch.dylib) + 98
+  574  gldBufferSubData (in AppleMetalOpenGLRenderer) + 326
+  574  invocation function for block in void replaceMethod<objc_object* __strong>(objc_class*, objc_selector*, objc_object* __strong (*)(void (*)(), objc_object*, objc_selector*)) (in libMTLHud.dylib)
+  338  Thread_4764197 DispatchQueue_1757: com.Metal.CommandQueueDispatch (serial)
+  318  -[IOGPUMetalCommandQueue submitCommandBuffers:count:] (in IOGPU) + 66
+  318  -[_MTLCommandQueue _submitAvailableCommandBuffers] (in Metal) + 792
+  318  -[_MTLCommandQueue submitCommandBuffer:] (in Metal) + 112
+  318  GLDContextRec::flushContext(bool) (in AppleMetalOpenGLRenderer) + 655
+  318  GLDContextRec::flushResource(GLRResource*, unsigned int) (in AppleMetalOpenGLRenderer) + 21
+  318  __40-[_MTLCommandQueue submitCommandBuffer:]_block_invoke (in Metal) + 26
+  318  _dispatch_client_callout (in libdispatch.dylib) + 6
+  318  _dispatch_lane_barrier_sync_invoke_and_complete (in libdispatch.dylib) + 60
+  318  gldBufferSubData (in AppleMetalOpenGLRenderer) + 258
+  316  -[IOGPUMetalCommandQueue _submitCommandBuffers:count:] (in IOGPU) + 505
+  316  IOConnectCallMethod (in IOKit) + 186
+  316  IOGPUCommandQueueSubmitCommandBuffers (in IOGPU) + 290
+  316  io_connect_method (in IOKit) + 409
+  316  mach_msg2_internal (in libsystem_kernel.dylib) + 83
+   43  glDrawElementsInstancedBaseVertex (in libGL.dylib) + 46
+   43  glDrawElementsInstancedBaseVertex_ACC_GL3Exec (in GLEngine) + 410
+   43  gldRenderVertexArray(GLDContextRec*, unsigned int, unsigned int, int, int, unsigned int, void const*, int, void const*) (in AppleMetalOpenGLRenderer) + 502
+   43  wow64_ext_glDrawElementsInstancedBaseVertex (in opengl32.so) + 58
+   42  GLDContextRec::beginRenderPass() (in AppleMetalOpenGLRenderer) + 28
+   42  GLDContextRec::getCommandBuffer() (in AppleMetalOpenGLRenderer) + 42
+   33  -[AGXG15GFamilyCommandBuffer renderCommandEncoderWithDescriptor:] (in AGXMetalG15G_C0) + 168
+   33  GLDContextRec::beginRenderPass() (in AppleMetalOpenGLRenderer) + 98
+   33  MTLCommandBuffer_renderCommandEncoderWithDescriptor(void (*)(), objc_object*, objc_selector*, MTLRenderPassDescriptor*) (in libMTLHud.dylib) + 245
+   33  invocation function for block in void replaceMethod<objc_object* __strong, MTLRenderPassDescriptor* __strong>(objc_class*, objc_selector*, objc_object* __strong (*)(void (*)(), objc_object*, ob
+   24  ??? (in win32u.so) load address 0x20d800000 + 0xaf1b5
+   24  NtUserMsgWaitForMultipleObjectsEx (in win32u.so) + 381
+   22  -[AGXG15GFamilyRenderContext initWithCommandBuffer:descriptor:subEncoderIndex:framebuffer:] (in AGXMetalG15G_C0) + 507
+   18  GLDContextRec::startPreprocessingBlitEncoderIfNeeded() (in AppleMetalOpenGLRenderer) + 90
+   18  gldBufferSubData (in AppleMetalOpenGLRenderer) + 592
+   17  -[AGXG15GFamilyBlitContext initWithCommandBuffer:descriptor:] (in AGXMetalG15G_C0) + 103
+   17  -[AGXG15GFamilyCommandBuffer blitCommandEncoderCommon:] (in AGXMetalG15G_C0) + 449
+   17  MTLCommandBuffer_blitCommandEncoder(void (*)(), objc_object*, objc_selector*) (in libMTLHud.dylib) + 114
+   17  MTLCommandBuffer_blitCommandEncoderWithDescriptor(void (*)(), objc_object*, objc_selector*, MTLBlitPassDescriptor*) (in libMTLHud.dylib) + 245
+   17  invocation function for block in void replaceMethod<objc_object* __strong, MTLBlitPassDescriptor* __strong>(objc_class*, objc_selector*, objc_object* __strong (*)(void (*)(), objc_object*, objc
+   17  medium_malloc_should_clear (in libsystem_malloc.dylib) + 179
+   17  szone_malloc_should_clear (in libsystem_malloc.dylib) + 151
+   13  -[AGXG15GFamilyRenderContext initWithCommandBuffer:descriptor:subEncoderIndex:framebuffer:] (in AGXMetalG15G_C0) + 8204
+   10  gldBufferSubData (in AppleMetalOpenGLRenderer) + 625
+    9  -[AGXG15GFamilyBlitContext copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:] (in AGXMetalG15G_C0) + 280
+    9  -[AGXG15GFamilyRenderContext drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:baseVertex:baseInstance:] (in AGXMetalG15G_C0) + 519
+    9  ??? (in wine) load address 0x200000000 + 0xfffffffe3a72b9d6
+    9  AGX::BlitDispatchContext<AGX::G15::Encoders, AGX::G15::Classes, AGX::G15::ObjClasses>::beginComputePass(AGXStreamHardwareCommandRec**) (in AGXMetalG15G_C0) + 70
+    9  AGX::BlitDispatchContext<AGX::G15::Encoders, AGX::G15::Classes, AGX::G15::ObjClasses>::blitCDMBuffer(IOGPUMetalResource const*, unsigned long long, IOGPUMetalResource const*, unsigned long long
+    9  AGX::LegacyBlitContext<AGX::G15::Encoders, AGX::G15::Classes, AGX::G15::ObjClasses>::copyBufferToBuffer(IOGPUMetalResource const*, unsigned long, IOGPUMetalResource const*, unsigned long, unsig
+    9  gldRenderVertexArray(GLDContextRec*, unsigned int, unsigned int, int, int, unsigned int, void const*, int, void const*) (in AppleMetalOpenGLRenderer) + 16624

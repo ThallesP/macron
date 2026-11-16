@@ -1,0 +1,17 @@
+0140:trace:fps:wglSwapBuffers @ approx 0.00fps, total 0.00fps
+0140:trace:fps:wglSwapBuffers @ approx 3.24fps, total 3.89fps
+0140:trace:fps:wglSwapBuffers @ approx 5.23fps, total 4.55fps
+0140:trace:fps:wglSwapBuffers @ approx 5.27fps, total 4.79fps
+0140:trace:fps:wglSwapBuffers @ approx 5.21fps, total 4.90fps
+0140:trace:fps:wglSwapBuffers @ approx 5.16fps, total 4.95fps
+0140:trace:fps:wglSwapBuffers @ approx 5.11fps, total 4.98fps
+0140:trace:fps:wglSwapBuffers @ approx 5.22fps, total 5.01fps
+0140:trace:fps:wglSwapBuffers @ approx 5.11fps, total 5.02fps
+0140:trace:fps:wglSwapBuffers @ approx 5.16fps, total 5.04fps
+0140:trace:fps:wglSwapBuffers @ approx 5.21fps, total 5.06fps
+0140:trace:fps:wglSwapBuffers @ approx 5.17fps, total 5.07fps
+0140:trace:fps:wglSwapBuffers @ approx 5.15fps, total 5.07fps
+0140:trace:fps:wglSwapBuffers @ approx 5.00fps, total 5.07fps
+0140:trace:fps:wglSwapBuffers @ approx 4.97fps, total 5.06fps
+0140:trace:fps:wglSwapBuffers @ approx 5.03fps, total 5.06fps
+0140:trace:fps:wglSwapBuffers @ approx 5.03fps, total 5.06fps

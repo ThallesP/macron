@@ -1,0 +1,16 @@
+RESULT adapter Apple M3, OpenGL 4.1 Metal - 90.5
+RESULT api=gl vb=ring arch=x86_64 size=1024x768 draws=3900 quad=1x768 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 3.02 p50_ms 331.39 p95_ms 337.05 frames 16 cpu_cores 0.72
+RESULT adapter Apple M3, OpenGL 4.1 Metal - 90.5
+RESULT api=gl vb=sub0 arch=x86_64 size=1024x768 draws=3900 quad=1x768 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 2.99 p50_ms 334.81 p95_ms 340.63 frames 15 cpu_cores 0.70
+RESULT adapter Apple M3, OpenGL 4.1 Metal - 90.5
+RESULT api=gl vb=orphan arch=x86_64 size=1024x768 draws=3900 quad=1x768 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 60.03 p50_ms 16.66 p95_ms 19.01 frames 301 cpu_cores 1.00
+RESULT adapter Apple M3, OpenGL 4.1 Metal - 90.5
+RESULT api=gl vb=mapring arch=x86_64 size=1024x768 draws=3900 quad=1x768 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 120.58 p50_ms 7.28 p95_ms 11.67 frames 603 cpu_cores 0.93
+RESULT adapter Apple M3, OpenGL 4.1 Metal - 90.5
+RESULT api=gl vb=mapring-flush arch=x86_64 size=1024x768 draws=3900 quad=1x768 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 120.27 p50_ms 7.05 p95_ms 11.88 frames 602 cpu_cores 0.88
+RESULT adapter Apple M3, OpenGL 4.1 Metal - 90.5
+RESULT api=gl vb=mapring-sync arch=x86_64 size=1024x768 draws=3900 quad=1x768 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 1.50 p50_ms 668.88 p95_ms 682.80 frames 8 cpu_cores 0.26
+RESULT adapter Apple M3, Metal
+RESULT api=metal vb=ring arch=x86_64 size=1024x768 draws=3900 quad=1x768 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 40.07 p50_ms 19.21 p95_ms 34.13 frames 201 cpu_cores 0.16
+RESULT api=gl vb=ring arch=x86_64 size=1024x768 draws=4 quad=1x768 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 1455.17 p50_ms 0.60 p95_ms 1.12 frames 5821 cpu_cores 0.77
+RESULT api=gl vb=ring arch=arm64 size=1024x768 draws=3900 quad=1x768 tex=256x256 textures=16 rt=1 upload=0 uniforms=1 fps 3.09 p50_ms 324.67 p95_ms 328.58 frames 16 cpu_cores 0.55

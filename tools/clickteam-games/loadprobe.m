@@ -17,6 +17,13 @@
 //           Ultimate Custom Night's draws (+opengl trace)
 //   sub0    glBufferSubData at offset 0 of a small buffer every draw
 //   orphan  glBufferData(NULL) first, so the driver can give a fresh buffer
+//   mapring the ring, written through glMapBufferRange with
+//           GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_INVALIDATE_RANGE_BIT
+//   mapring-flush  the same with GL_MAP_FLUSH_EXPLICIT_BIT and
+//           glFlushMappedBufferRange
+//   mapring-sync   the same map without GL_MAP_UNSYNCHRONIZED_BIT
+// On a real Apple GPU (OpenGL 4.1 Metal) ring and sub0 make the driver flush
+// and wait on every upload; see docs/proof/gate1-m3/.
 // uniforms=1 also sets two 4x4 matrices and a vec3 before every draw, as
 // wined3d does for each Direct3D 9 draw (Metal: one more setVertexBytes).
 // quad=full makes every quad cover the whole target. upload=BYTES rewrites
@@ -150,7 +157,17 @@ static int run_gl(BOOL software) {
     glUniformMatrix4fv(m0, 1, GL_FALSE, identity); glUniformMatrix4fv(m1, 1, GL_FALSE, identity); glUniform3f(k, 0, 0, 0);
 
     enum { RING_QUADS = 16384 };
-    BOOL ring = [VB isEqual:@"ring"], orphan = [VB isEqual:@"orphan"];
+    int mapmode = [VB isEqual:@"mapring"] ? 1 : [VB isEqual:@"mapring-sync"] ? 2 : [VB isEqual:@"mapring-flush"] ? 3 : 0;
+    BOOL ring = [VB isEqual:@"ring"] || mapmode, orphan = [VB isEqual:@"orphan"];
+    void (^up)(GLenum, GLintptr, GLsizeiptr, const void *) = ^(GLenum t, GLintptr off, GLsizeiptr n, const void *d) {
+        if (!mapmode) { glBufferSubData(t, off, n, d); return; }
+        GLbitfield acc = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT | (mapmode != 2 ? GL_MAP_UNSYNCHRONIZED_BIT : 0) | (mapmode == 3 ? GL_MAP_FLUSH_EXPLICIT_BIT : 0);
+        void *m = glMapBufferRange(t, off, n, acc);
+        if (!m) { fprintf(stderr, "map failed 0x%x\n", glGetError()); exit(4); }
+        memcpy(m, d, n);
+        if (mapmode == 3) glFlushMappedBufferRange(t, 0, n);
+        glUnmapBuffer(t);
+    };
     GLsizeiptr vbsize = ring ? RING_QUADS * 64 : 64;
     GLuint vao, vbo, ibo; glGenVertexArrays(1, &vao); glBindVertexArray(vao);
     glGenBuffers(1, &vbo); glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -205,8 +222,8 @@ static int run_gl(BOOL software) {
                     glBufferData(GL_ELEMENT_ARRAY_BUFFER, RING_QUADS * 12, NULL, GL_STREAM_DRAW);
                     slot = 0;
                 }
-                glBufferSubData(GL_ARRAY_BUFFER, slot * 64, 64, v);
-                glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, slot * 12, 12, quad_indices);
+                up(GL_ARRAY_BUFFER, slot * 64, 64, v);
+                up(GL_ELEMENT_ARRAY_BUFFER, slot * 12, 12, quad_indices);
             } else put(v);
             if (UNIFORMS) {
                 glUniformMatrix4fv(m0, 1, GL_FALSE, identity); glUniformMatrix4fv(m1, 1, GL_FALSE, identity); glUniform3f(k, 0, 0, 0);
@@ -225,7 +242,7 @@ static int run_gl(BOOL software) {
             glBindTexture(GL_TEXTURE_2D, target);
             if (ring) {
                 if (slot == RING_QUADS) { glBufferData(GL_ARRAY_BUFFER, vbsize, NULL, GL_STREAM_DRAW); slot = 0; }
-                glBufferSubData(GL_ARRAY_BUFFER, slot * 64, 64, v);
+                up(GL_ARRAY_BUFFER, slot * 64, 64, v);
                 glDrawArrays(GL_TRIANGLE_STRIP, slot * 4, 4);
                 slot++;
             } else {
