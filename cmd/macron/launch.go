@@ -116,6 +116,9 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 	if err != nil {
 		return fail(output, err)
 	}
+	if err := followGameModeSwitch(ctx, layout, installed, progress); err != nil {
+		return fail(output, err)
+	}
 	exitCode, err := launch.Run(ctx, launch.Input{
 		Runtime:        installed,
 		Installers:     fixes.Installers,
@@ -135,6 +138,30 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 		return fail(output, err)
 	}
 	return exitCode
+}
+
+// The runtime's Wine loader runs from a games-category app bundle while
+// the game-mode file exists, and as Wine ships it otherwise.
+func followGameModeSwitch(ctx context.Context, layout wineruntime.Layout, installed wineruntime.Installed, progress func(string)) error {
+	_, err := os.Stat(layout.GameModeFile())
+	on := err == nil
+	for _, tree := range []wineruntime.Tree{wineruntime.TreeDXMT, wineruntime.TreePlain} {
+		root := installed.Root(tree)
+		if on == wineruntime.GameModeApplied(root) {
+			continue
+		}
+		if on {
+			if err := wineruntime.EnsureGameMode(ctx, root); err != nil {
+				return err
+			}
+		} else if err := wineruntime.RevertGameMode(root); err != nil {
+			return err
+		}
+	}
+	if on {
+		progress(fmt.Sprintf("Wine runs as a game app, so macOS Game Mode can turn on (%s exists)", layout.GameModeFile()))
+	}
+	return nil
 }
 
 func withBackendFromEnv(profile fixes.Profile, value string) (fixes.Profile, error) {

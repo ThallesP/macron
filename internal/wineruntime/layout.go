@@ -44,6 +44,13 @@ func (l Layout) ShowFPSFile() string {
 	return filepath.Join(l.Home, "show-fps")
 }
 
+// GameModeFile switches Game Mode on for every game while it exists: the
+// runtime's Wine loader then runs from a games-category app bundle
+// (gamemode.go).
+func (l Layout) GameModeFile() string {
+	return filepath.Join(l.Home, "game-mode")
+}
+
 func (l Layout) SteamAppBackupDir() string {
 	return filepath.Join(l.Home, "steam-app-backup")
 }
@@ -55,5 +62,6 @@ func (l Layout) CreatedPaths() []string {
 		l.LogsDir(),
 		l.DownloadsDir(),
 		l.ShowFPSFile(),
+		l.GameModeFile(),
 	}
 }
