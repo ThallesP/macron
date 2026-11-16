@@ -372,12 +372,11 @@ Every sandbox is a new device. Since 2026-11-15 Steam Guard is off on the test a
 
 ## Next
 
-1. Gate 3: done, v0.2.0 ("Gate 3, 2026-11-15").
-2. Gate 1: Ultimate Custom Night's frame rate, started with Play, title screen and into a night (`show-fps`), with `tools/clickteam-games/gltrace.sh` to settle which of the Wine fixes is its cost; then say what the virtual GPU limits.
-3. Gate 5: Overwatch (2357570) as far as its sign-in screen: add it, Install, Play, record how far it got.
-4. Gate 4: merge the `steam-bridge` branch when its build side is done, then the signed-in check (SteamAPI_Init in a game started by Play, an achievement, a cloud save) and a second release.
-5. A new Steam build: the daily `Steam builds` run proposes the rows; after merging, cut a release so the row reaches installed Macs.
-6. Left from phase 1: the hardware OpenGL path (Xonotic without `MACRON_OPENGL`) is still unchecked on a real Mac.
+1. Thalles's `macron diagnose` report from his Mac (per-call cost and frame rates on real hardware) and his Overwatch result past the Battle.net sign-in. They decide how far gate 1 goes on a real GPU.
+2. 64-bit Direct3D 9 games: their buffer maps still cross one by one (about 270 µs a draw on the sandbox). An Opus 5.5 subagent is working on branch `wd3d-upload64` (sandbox sbx_y2bxfj2u); merge, publish an overlay, pin and release when it is measured.
+3. Steam Auto-Cloud for Windows games: "For Mythos".
+4. A new Steam build: the daily `Steam builds` run proposes the rows; after merging, cut a release so the row reaches installed Macs.
+5. Left from phase 1: the hardware OpenGL path (Xonotic without `MACRON_OPENGL`) is still unchecked on a real Mac.
 
 ## For Mythos
 
