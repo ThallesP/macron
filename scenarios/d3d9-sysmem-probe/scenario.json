@@ -25,7 +25,7 @@
   },
   "reference": {
     "image": "reference.png",
-    "source": "pending: the Reference workflow on windows-latest"
+    "source": "windows-latest, Microsoft Basic Render Driver, software vertex processing, https://github.com/ThallesP/macron/actions/runs/43807418703 (identical, pixel for pixel, to d3d9-fps-probe's reference)"
   },
   "uploads": {
     "exes": ["probe32.exe", "probe64.exe"],
