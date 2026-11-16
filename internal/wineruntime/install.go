@@ -57,6 +57,8 @@ var windowsArchitectures = []string{"i386-windows", "x86_64-windows"}
 
 // overlayUnixLibs are the overlay's Unix libraries that go into the plain
 // tree too, because the overlay's Windows modules there call into them:
+const dxmtOverlayModule = "lib/wine/x86_64-windows/d3d11.dll"
+
 // opengl32.dll's calls to its Unix side are numbered, and patch 0007 adds one.
 var overlayUnixLibs = []string{"lib/wine/x86_64-unix/opengl32.so"}
 
@@ -93,6 +95,11 @@ func Install(ctx context.Context, layout Layout, manifest Manifest, progress fun
 	if err != nil {
 		return Installed{}, err
 	}
+	progress(fmt.Sprintf("downloading %s", manifest.DXMTOverlay.Name))
+	dxmtOverlayArchive, err := Download(ctx, layout.DownloadsDir(), manifest.DXMTOverlay)
+	if err != nil {
+		return Installed{}, err
+	}
 	progress(fmt.Sprintf("downloading %s", manifest.DXVK.Name))
 	dxvkArchive, err := Download(ctx, layout.DownloadsDir(), manifest.DXVK)
 	if err != nil {
@@ -112,6 +119,10 @@ func Install(ctx context.Context, layout Layout, manifest Manifest, progress fun
 	}
 	progress("adding DXMT")
 	if err := addDXMT(ctx, dxmtArchive, staging); err != nil {
+		return Installed{}, err
+	}
+	progress("adding Macron's DXMT patches")
+	if err := addDXMTOverlay(ctx, dxmtOverlayArchive, staging); err != nil {
 		return Installed{}, err
 	}
 	progress("adding Macron's Wine patches")
@@ -176,6 +187,22 @@ func addDXMT(ctx context.Context, archive, staging string) error {
 		if err := copyFiles(ctx, source, filepath.Join(dxmt, "lib", "wine", arch)); err != nil {
 			return err
 		}
+	}
+	return os.RemoveAll(unpacked)
+}
+
+// The DXMT overlay (runtime/dxmt) replaces DXMT's own modules in the DXMT tree
+// only: the plain tree keeps Wine's d3d11.dll.
+func addDXMTOverlay(ctx context.Context, archive, staging string) error {
+	unpacked := filepath.Join(staging, "unpacked-dxmt-overlay")
+	if err := extract(ctx, archive, unpacked); err != nil {
+		return err
+	}
+	if _, err := os.Stat(filepath.Join(unpacked, dxmtOverlayModule)); err != nil {
+		return failure.Errorf(failure.CodeExtractFailed, "%s has no %s", filepath.Base(archive), dxmtOverlayModule)
+	}
+	if err := copyTree(ctx, unpacked, filepath.Join(staging, string(TreeDXMT))); err != nil {
+		return err
 	}
 	return os.RemoveAll(unpacked)
 }

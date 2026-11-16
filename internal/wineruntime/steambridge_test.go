@@ -49,15 +49,15 @@ func TestInstallPutsTheSteamBridgeInBothTrees(t *testing.T) {
 			"lib/wine/x86_64-windows/steam.exe":                  "steam helper",
 			"lib/wine/x86_64-unix/lsteamclient.so":               "bridge unix",
 			"share/doc/macron-steam-bridge/LICENSE.lsteamclient": "steamworks sdk licence",
-			"lib/wine/x86_64-windows/d3d11.dll":                  map[Tree]string{TreePlain: "wine d3d11", TreeDXMT: "dxmt d3d11"}[tree],
+			"lib/wine/x86_64-windows/d3d11.dll":                  map[Tree]string{TreePlain: "wine d3d11", TreeDXMT: "macron dxmt d3d11"}[tree],
 		} {
 			if got := read(t, filepath.Join(installed.Root(tree), path)); got != want {
 				t.Errorf("%s tree %s = %q, want %q", tree, path, got, want)
 			}
 		}
 	}
-	if f.requests != 5 {
-		t.Errorf("made %d downloads, want 5", f.requests)
+	if f.requests != 6 {
+		t.Errorf("made %d downloads, want 6", f.requests)
 	}
 }
 
@@ -73,8 +73,8 @@ func TestInstallWithoutASteamBridgeDownloadsNoBridge(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(installed.Root(TreePlain), steamBridgeUnixLib)); err == nil {
 		t.Error("the plain tree has a Steam bridge nobody pinned")
 	}
-	if f.requests != 4 {
-		t.Errorf("made %d downloads, want 4", f.requests)
+	if f.requests != 5 {
+		t.Errorf("made %d downloads, want 5", f.requests)
 	}
 }
 

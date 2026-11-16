@@ -69,5 +69,5 @@ jobs:
             echo
             echo "DXMT and these patches are licensed under the GNU LGPL 2.1 or later; the licence text is in the archive under \`share/macron/dxmt/LICENSE\`."
           } > notes.md
-          gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --title "DXMT ${DXMT_TAG#v} for Macron (${RELEASE_TAG#runtime-dxmt-})" \
+          gh release create "$RELEASE_TAG" --latest=false --target "$GITHUB_SHA" --title "DXMT ${DXMT_TAG#v} for Macron (${RELEASE_TAG#runtime-dxmt-})" \
             --notes-file notes.md "out/$ASSET_NAME" "out/$ASSET_NAME.sha256" $(for patch in $patches; do echo "out/$patch"; done)
