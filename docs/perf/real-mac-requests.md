@@ -183,6 +183,83 @@ cd src && git pull && tools/perf/bench.sh pair m3 1600x900
 
 `docs/perf/real-mac-results.md`: the display lines and runtime name from the setup; request 1's eight files' contents; for every run of requests 2 to 6 its `summary.txt` (or what went wrong); request 5's `grep` output and whether the network question appeared; request 6's `ow-top.txt`, the `grep` lines and the settings lines; request 7's output; request 8's table and each run's `bench.txt`. Into `docs/perf/m3-batch1/<tag>/`: each run's `summary.txt`, `env.txt`, `hud.csv`, `thermal.txt`. Then a message to this thread.
 
+## Batch 2 (2026-11-16, after batch 1's first answers)
+
+Same ground rules, plus what batch 1 taught: keep each benchmark or `gpuload` window floating (AeroSpace) and, for Superposition, the active app for the whole run; check the render resolution in each `bench.txt`. These need the new build of the two `gpuload` programs (a `--sync` switch). The Direct3D one is published; the native one is built on the Mac with Xcode's compiler (Xcode is there, request 7), because no sandbox was free to build it:
+
+```sh
+cd ~/macron-perf/src && git pull && cd ..
+curl -fsSL -o gpuload.exe https://github.com/ThallesP/macron/releases/download/perf-probes-3/gpuload.exe
+shasum -a 256 gpuload.exe
+# must print: 9b77bd9cc2d28d5e1d822f47287479b8a0c1e2b9224715005348779deb8071b4  gpuload.exe
+clang -O2 -fobjc-arc -arch x86_64 -arch arm64 -o gpuload src/tools/perf/gpuload.m -framework Metal -framework QuartzCore -framework AppKit
+./gpuload --mode fill --size 640x360 --seconds 2 --sync 1 --out check.txt >/dev/null && cat check.txt   # must print config ... sync 1 and an fps line
+```
+
+### Request 9: does something hold DXMT's presents at 60 a second? (3 minutes)
+
+In batch 1's first `pair` pass the Direct3D 11 program returned from `Present` exactly 60.0 times a second with sync interval 0, while the same program through DXMT on the sandbox (HUD off) ran at 97 to 210, and native Metal on the M3 ran at 133 to 253. The M3 runs had the Metal HUD on; the sandbox's had it off. This separates the two:
+
+```sh
+cd ~/macron-perf
+for hud in 0 1; do
+  env MTL_HUD_ENABLED=$hud MTL_HUD_LOG_ENABLED=$hud SteamAppId=990004 STEAM_COMPAT_DATA_PATH=$HOME/macron-perf/gpuload-prefix \
+    macron waitforexitandrun "$PWD/gpuload.exe" --mode draws --size 1280x720 --seconds 15 --sync 0 --out "Z:$HOME/macron-perf/cap-d3d-hud$hud.txt" >/dev/null 2>&1
+  env MTL_HUD_ENABLED=$hud MTL_HUD_LOG_ENABLED=$hud arch -arm64 ./gpuload --mode draws --size 1280x720 --seconds 15 --sync 0 --out cap-metal-hud$hud.txt >/dev/null 2>&1
+done
+grep -H 'RESULT fps' cap-*.txt
+```
+
+Read the `fps` of each (the program's own clock, not the HUD's):
+
+- `cap-d3d-hud0` well above 60 and `cap-d3d-hud1` at 60: the HUD holds DXMT's presents to the display; numbers taken with the HUD on (show-fps, batch 1) are capped at 60 for any game faster than that, and the ceiling is not something players without the HUD have.
+- `cap-d3d-hud0` also at 60: something in the DXMT/Wine window path holds every DXMT game in a window to the display's rate whatever the game asks for. Then it is worth a fix, and the next request will look for where.
+- The two `cap-metal` lines are the reference: native Metal with the same settings.
+
+### Request 10: DXMT against native Metal, both at the display's rate (about 15 minutes)
+
+```sh
+cd ~/macron-perf/src && tools/perf/bench.sh pair m3sync 1600x900
+```
+
+The same as request 8, but both sides now present with sync interval 1 (`SYNC=1`, the default now), so both run at 60 a second and the HUD's GPU time a frame is one rendered frame's on both. Read, for each load, the median `GPU time ms` of `d3d11` against `metal-x86_64`: the difference is what DXMT adds to the same work on the GPU (its presenting pass included). Within a few percent closes candidate 5; a large difference on `fill` points at DXMT's shaders or passes, on `draws` at its per-draw work. If a load's GPU time is above 16 ms on either side, that side cannot keep 60 and the comparison for that load is per shown frame again; say which.
+
+### Request 11: Metal System Traces (about 10 minutes)
+
+`xctrace` is on the Mac (`xctrace version 16.0`), so the GPU's own record of each pass can be had. Three 5-second traces: `gpuload.exe` through DXMT, native `gpuload`, and Superposition in the middle of its run (window active and floating).
+
+```sh
+cd ~/macron-perf
+trace() {   # trace <name> <pid>
+  xcrun xctrace record --template 'Metal System Trace' --time-limit 5s --attach "$2" --output "trace-$1.trace" >/dev/null
+  xcrun xctrace export --input "trace-$1.trace" --toc > "trace-$1-toc.xml"
+}
+# 1. Direct3D 11 through DXMT (start it, wait 5 s, trace the Windows program's own process):
+SteamAppId=990004 STEAM_COMPAT_DATA_PATH=$HOME/macron-perf/gpuload-prefix macron waitforexitandrun "$PWD/gpuload.exe" --mode fill --size 1600x900 --seconds 25 --sync 1 --out "Z:$HOME/macron-perf/tr-d3d.txt" >/dev/null 2>&1 &
+sleep 8; trace d3d "$(pgrep -f '^Z:.*gpuload.exe' | head -1)"; wait
+# 2. native:
+arch -x86_64 ./gpuload --mode fill --size 1600x900 --seconds 25 --sync 1 --out tr-metal.txt >/dev/null 2>&1 &
+sleep 8; trace metal "$(pgrep -f '/gpuload --mode' | head -1)"; wait
+# 3. Superposition: start `tools/perf/bench.sh run superposition tr-sp 1600x900 windowed` as usual, and about a minute into the run:
+#    trace sp "$(pgrep -f '^C:.*superposition.exe' | head -1)"
+```
+
+Then, for each trace, export the tables about GPU work: list the schemas with `grep -o 'schema="[^"]*"' trace-<name>-toc.xml | sort -u`, and export every one whose name contains `gpu` or `encoder`:
+
+```sh
+for name in d3d metal sp; do
+  for schema in $(grep -o 'schema="[^"]*"' trace-$name-toc.xml | sort -u | sed 's/schema="//;s/"//' | grep -E 'gpu|encoder'); do
+    xcrun xctrace export --input trace-$name.trace --xpath "/trace-toc/run[@number=\"1\"]/data/table[@schema=\"$schema\"]" | sed -E 's|/Users/[^/ <"]+|~|g' | gzip > trace-$name-$schema.xml.gz
+  done
+done
+```
+
+Push the `.xml.gz` files and the three `-toc.xml` files (home folder replaced the same way) to `docs/perf/m3-batch2/`; the `.trace` bundles stay on the Mac. They show every GPU pass with its duration and label: what DXMT's frame is made of next to the native one's, and in Superposition whether DXMT's own passes (the present copy, clears, its stream-output emulation) take a share worth chasing.
+
+### What to push for batch 2
+
+`docs/perf/real-mac-results.md`: request 9's four `RESULT fps` lines; request 10's table and each run's `bench.txt`; request 11's list of exported files and anything that failed. Files into `docs/perf/m3-batch2/` as above.
+
 ## Ultimate Custom Night (gate 1 thread, Opus 5.5)
 
 Context: `docs/proof/gate1-m3/macron9.md`. With `macron.9` the menu runs at 31 fps; the game's thread works about 19 ms a frame (13 of them in Wine) and waits for its frame timer for the rest. The menu is the benchmark (no input needed). Same setup as macron9.md: `macron` built from main, its runtime in a separate `MACRON_HOME`, empty workspace, sound off. Results go to `docs/proof/gate1-m3/` with the home folder written `~` (`sed -E 's|/Users/[^/ ]+|~|g'`).

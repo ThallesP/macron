@@ -2,12 +2,13 @@
 // the two on one Mac show what DXMT's translation costs on the GPU.
 //
 //   gpuload [--mode fill|draws|mix] [--size WxH] [--seconds S]
-//           [--passes P] [--draws D] [--out FILE]
+//           [--passes P] [--draws D] [--sync N] [--out FILE]
 //
 // The same passes, shader math, draws and per-draw constants as gpuload.c;
 // the window's layer is set up the way Wine and DXMT set theirs up
 // (contentsScale 1, so the drawable is WxH pixels in a WxH-point window;
-// display sync off). One command buffer a frame, at most 3 frames in
+// display sync off, as DXMT sets it). --sync 1 turns display sync on, so
+// presents wait for the display as gpuload.c's --sync 1 does. One command buffer a frame, at most 3 frames in
 // flight. Besides the frame rate it prints the GPU time a frame from the
 // command buffers' GPUStartTime and GPUEndTime, a cross-check of the Metal
 // HUD's figure. Runs as x86_64 (Rosetta, like Wine) or arm64.
@@ -82,7 +83,7 @@ int main(int argc, char **argv)
 {
     @autoreleasepool {
         const char *mode = "mix", *out = "gpuload.txt";
-        unsigned width = 1600, height = 900, passes = 8, draws = 4000;
+        unsigned width = 1600, height = 900, passes = 8, draws = 4000, sync = 0;
         double seconds = 20;
         for (int i = 1; i + 1 < argc; i += 2) {
             if (!strcmp(argv[i], "--mode")) mode = argv[i + 1];
@@ -90,6 +91,7 @@ int main(int argc, char **argv)
             else if (!strcmp(argv[i], "--seconds")) seconds = atof(argv[i + 1]);
             else if (!strcmp(argv[i], "--passes")) passes = atoi(argv[i + 1]);
             else if (!strcmp(argv[i], "--draws")) draws = atoi(argv[i + 1]);
+            else if (!strcmp(argv[i], "--sync")) sync = atoi(argv[i + 1]);
             else if (!strcmp(argv[i], "--out")) out = argv[i + 1];
         }
         int fill = strcmp(mode, "draws") != 0, quads = strcmp(mode, "fill") != 0;
@@ -99,7 +101,7 @@ int main(int argc, char **argv)
 #else
         const char *arch = "arm64";
 #endif
-        result("RESULT config api metal-%s mode %s size %ux%u passes %u draws %u\n", arch, mode, width, height, fill ? passes : 0, quads ? draws : 0);
+        result("RESULT config api metal-%s mode %s size %ux%u passes %u draws %u sync %u\n", arch, mode, width, height, fill ? passes : 0, quads ? draws : 0, sync);
 
         [NSApplication sharedApplication];
         [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
@@ -115,7 +117,7 @@ int main(int argc, char **argv)
         layer.framebufferOnly = YES;
         layer.contentsScale = 1.0;
         layer.drawableSize = CGSizeMake(width, height);
-        layer.displaySyncEnabled = NO;
+        layer.displaySyncEnabled = sync > 0;
         window.contentView.wantsLayer = YES;
         window.contentView.layer = layer;
         [window makeKeyAndOrderFront:nil];

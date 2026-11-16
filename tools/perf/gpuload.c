@@ -3,7 +3,7 @@
  * what DXMT's translation costs on the GPU.
  *
  *   gpuload.exe [--mode fill|draws|mix] [--size WxH] [--seconds S]
- *               [--passes P] [--draws D] [--out FILE]
+ *               [--passes P] [--draws D] [--sync N] [--out FILE]
  *
  * fill:  P full-screen passes a frame into a WxH RGBA16F texture, each
  *        sampling the previous one and doing 16 rounds of multiply-add and
@@ -14,7 +14,8 @@
  *        way Direct3D 11 games feed per-object constants.
  * mix:   both.
  *
- * It presents with sync interval 0 (as fast as it can), warms up for 2
+ * It presents with sync interval --sync (default 0, as fast as it can;
+ * 1 waits for the display, as gpuload.m's --sync 1 does), warms up for 2
  * seconds, measures for S seconds (default 20), and quits by itself. RESULT
  * lines go to stdout and to the --out file (default gpuload.txt), because a
  * program started through Macron's steam.exe has no stdout in macron's log.
@@ -95,7 +96,7 @@ static int compare_double(const void *a, const void *b)
 int main(int argc, char **argv)
 {
     const char *mode = "mix", *out = "gpuload.txt";
-    unsigned width = 1600, height = 900, passes = 8, draws = 4000;
+    unsigned width = 1600, height = 900, passes = 8, draws = 4000, sync = 0;
     double seconds = 20;
     for (int i = 1; i + 1 < argc; i += 2) {
         if (!strcmp(argv[i], "--mode")) mode = argv[i + 1];
@@ -103,11 +104,12 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--seconds")) seconds = atof(argv[i + 1]);
         else if (!strcmp(argv[i], "--passes")) passes = atoi(argv[i + 1]);
         else if (!strcmp(argv[i], "--draws")) draws = atoi(argv[i + 1]);
+        else if (!strcmp(argv[i], "--sync")) sync = atoi(argv[i + 1]);
         else if (!strcmp(argv[i], "--out")) out = argv[i + 1];
     }
     int fill = strcmp(mode, "draws") != 0, quads = strcmp(mode, "fill") != 0;
     result_file = fopen(out, "w");
-    result("RESULT config api d3d11 mode %s size %ux%u passes %u draws %u\n", mode, width, height, fill ? passes : 0, quads ? draws : 0);
+    result("RESULT config api d3d11 mode %s size %ux%u passes %u draws %u sync %u\n", mode, width, height, fill ? passes : 0, quads ? draws : 0, sync);
 
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = window_proc;
@@ -244,7 +246,7 @@ int main(int argc, char **argv)
                 ID3D11DeviceContext_Draw(ctx, 4, 0);
             }
         }
-        hr = IDXGISwapChain_Present(swap, 0, 0);
+        hr = IDXGISwapChain_Present(swap, sync, 0);
         if (FAILED(hr)) {
             result("RESULT present: FAILED hr=0x%08lx at frame %llu\n", (unsigned long)hr, frame);
             return 1;

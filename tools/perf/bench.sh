@@ -29,7 +29,11 @@
 # `pair` runs tools/perf/gpuload.c through DXMT and its native Metal twin
 # tools/perf/gpuload.m on the same Mac, for three loads (full-screen shader
 # passes, many small draws, both), and prints a table: the GPU time a frame
-# DXMT adds to the same work.
+# DXMT adds to the same work. Both sides present with sync interval SYNC
+# (default 1: every frame waits for the display, so both run at the
+# display's rate and the HUD's GPU time a frame is one rendered frame's on
+# both; with SYNC=0 an uncapped side's HUD frames are frames shown, not
+# frames rendered).
 #
 # Needs macron (Macron 0.4.0 or later) on PATH, curl, shasum, awk.
 set -eu
@@ -208,7 +212,7 @@ pair() {
 			[ -e "$out" ] && die "$out exists; pick another tag"
 			mkdir -p "$out"
 			{
-				echo "gpuload $load, $api, $size, $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+				echo "gpuload $load, $api, $size, sync ${SYNC:-1}, $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 				echo "macOS $(sw_vers -productVersion), $(sysctl -n machdep.cpu.brand_string)"
 				pmset -g batt | sed -n 1p
 				echo "waited $(wait_cool) s for thermal pressure 0 before starting"
@@ -221,7 +225,7 @@ pair() {
 				pkill -f gpuload
 			) &
 			watchdog=$!
-			set -- --mode "$load" --size "$size" --seconds 20
+			set -- --mode "$load" --size "$size" --seconds 20 --sync "${SYNC:-1}"
 			case $api in
 			d3d11)
 				env MTL_HUD_ENABLED=1 MTL_HUD_LOG_ENABLED=1 SteamAppId=990004 STEAM_COMPAT_DATA_PATH="$home/gpuload-prefix" \
