@@ -11,12 +11,12 @@ Taken on Thalles's own Mac at his request ("feel free to launch the game and do 
 
 ## The cause
 
-Apple's OpenGL on Apple silicon is a layer over Metal (`AppleMetalOpenGLRenderer`, "OpenGL 4.1 Metal"). In it, `glBufferSubData` on a buffer that draws already issued still use does two things every time (`sample-game-thread.txt`, of 1,163 samples of the game's thread):
+Apple's OpenGL on Apple silicon is a layer over Metal (`AppleMetalOpenGLRenderer`, "OpenGL 4.1 Metal"). In it, `glBufferSubData` on a buffer that draws already issued still use does two things every time (`sample-game-thread.txt`; the game's thread has 1,502 samples, 1,163 listed under the thread and 338 under Metal's command queue, which runs on the same thread):
 
 - `gldBufferSubData` → `flushResource` → `flushContext` → `-[_MTLCommandQueue submitCommandBuffer:]`: 318 samples. It submits the context's command buffer.
 - `gldBufferSubData` → `getPreprocessingCommandBuffer` → `-[_MTLCommandQueue commandBufferWithUnretainedReferences]` → `_dispatch_semaphore_wait_slow`: 574 samples. It asks for a new command buffer and waits for the GPU to finish an earlier one.
 
-So 892 of 1,163 samples (77%) are inside `glBufferSubData`, and 574 (49%) are a wait. wined3d uploads each draw's vertices and indices with `glBufferSubData` (through `wow64_flush_batch` → `wow64_ext_glBufferSubData` with patch 0007); a night is about 3,900 draws a frame. The draws themselves are 43 samples.
+So 892 of 1,502 samples (59%) are inside `glBufferSubData`, and 574 (38%) are a wait. (An earlier version of this file divided by 1,163 and said 77% and 49%.) wined3d uploads each draw's vertices and indices with `glBufferSubData` (through `wow64_flush_batch` → `wow64_ext_glBufferSubData` with patch 0007); a night is about 3,900 draws a frame. The draws themselves are 43 samples.
 
 The Metal HUD (`libMTLHud.dylib`) is in those stacks because `show-fps` turns it on. It is not the cause: the 2026-11-14 measurement on this Mac, taken with `WINEDEBUG=fps` alone, was the same 5 fps, and `loadprobe` below shows the same cost with no HUD and no Wine.
 
@@ -37,6 +37,10 @@ The Metal HUD (`libMTLHud.dylib`) is in those stacks because `show-fps` turns it
 | `vb=ring` with 4 draws a frame | about 1,450 |
 
 So the cost is per upload, it is the same with and without Rosetta, and an unsynchronised map avoids it completely: 3 fps becomes 120.
+
+## What an unattended start shows
+
+Started with no input, the game goes to its character-select menu by itself, so starts without a person measure the menu: 4.9 to 5.2 fps on 0.4.0. A `+opengl` trace there (2026-11-16, 3.5 s): 9,186 draws a second at 4.1 fps with the trace on, so about 2,240 draws a frame, each with two `glBufferSubData` (64,284 uploads for 32,142 draws). With `WINEDEBUG` set to anything but `-all`, wined3d also calls `glGetError` after every OpenGL call (194,397 in that window), which empties the batching queue each time; frame rates taken with debug channels on are lower than a normal start's.
 
 ## Other paths tried on this Mac
 
