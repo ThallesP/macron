@@ -4,7 +4,7 @@ Macron makes Steam's own Install and Play buttons work for Windows-only games in
 
 ## After installing, in short
 
-1. Open Steam. A Windows-only game now has a working Install button: install one and press Play. The first start of a game takes about a minute longer while its Windows environment is made.
+1. Open Steam. A Windows-only game now has a working Install button: install one and press Play. The first Windows game you start after installing takes about a minute longer while Macron prepares its Windows environment; later new games take a few seconds more than usual, and games you already played start as usual even after a Macron update.
 2. To log its frame rate, turn the frame counter on before pressing Play, and off again afterwards:
    ```sh
    touch ~/Library/Application\ Support/Macron/show-fps   # on
@@ -26,6 +26,10 @@ Ultimate Custom Night ran at 5 frames a second in its menu on Thalles's M3 with 
 A night (about 1.7 times the menu's work) has not been measured on a real Mac yet. Turn the frame counter on (below) and `macron diagnose` reports it.
 
 If a game draws garbage, flickers or stutters with this build, these go in its Steam launch options, one at a time, to find which change it is: `WINE_D3D_CONFIG=csmt=0 %command%` (Direct3D work back on the game's thread), `WINE_OPENGL_UNSYNCHRONIZED=0 %command%` (the old uploads), `WINE_OPENGL_BATCH=0 %command%` (no batching of OpenGL calls). Direct3D 10 and 11 games go through DXMT and are not affected by any of them.
+
+## Starting games
+
+A game's first Play after a Macron update no longer waits for a Windows setup step: it starts as quickly as any other start (on the test machines the first start after an update took 7.7 times an ordinary start before this build, and the same as an ordinary start now). A new game starts from a prepared copy instead of building its own Windows environment: about 1.2 to 1.5 times an ordinary start, where it took about 11 times before. The "Wine configuration is being updated" window no longer appears. While a game runs, the Dock, the menu bar and Force Quit still call it `wine`. `docs/startup/README.md` in the source has the measurements.
 
 ## Before you start
 
@@ -56,7 +60,7 @@ If Steam is a build Macron does not know yet (Steam updates itself), or any step
 
 ## Using it
 
-Open Steam. A Windows-only game in your library now has a working Install button; Steam downloads it into its normal library, and Play starts it through Macron. The first start of each game takes about a minute longer while its Windows environment is made. Steam's Stop button stops it. Games that have a Mac version install and start exactly as before.
+Open Steam. A Windows-only game in your library now has a working Install button; Steam downloads it into its normal library, and Play starts it through Macron. The first Windows game you start after installing or updating Macron takes about a minute longer, once, while Macron prepares the Windows environment new games start from; every later new game gets a copy of it in under a second. Steam's Stop button stops it. Games that have a Mac version install and start exactly as before.
 
 - **A log of every start** is in `~/Library/Application Support/Macron/logs/steam-<app id>/`.
 - **Frame rate:** create the file `~/Library/Application Support/Macron/show-fps` (`touch` it) and start the game. Direct3D 8 and 9 games then log their frame rate into that log (`trace:fps:… @ approx 59.9fps`), which `macron diagnose` sums up; Direct3D 10 and 11 games show Apple's Metal HUD over the game and write every frame's interval into that log, which `macron diagnose` turns into the average and the hitches. Delete the file to turn it off.
