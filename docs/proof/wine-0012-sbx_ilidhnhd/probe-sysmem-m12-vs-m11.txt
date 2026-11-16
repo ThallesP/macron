@@ -1,0 +1,9 @@
+m12 RESULT fps 9.50 p50_ms 103.136 p95_ms 136.404 p99_ms 178.979 frames 143
+m11 RESULT fps 8.94 p50_ms 102.371 p95_ms 167.399 p99_ms 179.196 frames 135
+m12 RESULT fps 8.96 p50_ms 107.997 p95_ms 152.276 p99_ms 187.101 frames 135
+m11 RESULT fps 8.44 p50_ms 113.633 p95_ms 171.713 p99_ms 194.598 frames 127
+m12 RESULT fps 12.21 p50_ms 78.469 p95_ms 112.900 p99_ms 132.112 frames 184
+m11 RESULT fps 9.75 p50_ms 99.227 p95_ms 128.365 p99_ms 136.731 frames 147
+CHECK d3d9-sysmem-probe exit 0
+CHECK d3d9-fps-probe exit 0
+M12-DONE
