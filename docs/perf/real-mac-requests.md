@@ -45,7 +45,7 @@ cat avx-*.txt nv-*.txt
 
 (The first start creates a Windows environment and takes a minute.) Read:
 
-- `avx-1*.txt`, the line `RESULT avx2 ... x the SSE2 time`. On the sandbox it was 1.56 and 1.81 (AVX2 code slower than SSE2 code under Rosetta). Similar here means `ROSETTA_ADVERTISE_AVX` stays a per-game compatibility switch and is no speed-up. Below 1.0 would mean AVX code is faster on the M3, and the variable becomes a candidate for games with AVX paths.
+- `avx-1*.txt`, the line `RESULT avx2 ... x the SSE2 time`. On the sandbox it was 1.16 to 1.81 over seven runs (AVX2 code slower than SSE2 code under Rosetta). Similar here means `ROSETTA_ADVERTISE_AVX` stays a per-game compatibility switch and is no speed-up. Below 1.0 would mean AVX code is faster on the M3, and the variable becomes a candidate for games with AVX paths.
 - `nv-1.txt`, the line `RESULT DLSS feature`. `created (MetalFX temporal scaler)` means a game's DLSS calls can run on this Mac through DXMT (candidate 1 goes on to request 6). `not created` means the M3's MetalFX temporal scaler is unavailable to DXMT, and candidate 1 is dead here.
 
 ### Request 2: does the benchmark run, and the baseline (about 20 minutes)

@@ -59,14 +59,14 @@ DXMT can upscale the game's finished frame with MetalFX before presenting it, so
 msync replaces wineserver round trips for Windows waits and events with Mach semaphores in the game's own process.
 
 - **M3:** a wineserver round trip costs 8.1 µs and this Wine has no msync or esync (`macron diagnose`).
-- For Overwatch it cannot raise the frame rate while the GPU is the limit. It may help CPU-bound games. It exists as [marzent/wine-msync](https://github.com/marzent/wine-msync) (LGPL-3.0, written against CrossOver's Wine) and as a per-bottle switch in CrossOver 25, where CodeWeavers say some applications run faster, some show no difference and some break ([CodeWeavers](https://support.codeweavers.com/miscellanous/advanced-settings-in-crossover-mac)).
+- For Overwatch it cannot raise the frame rate while the GPU is the limit. It may help CPU-bound games. It exists as [marzent/wine-msync](https://github.com/marzent/wine-msync) (LGPL-3.0; patches for CrossOver 22 and 23, Wine Staging and Wine devel, the newest for Wine 9.15 in August 2024, so Macron's Wine 11.21 would need a port) and as a per-bottle switch in CrossOver 25, where CodeWeavers say some applications run faster, some show no difference and some break ([CodeWeavers](https://support.codeweavers.com/miscellanous/advanced-settings-in-crossover-mac)).
 - **pending:** how busy the wineserver is while Overwatch runs (request 6's `top`).
 
 ### 7. AVX under Rosetta (`ROSETTA_ADVERTISE_AVX=1`)
 
 Rosetta can run AVX and AVX2 code but hides them from CPUID unless the variable is set.
 
-- **sandbox** (`tools/perf/avxprobe.c`, through `macron waitforexitandrun`): without the variable a Windows program under Macron sees no AVX, AVX2, FMA, F16C or BMI, and `IsProcessorFeaturePresent(PF_AVX_INSTRUCTIONS_AVAILABLE)` is false; with it, all of them are present, XCR0 is 0x7 and `GetEnabledXStateFeatures` is 0x7. The same float kernel (4096 floats in L1, 200,000 passes) took 0.079 to 0.080 s as SSE2 (20.4 to 20.8 GFLOP/s) and 0.125 s as AVX2+FMA (13.1 GFLOP/s): **AVX2 code is 1.56 times slower** than SSE2 code under Rosetta here. The sandbox's CPU cores are real Apple cores, and this kernel makes no system calls, so the ratio should hold on the M3 (request 1 checks).
+- **sandbox** (`tools/perf/avxprobe.c`, through `macron waitforexitandrun`): without the variable a Windows program under Macron sees no AVX, AVX2, FMA, F16C or BMI, and `IsProcessorFeaturePresent(PF_AVX_INSTRUCTIONS_AVAILABLE)` is false; with it, all of them are present, XCR0 is 0x7 and `GetEnabledXStateFeatures` is 0x7. The same float kernel (4096 floats in L1, 200,000 passes) was slower as AVX2+FMA than as SSE2 in all seven runs: 1.16, 1.17, 1.30, 1.44, 1.50, 1.56 and 1.81 times the SSE2 time (the sandbox's absolute speed varied from 8 to 21 GFLOP/s between runs, the ratio less). **AVX2 code is slower than SSE2 code under Rosetta here.** The sandbox's CPU cores are real Apple cores, and this kernel makes no system calls, so the ratio should hold on the M3 (request 1 checks).
 - So it is a compatibility switch for games that refuse to start without AVX (CrossOver turns it on per game), not a speed-up; turned on for every game it can make games that pick an AVX path slower.
 
 ### 8. D3DMetal (Apple's Game Porting Toolkit) installed by the user
