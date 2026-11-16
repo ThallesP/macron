@@ -1,0 +1,40 @@
+======================================================================
+wine [79085]: 64-bit (translated)    Footprint: 123 MB (4096 bytes per page)
+======================================================================
+
+  Dirty      Clean  Reclaimable    Regions    Category
+    ---        ---          ---        ---    ---
+  63 MB     196 KB          0 B        115    WINE_RESERVE
+  49 MB        0 B          0 B        244    untagged (VM_ALLOCATE)
+2600 KB        0 B          0 B          7    MALLOC_TINY
+2424 KB    4188 KB          0 B        351    mapped file
+1314 KB        0 B          0 B          1    page table
+1288 KB        0 B          0 B        323    Rosetta Generic
+1024 KB        0 B          0 B          2    MALLOC_MEDIUM
+ 808 KB        0 B          0 B          1    Rosetta JIT
+ 436 KB        0 B          0 B          4    MALLOC_SMALL
+ 370 KB        0 B          0 B        468    __DATA
+ 262 KB        0 B          0 B        424    __DATA_DIRTY
+ 192 KB        0 B          0 B          2    Rosetta IndirectBranch
+ 184 KB        0 B          0 B          2    Rosetta Arena
+ 144 KB        0 B          0 B        504    __DATA_CONST
+  92 KB        0 B          0 B          8    stack
+  84 KB        0 B          0 B         12    MALLOC metadata
+  36 KB        0 B          0 B       1116    unused dyld shared cache area
+  32 KB        0 B          0 B          1    Activity Tracing
+  16 KB        0 B          0 B          8    Rosetta Thread Context
+  16 KB        0 B          0 B          8    Rosetta Return Stack
+  16 KB        0 B          0 B          1    libdispatch
+ 8192 B        0 B          0 B          1    os_alloc_once
+ 8192 B        0 B          0 B          2    __TPRO_CONST
+    0 B     424 KB          0 B        522    __TEXT
+    0 B      72 KB          0 B         18    __LINKEDIT
+    0 B        0 B          0 B          1    __CTF
+    0 B        0 B          0 B          1    __FONT_DATA
+    ---        ---          ---        ---    ---
+ 123 MB    4880 KB          0 B       4149    TOTAL
+
+Auxiliary data:
+    phys_footprint: 123 MB
+    phys_footprint_peak: 123 MB
+

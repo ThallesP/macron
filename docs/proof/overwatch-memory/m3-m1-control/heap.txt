@@ -1,0 +1,80 @@
+Process:         Overwatch.exe [79085]
+Path:            */wine
+Load Address:    0x200000000
+Identifier:      wine
+Version:         11.21 (0)
+Code Type:       X86-64 (translated)
+Platform:        macOS
+Parent Process:  launchd [1]
+Target Type:     live task
+
+Date/Time:       2026-11-16 07:00:21.518 -0300
+Launch Time:     2026-11-16 06:57:04.810 -0300
+OS Version:      macOS 26.5.2 (25F84)
+Report Version:  7
+Analysis Tool:   /usr/bin/heap
+
+Physical footprint:         13.9G
+Physical footprint (peak):  14.0G
+Idle exit:                  untracked
+----
+
+Process 79085: 5 zones
+
+All zones: 11180254 nodes malloced - Sizes: 9600KB[1] 9328KB[1] 1152KB[1] 528KB[2] 256KB[4] 224KB[1] 160KB[3] 128KB[84] 96KB[560] 64KB[12961] 32KB[1620] 31KB[1490] 30KB[2345] 29KB[2483] 28KB[2100] 27KB[2082] 26KB[2519] 25.5KB[1] 25KB[2632] 24.5KB[2] 24KB[2888] 23.5KB[1] 23KB[3113] 22KB[3296] 21KB[4199] 20KB[4453] 19KB[5615] 18KB[9365] 17.5KB[1] 17KB[11203] 16KB[23357] 15KB[16889] 14.5KB[1] 14KB[9085] 13.5KB[5] 13KB[43341] 12.5KB[3] 12KB[14059] 11.5KB[4] 11KB[105914] 10KB[19392] 9.5KB[1] 9KB[39280] 8.5KB[24] 8KB[60256] 7.5KB[66091] 7KB[52021] 6.5KB[13] 6KB[95949] 5.5KB[10] 5KB[79835] 4.5KB[116] 4KB[221062] 3.5KB[189] 3KB[247225] 2.5KB[31] 2KB[417703] 1.5KB[5776] 1KB[1370525] 1008[3] 992[20] 976[4] 960[68378] 944[8] 928[16] 912[10] 896[11755] 880[56] 864[13] 848[5] 832[21] 816[6] 800[76] 784[32] 768[227172] 752[29] 736[15] 720[3] 704[15] 688[56] 672[3171] 656[62] 640[11777] 624[3152] 608[38] 592[55] 576[65] 560[39] 544[120] 528[9] 512[67192] 496[4] 480[63988] 464[67] 448[551] 432[82] 416[63] 400[8709] 384[39068] 368[249] 352[66] 336[101] 320[941] 304[234] 288[124] 272[226] 256[123156] 240[5678] 228[3] 224[1972] 208[728] 192[2422] 176[3333949] 160[25419] 144[5000] 132[3] 128[226745] 112[10360] 110[3] 108[6] 104[3] 96[2518] 91[3] 88[3] 85[18] 84[6] 80[1548232] 76[3] 74[3] 72[18] 67[15] 65[3] 64[2056929] 63[3] 60[15] 58[3] 56[9] 53[3] 52[15] 50[3] 48[181682] 47[3] 44[6] 43[3] 40[9] 36[12] 34[3] 33[6] 32[171803] 31[3] 30[3] 28[63] 24[51] 20[6] 17[9] 16[12176] 12[6] 10[3] 8[93] 4[27] 1[9] 
+
+Found:  1171 ObjC classes  442 Swift classes  180 C++ classes  244 CFTypes
+Type names for non-objects could be derived from allocation backtraces if the process used MallocStackLogging
+
+-----------------------------------------------------------------------
+All zones: 11180254 nodes (12.3G)
+
+   COUNT      BYTES       AVG   CLASS_NAME                                        TYPE    BINARY
+   =====      =====       ===   ==========                                        ====    ======
+11086426      12.2G    1185.4   non-object                                                
+      30      9977K     332.6K  CFData (Bytes Storage)                            C       CoreFoundation
+    7700      3008K     400.0   Swift._DictionaryStorage<__C.NSDeviceDescriptionKey, Any>  Swift   libswiftCore.dylib
+    3289      2306K     718.0   AGX::G15::Texture                                 C++     AGXMetalG15G_C0
+    3114      1898K     624.0   AGXG15GFamilyTexture                              ObjC    AGXMetalG15G_C0
+      18      1152K      64.0K  MTLResourceList                                   ObjC    Metal
+    7700       842K     112.0   Swift.BridgingHashBuffer                          Swift   libswiftCore.dylib
+   10835       775K      73.2   Swift.StringStorage                               Swift   libswiftCore.dylib
+   15532       726K      47.9   NSConcreteValue                                   ObjC    Foundation
+    1152       645K     573.0   Class.methodCache._buckets (bucket_t)             C       libobjc.A.dylib
+     127       508K       4.0K  @autoreleasepool content                          C       libobjc.A.dylib
+    7700       361K      48.0   Swift._SwiftDeferredNSDictionary<__C.NSDeviceDescriptionKey, Any>  Swift   libswiftCore.dylib
+     909       355K     400.0   AGXG15GFamilyBuffer                               ObjC    AGXMetalG15G_C0
+    5653       342K      62.0   CFString                                          ObjC    CoreFoundation
+    1545       338K     224.0   URLParseInfo                                      Swift   Foundation
+    1546       282K     186.5   NSMutableDictionary (Storage)                     C       CoreFoundation
+    1545       266K     176.0   Swift.ManagedBuffer<Foundation.URLComponents, __C.os_unfair_lock_s>  Swift   libswiftCore.dylib
+      19       242K      12.7K  Swift Metadata                                    C       libswiftCore.dylib
+      32       144K       4.5K  AGX::G15::FragmentProgramVariant                  C++     AGXMetalG15G_C0
+      34       136K       4.0K  AGXG15GFamilyRenderPipeline                       ObjC    AGXMetalG15G_C0
+      27       122K       4.5K  AGX::G15::VertexProgramVariant                    C++     AGXMetalG15G_C0
+     192       120K     640.0   CFDictionary (Value Storage)                      C       CoreFoundation
+      78       117K    1536.0   HUDUserClientMetric                               ObjC    libMTLHud.dylib
+     447       107K     245.0   NSDictionary                                      ObjC    CoreFoundation
+      21        94K       4.5K  AGX::G15::ComputeProgramVariant                   C++     AGXMetalG15G_C0
+    2936        92K      32.0   Class.data (class_rw_t)                           C       libobjc.A.dylib
+      23        80K    3584.0   AGX::G15::BackgroundObjectProgramVariant          C++     AGXMetalG15G_C0
+      22        77K    3584.0   AGX::G15::BlitComputeProgramVariant               C++     AGXMetalG15G_C0
+     378        77K     208.0   icu::UnicodeSet                                   C++     libicucore.A.dylib
+     570        65K     116.1   CFString (Storage)                                C       CoreFoundation
+     565        62K     112.8   NSMutableArray (Storage)                          C       CoreFoundation
+      88        62K     721.1   CFDictionary (Weak Key Storage)                   C       CoreFoundation
+     104        58K     571.4   CFDictionary (Key Storage)                        C       CoreFoundation
+      29        58K    2048.0   AGXG15GFamilyFragmentProgram                      ObjC    AGXMetalG15G_C0
+     158        57K     368.0   IOGPUMetalPooledResource                          ObjC    IOGPU
+    1603        50K      32.0   NSMutableDictionary                               ObjC    CoreFoundation
+     250        50K     202.9   CFData                                            ObjC    CoreFoundation
+    1560        49K      32.0   NSArray                                           ObjC    CoreFoundation
+    1560        47K      31.2   NSArray._list (id[])                              C       CoreFoundation
+     734        34K      48.0   NSMutableArray                                    ObjC    CoreFoundation
+      70        30K     432.0   _MTLFunctionInternal                              ObjC    Metal
+      36        28K     800.0   TTenuousComponentFont                             C++     CoreText
+      18        27K    1536.0   AGXG15GFamilyVertexProgram                        ObjC    AGXMetalG15G_C0
+     215        27K     128.0   dispatch_queue_t (serial)                         ObjC    libdispatch.dylib
+     515        25K      50.5   __NSMallocBlock__                                 ObjC    libsystem_blocks.dylib
+    1545        24K      16.0   _NSSwiftURLComponents                             Swift   Foundation
+      16        24K    1536.0   AGXG15GFamilyComputeProgram                       ObjC    AGXMetalG15G_C0

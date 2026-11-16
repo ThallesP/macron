@@ -1,0 +1,18 @@
+Overwatch left alone, m1
+
+HUD frames logged: 24970
+frames measured: 22473 (the first 2497 left out)
+frames a second: 50.0
+GPU busy: 31% (sum of GPU time over sum of intervals)
+interval ms: p25 15.28, median 16.31, p75 24.42, p95 26.33, p99 27.99
+GPU time ms: p25 4.22, median 6.81, p75 7.91, p95 8.51, p99 8.91
+thermal pressure levels seen: 
+
+benchmark's own result:
+
+DXMT and Metal lines:
+   1 warn:  MakeWindowAssociation: Ignoring flags 1
+   1 warn:  Emulate stream output
+   1 warn:  DXGIAdapter: Unknown interface query f0db4c7f-fe5a-42a2-bd62-f2a6cf6fc83e
+   1 warn:  DXGIAdapter: Unknown interface query 17399d75-964e-4c03-99f8-9d4fd196dd62
+   1 err:   CreateGeometryShaderWithStreamOutput: not supported, expect problem

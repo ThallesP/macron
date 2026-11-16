@@ -1,0 +1,57 @@
+======================================================================
+wine [79085]: 64-bit (translated)    Footprint: 8979 MB (4096 bytes per page)
+======================================================================
+
+  Dirty      Clean  Reclaimable    Regions    Category
+    ---        ---          ---        ---    ---
+5905 MB        0 B          0 B        746    MALLOC_SMALL
+1149 MB      64 MB          0 B       9994    WINE_RESERVE
+ 733 MB        0 B          0 B        748    MALLOC_TINY
+ 563 MB        0 B          0 B         12    MALLOC_MEDIUM
+ 345 MB        0 B          0 B        362    Owned physical footprint (unmapped) (graphics)
+ 117 MB        0 B          0 B          1    Rosetta JIT
+  38 MB        0 B          0 B       9624    Rosetta Generic
+  25 MB        0 B          0 B          1    page table
+  19 MB        0 B          0 B          7    MALLOC_LARGE
+  18 MB        0 B          0 B          4    IOSurface
+  15 MB        0 B          0 B        331    untagged (VM_ALLOCATE)
+  13 MB        0 B          0 B        220    IOAccelerator (graphics)
+9360 KB        0 B          0 B          8    CoreAnimation
+9232 KB        0 B          0 B         95    Owned physical footprint (unmapped)
+8192 KB        0 B          0 B          1    Rosetta IndirectBranch
+3876 KB      69 MB          0 B        689    mapped file
+2646 KB        0 B          0 B       1024    __DATA
+2632 KB        0 B          0 B       1038    __DATA_CONST
+2052 KB        0 B          0 B          1    CG image
+1106 KB        0 B          0 B        860    __DATA_DIRTY
+ 544 KB        0 B          0 B          2    Rosetta Arena
+ 540 KB        0 B          0 B         67    stack
+ 352 KB        0 B          0 B        116    Rosetta Thread Context
+ 336 KB        0 B          0 B          3    CoreUI image data
+ 324 KB        0 B          0 B         46    MALLOC metadata
+ 232 KB        0 B          0 B        116    Rosetta Return Stack
+ 164 KB        0 B          0 B          1    libdispatch
+ 160 KB        0 B          0 B          4    IOAccelerator
+ 128 KB        0 B          0 B          1    Accelerate image backing stores
+  84 KB        0 B          0 B          9    IOKit
+  71 KB        0 B          0 B       2063    unused dyld shared cache area
+  48 KB        0 B          0 B          1    Activity Tracing
+  48 KB        0 B          0 B          1    dyld private memory
+  12 KB        0 B          0 B          3    CoreGraphics
+ 8192 B        0 B          0 B          1    os_alloc_once
+ 8192 B        0 B          0 B          2    __TPRO_CONST
+ 4096 B        0 B          0 B          1    Foundation
+ 4096 B        0 B          0 B          1    ColorSync
+    0 B        0 B        12 KB          6    ImageIO
+    0 B    5336 KB          0 B       1078    __TEXT
+    0 B    1472 KB          0 B         55    __LINKEDIT
+    0 B        0 B          0 B          1    __FONT_DATA
+    0 B        0 B          0 B          2    SQLite page cache
+    0 B        0 B          0 B          1    __CTF
+    ---        ---          ---        ---    ---
+8979 MB     140 MB        12 KB      29349    TOTAL
+
+Auxiliary data:
+    phys_footprint: 8939 MB
+    phys_footprint_peak: 8939 MB
+
