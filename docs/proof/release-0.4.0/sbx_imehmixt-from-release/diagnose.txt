@@ -1,0 +1,82 @@
+Macron diagnose report, 2026-11-16T01:21:08Z
+macron 0.4.0
+
+== This Mac
+macOS:            26.7.2 (25G332)
+chip:             Apple M1 (Virtual), model VirtualMac2,1, 3 cores, 7516192768 bytes of memory
+virtual machine:  yes
+SIP:              System Integrity Protection status: disabled.
+Rosetta:          installed
+
+== Steam
+build:            1794536281 (known to this macron: true)
+steamclient:      sha256 55a9341f7e411f52bae049193a98071ae666b0fddb90ab3cae6aa527d9d84335
+Steam.app:        /Applications/Steam.app
+tool registered:  true, default tool: true
+steam play:       on
+-- steamplay.log, last lines
+[2026-11-16 01:18:09] pid 28111: Steam Play is on (build 1794536281, steamclient.dylib 221faa3a6a2c36c99130b0a45028af1b)
+-- /Library/Logs/Macron-install.log, last lines
+== Macron install, 2026-11-16T01:17:37Z
+user: <user> (~)
+macron: downloading wine-devel-11.21-osx64.tar.xz
+macron: downloading wine-11.21-macron.6-overlay-osx64.tar.xz
+macron: downloading dxmt-v0.80-builtin.tar.gz
+macron: downloading dxvk-macOS-async-v1.10.3-20230507.tar.gz
+macron: unpacking Wine
+macron: adding DXMT
+macron: adding Macron's Wine patches
+macron: adding DXVK
+macron: downloading macron-steam-bridge-proton-11.0-2e-macron.1-osx64.tar.xz
+macron: adding the Steam bridge
+runtime wine-11.21-macron.6-dxmt-0.80-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1 is at ~/Library/Application Support/Macron/runtimes/wine-11.21-macron.6-dxmt-0.80-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1
+Steam is open; asking it to quit (it rewrites its settings when it quits).
+steam dir:       ~/Library/Application Support/Steam
+build:           1794536281 (known: true)
+steamclient:     sha256 55a9341f7e411f52bae049193a98071ae666b0fddb90ab3cae6aa527d9d84335
+steam_osx:       sha256 99cc08899ce366b9518c0a3782d1ae5954762894d2bf54cc2069c41df86162af
+tool registered: true
+default tool:    true
+backup:          true
+steam app:       /Applications/Steam.app
+steam play:      on
+Opened Steam again.
+== Done: Steam Play is on with Macron as its tool
+
+== Runtime
+pinned:           wine-11.21-macron.6-dxmt-0.80-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1
+steam bridge:     macron-steam-bridge-proton-11.0-2e-macron.1-osx64.tar.xz
+installed:        yes, bridge in it: true
+frame counter:    on (show-fps exists)
+
+== What a call costs (ns each, best of three)
+-- macOS, arm64
+arch arm64
+getpid 168.7 ns each (200000)
+-- macOS, x86_64
+arch x86_64
+getpid 5908.4 ns each (200000)
+tsd 5825.7 ns each (200000)
+xsave 1449.0 ns each (200000)
+fxsave 1352.2 ns each (200000)
+flags 9.5 ns each (2000000)
+mxcsr 1458.7 ns each (2000000)
+-- Windows program under Wine, cost64.exe
+bits 64 n 2000000
+yield 27045.6 ns each (20000 in 0.541 s)
+query 27563.0 ns each (20000 in 0.551 s)
+wait 95821.8 ns each (20000 in 1.916 s)
+x87 84.2 ns each (2000000 in 0.168 s)
+sse 2.5 ns each (2000000 in 0.005 s)
+loop 2.0 ns each (2000000 in 0.004 s)
+-- Windows program under Wine, cost32.exe
+bits 32 n 2000000
+yield 19700.4 ns each (20000 in 0.394 s)
+query 25506.3 ns each (20000 in 0.510 s)
+wait 97429.0 ns each (20000 in 1.949 s)
+x87 77.9 ns each (2000000 in 0.156 s)
+sse 2.6 ns each (2000000 in 0.005 s)
+loop 2.3 ns each (2000000 in 0.005 s)
+
+== Games started with the frame counter on (three latest starts each)
+(none yet: touch ~/Library/Application\ Support/Macron/show-fps, then start a game from Steam)
