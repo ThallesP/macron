@@ -14,7 +14,7 @@
 **What is in which release**
 
 - v0.5.0-rc2 (published): the Ultimate Custom Night fixes (Wine patches 0001 to 0011).
-- v0.5.0-rc3 (being tested now; PROGRESS.md links it when published): rc2, plus the DXMT memory fix, plus two switches, both off until you turn them on: `dlss` and `game-mode`.
+- [v0.5.0-rc3](https://github.com/ThallesP/macron/releases/tag/v0.5.0-rc3) (published, tested on a fresh sandbox; install this one, PROGRESS.md has the command): rc2, plus the DXMT memory fix, plus two switches, both off until you turn them on: `dlss` and `game-mode`.
 
 **What you can try**
 
@@ -140,7 +140,7 @@ Only what is measured to work and cannot hurt anyone who does not turn it on:
 - `~/Library/Application Support/Macron/dlss`: DLSS through MetalFX for DXMT games (candidate 1). Measured on the M3: the DLSS feature is created through MetalFX's temporal scaler. Not measured: a game's frame rate with it.
 - `~/Library/Application Support/Macron/game-mode`: Wine's loader in a games-category bundle, so macOS can give Wine games Game Mode (candidate 3). Measured on a sandbox: every Wine process labelled a game, the Direct3D 11 probe drawing as before, the switch undone cleanly. Not measured: Game Mode turning on full screen on the M3, and frame times with it.
 
-Both are in `macron`, are removed by `macron uninstall`, and are described in README.md's launcher section. Everything else on the list is either closed, a setting in the game (render scale, frame limiter), or not built (an msync port).
+Both are in `macron`, are removed by `macron uninstall`, and are described in README.md's launcher section. **Published in [v0.5.0-rc3](https://github.com/ThallesP/macron/releases/tag/v0.5.0-rc3)**, which passed `gate3.sh`, the Steam bridge check and a check of both switches from the installed package on a fresh sandbox before publishing (sbx_vubspulo, `docs/proof/release-0.5.0-rc3/`): with `dlss` the adapter is `0x10de` and without it `0x106b`; with `game-mode` the Direct3D 11 probe presents (60 frames in 810 ms), `gamepolicyd` labels it a game, and removing the file restores Wine's loader with a valid signature and no bundle left. Everything else on the list is either closed, a setting in the game (render scale, frame limiter), or not built (an msync port).
 
 ## The benchmark
 
