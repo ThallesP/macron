@@ -139,3 +139,36 @@ WindowedRefresh = "60"
 ```
 
 Nothing else in the file matches the pattern.
+
+## Request 6, start 1 (Overwatch left alone after its start, 2026-11-16 05:17 to 05:21 local)
+
+Started the way Steam starts it with `MTL_HUD_ENABLED=1 MTL_HUD_LOG_ENABLED=1`, the frame counter file absent, Macron 0.4.0, sound off, an empty workspace in front, and left for 185 s with nothing clicked. No screenshot was taken (it would show his account), so "the main menu" is what the game shows by itself after signing in; the HUD's figures are level from 40 s after the start to the end.
+
+```
+HUD frames logged: 20030
+frames measured: 18027 (the first 2003 left out)
+frames a second: 53.5
+GPU busy: 40% (sum of GPU time over sum of intervals)
+interval ms: p25 16.84, median 18.27, p75 20.49, p95 22.85, p99 24.64
+GPU time ms: p25 7.46, median 7.77, p75 8.15, p95 8.63, p99 8.98
+```
+
+Every 20 s (memory by the HUD, frames a second, median GPU time): 13.2 GB / 25.1 / 1.0 ms at the start, then 13.7 to 14.3 GB, 54.2 to 54.6 frames a second, 7.7 to 8.3 ms for the rest.
+
+`top`, four samples 5 s apart from 135 s after the start (`ow-top.txt`; command, CPU %, threads):
+
+```
+wine 100.2 70/4
+wineserver 51.2 2
+WindowServer 30.3 21
+wine 103.9 70/1
+wineserver 54.6 2
+WindowServer 30.1 21/1
+wine 104.4 70/4
+wineserver 54.6 2/1
+WindowServer 30.3 22
+```
+
+So on this screen the GPU works 40% of the time (7.8 ms of an 18.3 ms frame) and the frame rate is 54, while `wineserver` uses about half a core next to the game's one core. That is the case the request describes as "server round trips are a real cost".
+
+Start 2 (the NVIDIA switch) was not run.

@@ -1,0 +1,18 @@
+Overwatch left alone after its start for 185 s (menu), start 1: MTL_HUD_ENABLED=1 MTL_HUD_LOG_ENABLED=1, Macron 0.4.0, sound off, empty workspace in front
+
+HUD frames logged: 20030
+frames measured: 18027 (the first 2003 left out)
+frames a second: 53.5
+GPU busy: 40% (sum of GPU time over sum of intervals)
+interval ms: p25 16.84, median 18.27, p75 20.49, p95 22.85, p99 24.64
+GPU time ms: p25 7.46, median 7.77, p75 8.15, p95 8.63, p99 8.98
+thermal pressure levels seen: 
+
+benchmark's own result:
+
+DXMT and Metal lines:
+   1 warn:  MakeWindowAssociation: Ignoring flags 1
+   1 warn:  Emulate stream output
+   1 warn:  DXGIAdapter: Unknown interface query f0db4c7f-fe5a-42a2-bd62-f2a6cf6fc83e
+   1 warn:  DXGIAdapter: Unknown interface query 17399d75-964e-4c03-99f8-9d4fd196dd62
+   1 err:   CreateGeometryShaderWithStreamOutput: not supported, expect problem
