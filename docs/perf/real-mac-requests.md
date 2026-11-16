@@ -298,9 +298,25 @@ tools/perf/bench.sh run superposition abba-off-2 800x450 windowed
 
 Read the benchmark's own FPS and the HUD's GPU time median of the two `on` runs against the two `off` runs. If the `on` runs are not slower, the upscale is close to free on the M3, and a game rendered at half the width and height and upscaled by DXMT is a cheap way to a sharp full-size picture. Also take one screenshot of the window in an `on` run and one in an `off` run (`screencapture -l <window id>`, the benchmark's window only), so the picture can be judged. If `screencapture` asks for a permission, skip the screenshots and say so.
 
+### Request 15: which Wine server requests Overwatch makes on its menu (about 5 minutes; his account, nothing clicked, the same start as request 6's start 1)
+
+On the menu `wineserver` used half a core next to the game's one (start 1). Which requests those are decides what a fix looks like: msync replaces waits and event, semaphore and mutex operations, and nothing else. This counts them by type for 5 seconds of the menu. It is start 1 again with Wine's server trace on, so the game runs slower while traced; the mix of requests is what matters, not the rate.
+
+1. Start Overwatch exactly as for start 1 (`MTL_HUD_ENABLED=1 MTL_HUD_LOG_ENABLED=1`, no `show-fps` file), adding `WINEDEBUG=-all,+server` in front of the command. No Wine process of that prefix may be running before (the trace is on only for a server started by this launch).
+2. When the menu has been up for about a minute (the HUD's frame rate level, or 120 s after the start), in another terminal:
+
+   ```sh
+   cd ~/macron-perf/src && git pull
+   L=$(ls -t ~/Library/Application\ Support/Macron/logs/steam-2357570/*.log | head -1)
+   tools/perf/server-count.sh "$L" 5 ~/macron-perf/results/ow-server
+   ```
+3. Quit the game as before, then delete the launch log: with the trace it can be several GB (`rm "$L"`).
+
+Push `~/macron-perf/results/ow-server/` (`window.txt`, `requests.txt`, `threads.txt`, `thread-requests.txt`, `selects.txt`: request names, thread ids and counts only, no arguments) to `docs/perf/m3-batch2/ow-server/`. If the game does not reach its menu with the trace on (too slow, or it quits), say so and how far it got. Read: if `select` (waits) and `set_event`, `release_semaphore`, `release_mutex`, `event_op` lead the list, the server's half core is synchronisation and msync's ground; if window, message-queue, input or file requests lead (`get_message`, `send_message`, `get_window_*`, `set_cursor`, `get_thread_input`...), msync would not touch it and the fix is elsewhere.
+
 ### What to push for batch 2
 
-`docs/perf/real-mac-results.md`: request 9's four `RESULT fps` lines; request 10's table and each run's `bench.txt`; request 11's list of exported files and anything that failed; request 12's summary; request 13's three lines; request 14's four summaries. Files into `docs/perf/m3-batch2/` as above (each run's `summary.txt`, `env.txt`, `hud.csv`, `thermal.txt`, `bench.txt`, the trace exports, the two screenshots). Suggested order: 13 needs a log, so 12 first; then 9, 10, 11, 14.
+`docs/perf/real-mac-results.md`: request 9's four `RESULT fps` lines; request 10's table and each run's `bench.txt`; request 11's list of exported files and anything that failed; request 12's summary; request 13's three lines; request 14's four summaries; request 15's files. Files into `docs/perf/m3-batch2/` as above (each run's `summary.txt`, `env.txt`, `hud.csv`, `thermal.txt`, `bench.txt`, the trace exports, the two screenshots). Suggested order: 13 needs a log, so 12 first; then 9, 10, 11, 14.
 
 ## Ultimate Custom Night (gate 1 thread, Opus 5.5)
 

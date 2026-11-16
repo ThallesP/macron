@@ -14,7 +14,17 @@ State: 2026-11-16, batch 1 run on the M3 (`docs/perf/real-mac-results.md`, files
 
 ## Candidates, ranked
 
-Ranked by what they could take off Overwatch's 15.7 ms of GPU time a frame, times how sure the evidence is today.
+Ranked by what they could save in Overwatch on the M3, times how sure the evidence is today. Order as of batch 1 and request 6's start 1:
+
+1. DLSS through MetalFX (candidate 1): works on the M3; Overwatch offers DLSS; whether Overwatch takes it under DXMT is Thalles's to try on his account.
+2. Rendering fewer pixels (candidate 2), with DXMT's MetalFX spatial upscale as the cheap way back to a full-size picture (candidate 4): Superposition is pixel-bound near Overwatch's sizes; the upscale costs about 0.26 ms.
+3. Wine server round trips (candidate 6): half a core of `wineserver` on Overwatch's CPU-bound screen; request 15 says which requests.
+4. Game Mode (candidate 3): works for Wine's processes on a sandbox; untried on the M3 (needs Thalles).
+5. DXMT's own GPU work (candidate 5): open until request 10 and 11.
+6. D3DMetal (candidate 8): needs a second Wine; unknown gain.
+7. AVX (candidate 7): closed, slower.
+
+The sections keep their first numbers.
 
 ### 1. DLSS through MetalFX: DXMT's NVIDIA extension (`DXMT_ENABLE_NVEXT=1`)
 
@@ -63,13 +73,17 @@ DXMT can upscale the game's finished frame with MetalFX before presenting it, so
 - **pending:** the GPU busy share (GPU time over frame interval) in the benchmark (request 2) and in Overwatch's menu (request 6). A frame interval much longer than the GPU time means the GPU waits on something.
 - **pending:** the direct measure, request 8 (rerun with both sides at sync interval 1, after the first pass showed the two sides running at different rates): `tools/perf/gpuload.c` (Direct3D 11, through DXMT) and `tools/perf/gpuload.m` (the same passes, shader math, draws and per-draw constants in native Metal, its layer set up as Wine's and DXMT's are) on the same M3, for full-screen shader passes, for 4,000 small draws with per-draw constants, and for both. The GPU time a frame of the two is what DXMT adds to the same work, presenting pass included. Both run and quit by themselves on the sandbox (its numbers say nothing about speed). One difference that is not DXMT's: the Direct3D 11 program's shaders are compiled at run time by Wine's own HLSL compiler, not by Microsoft's, as a shipped game's would be.
 
-### 6. msync (Mach-semaphore synchronisation) in the Wine overlay
+### 6. Wine server round trips (msync, or a Mac backend for Wine's in-process sync)
 
-msync replaces wineserver round trips for Windows waits and events with Mach semaphores in the game's own process.
+A Windows wait, event, semaphore or mutex operation under this Wine is a request to the `wineserver` process and back; msync and its kind do those in the game's own process instead.
 
 - **M3:** a wineserver round trip costs 8.1 µs and this Wine has no msync or esync (`macron diagnose`).
-- For Overwatch it cannot raise the frame rate while the GPU is the limit. It may help CPU-bound games. It exists as [marzent/wine-msync](https://github.com/marzent/wine-msync) (LGPL-3.0; patches for CrossOver 22 and 23, Wine Staging and Wine devel, the newest for Wine 9.15 in August 2024, so Macron's Wine 11.21 would need a port) and as a per-bottle switch in CrossOver 25, where CodeWeavers say some applications run faster, some show no difference and some break ([CodeWeavers](https://support.codeweavers.com/miscellanous/advanced-settings-in-crossover-mac)).
-- **pending:** how busy the wineserver is while Overwatch runs (request 6's `top`).
+- **M3, Overwatch after its start, left alone 185 s** (request 6 start 1, `m3-batch1/ow-1/`): 53.5 to 54.6 frames a second, frame interval median 18.27 ms, GPU time median 7.77 ms, **GPU busy 40%**; `top` over 20 s: the game 100 to 104% of a core, **`wineserver` 51 to 55% of a core**. On that screen the GPU is not the limit and the server does half a core of work for the game. (In the practice range the GPU was the limit at 15.7 ms; these are different screens.)
+- **source, Wine 11.21:** Wine now has a layer for synchronisation done in the game's process, `inproc_sync` (`dlls/ntdll/unix/sync.c`, `server/inproc_sync.c`): nine operations (semaphore release and query, event set, reset, pulse and query, mutex release and query, wait for any or all), with a handle cache in each process and the objects kept alive by the server. Its only backend is Linux's `ntsync` kernel driver: the server creates a kernel object per Windows object and hands its file descriptor to clients. Without `linux/ntsync.h` every operation returns `STATUS_NOT_IMPLEMENTED` and Wine falls back to the server. On a Mac that is always the case.
+- **source, msync:** the newest patch set ([marzent/wine-msync](https://github.com/marzent/wine-msync), `msync-devel.patch`) is for Wine 9.15 (August 2024): about 3,500 added lines in about 40 files of the server and `ntdll`, every waitable server object given a shared-memory slot (the esync design), waits through Mach semaphores and the private `__ulock_wait2` and `mach_msg2_trap`. Wine's synchronisation was rebuilt around `inproc_sync` since then, so porting it to 11.21 is a reimplementation, not a rebase.
+- **What porting takes (not built):** either msync carried forward onto 11.21's server code, or a Mac backend for the nine `inproc_sync` operations, where the server makes a shared-memory object instead of an `ntsync` one and clients wait on it in their own process. The hard part on either path is the same: waiting on several objects at once (wait-any and wait-all across processes, with timeouts and APCs), which `ntsync` does in the kernel and a Mac has no kernel object for.
+- **Whether a smaller change gets most of it:** depends on which requests make up the half core. If they are waits and event or semaphore operations, it is `inproc_sync`'s ground and nothing smaller covers it; if they are window, message-queue or input requests, msync would not help and the fix is in those paths. Request 15 counts them by type on the menu on the M3 (the sandbox cannot show that screen: the test account has no Blizzard account and the game stops at its sign-in).
+- **Ranked third:** it is the only measured cost on the CPU-bound screen, and it does nothing for the GPU-bound practice range.
 
 ### 7. AVX under Rosetta (`ROSETTA_ADVERTISE_AVX=1`)
 
