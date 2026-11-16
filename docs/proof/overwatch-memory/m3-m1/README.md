@@ -40,7 +40,7 @@ m1-control: every 20 s (clock, HUD memory MB, frames a second, median GPU ms, fr
   07:01:29  14263  54.8   7.6   1
 ```
 
-`bench.sh summary`: patched 50.0 frames a second, GPU busy 31%; control 43.3, GPU busy 33% (request 6's start 1 on 0.4.0: 53.5 and 40%). The two starts ran six minutes apart on a Mac that had been running benchmarks for three hours, so the difference between them is not evidence about the patch either way; the frames over 50 ms after the first 20 s are 0 to 3 per 20 s in the patched start and 0 to 5 in the control.
+`bench.sh summary`: patched 50.0 frames a second, GPU busy 31%; control 43.3, GPU busy 33% (request 6's start 1 on 0.4.0: 53.5 and 40%). The two starts ran six minutes apart on a Mac that had been running benchmarks for three hours, so the difference between them is not evidence about the patch either way; the frames over 50 ms after the first 20 s are 1 to 7 per 20 s in the patched start (38 in all) and 0 to 10 in the control (39 in all).
 
 Neither start crashed; each ended when asked. `heap.txt` is from the patched start, taken 195 s after its launch.
 
