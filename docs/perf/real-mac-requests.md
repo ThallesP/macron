@@ -464,3 +464,20 @@ What the results mean (the M3 with 0.4.0: HUD 13.7 to 14.3 GB on the menu, `foot
 - **Still about 14 GB:** first check the `shasum` above (the patched `d3d11.dll` must be the one installed); if it is, the M3's `malloc` is something else than on the sandboxes, and `heap.txt` says what. If the control start was run and shows the same, the patch does nothing there.
 - **In every case:** the HUD's frames a second and median GPU time on the menu against request 6's 53.5 fps and 7.8 ms (with `macron.11` in both builds, the control start says whether any difference is the patch's). A shader is now parsed again before its first compile; a lower frame rate or more frames over 50 ms in the first minute would be that cost.
 - **A crash or a black screen:** say when; on the sandboxes one of six patched starts crashed early (`page fault on execute access` inside Overwatch.exe), and none of six with DXMT's own file, which is too few to tell.
+
+### U5: Wine patch 0012, the menu's dips (about 10 minutes)
+
+What changed (`runtime/wine/patches/README.md`, 0012): in U4's sample the game's thread spent 5% in wined3d's spin-wait sleep (`NtDelayExecution`, `cthread_yield`) while the command stream thread waited for work half the time. The game's system memory vertex buffer (4,096 quads; the menu draws about 2,240 a frame) wraps with a `DISCARD` lock about every second frame, and that lock waited until the command stream had run every queued copy from it: the whole queue drained every other frame. With 0012 a copy from such a buffer takes the data when it is queued, so the lock does not wait. On a sandbox the probe in the game's drawing mode was ahead of `macron.11` in each of three alternating pairs (9.5, 9.0, 12.2 fps against 8.9, 8.4, 9.8; p95 136, 152, 113 ms against 167, 172, 128), and the d3d9 scenario checks pass, pictures included.
+
+Build `macron` from branch `wine-0012` (it pins the test overlay `runtime-wine-11.21-macron.12`) into a new `MACRON_HOME`, as for U4:
+
+```sh
+git -C ~/macron-perf/src fetch origin wine-0012 && git -C ~/macron-perf/src checkout FETCH_HEAD
+cd ~/macron-perf/src && go build -o ~/macron-perf/macron-0012 ./cmd/macron
+MACRON_HOME=~/macron-perf/home-0012 ~/macron-perf/macron-0012 runtime install
+```
+
+Then the menu, no extra environment: the frame rate over two minutes (with `show-fps`), the game's CPU, a screenshot; and one start with `WINEDEBUG=-all,+loaddll` and an 8 s `sample` of the whole process. Commit to `docs/proof/gate1-m3/macron12/`, scrubbed as before. What the results mean:
+- **Fewer readings below 56 than U4's 20 of 86** (counting the same way, first 20 s included and also without them), and the game's thread's share in `NtDelayExecution` well under U4's 5%: the drains were the dips. Then `wine-0012` goes to main and into the next release candidate.
+- **The same dips**: the drains were not what made them; the sample says what the game's thread waits for instead.
+- **Broken sprites or a crash**: 0012 copies data at a different moment; say which start.
