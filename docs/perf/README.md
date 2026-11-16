@@ -1,5 +1,12 @@
 # What would make games faster on a real Apple-silicon Mac
 
+**Thalles, when you wake:** two things to try in Overwatch, both off until you turn them on, both in the next Macron release candidate that carries `main` from d04f6e9 on (the release thread is cutting candidates; this line will name the one to install as soon as it is published):
+
+1. `touch ~/Library/Application\ Support/Macron/dlss`, start Overwatch, and in its video settings choose DLSS. DXMT then tells the game the GPU is NVIDIA's and runs DLSS on Apple's MetalFX upscaler (it works on your M3: the feature is created). It changes what an online game with anti-cheat sees of the machine, which is why it is your decision and off by default. `rm` the file to undo. Compare the frame rate in the practice range with and without (show-fps).
+2. `touch ~/Library/Application\ Support/Macron/game-mode` and play full screen: macOS can then give Overwatch Game Mode (the Metal HUD shows a "Game Mode" line). The first start asks once whether "Macron Game" may find devices on local networks. `rm` the file to undo.
+
+Without any new build, Overwatch's own settings are the measured lever: its render scale (rendering fewer pixels is where the GPU time goes, candidate 2) and its frame limiter (a full game load throttles the fanless Air within a minute, "Heat").
+
 The reference is Overwatch (Direct3D 11, 64-bit) through DXMT on Thalles's MacBook Air (M3, 10 GPU cores, 16 GB, 2880x1864 panel, no fan), where Macron 0.4.0 gave 57.5 fps in the practice range and "60 to 75 fps" with the frame rate unlocked (docs/proof/overwatch-m3/). There the Metal HUD put the GPU's time a frame at a median 15.7 ms (p25 14.7, p75 16.8): **the GPU is the limit at about 64 fps**, so work taken off the CPU alone does not raise Overwatch's frame rate. What raises it is less GPU work a frame, or the GPU getting more of the machine.
 
 Every line below says where its evidence comes from: **source** (read in DXMT 0.80 or Wine 11.21), **sandbox** (a GitHub macOS runner: virtual Apple GPU, which shows that something works and what it does, never how fast), **M3** (Thalles's Mac), or **pending** (asked for in [real-mac-requests.md](real-mac-requests.md), not known yet). Nothing marked pending is a finding.
