@@ -1,0 +1,11 @@
+start 1 window yes alive approx 8.95fps 
+start 2 window yes alive approx 8.61fps 
+start 3 window yes alive approx 9.44fps 
+start 4 window yes alive approx 9.08fps 
+start 5 window yes alive approx 9.40fps 
+start 6 window yes alive approx 11.10fps 
+start 7 window yes alive approx 12.84fps 
+start 8 window yes alive approx 16.49fps 
+start 9 window yes alive approx 9.33fps 
+start 10 window yes alive approx 15.77fps 
+STAB-DONE
