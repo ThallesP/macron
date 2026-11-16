@@ -416,3 +416,51 @@ Commit to `docs/proof/gate1-m3/macron11/`, scrubbed as before. What the results 
 - **Below U3's 60 in 1**: something differs between `csmt=0x1` set by hand and the default; the sample says what.
 - **Broken sprites, a crash, or a hang on quit**: say which start; `WINE_D3D_CONFIG=csmt=0` is the way back.
 - The sample of start 3: the game's thread spent about 10% in `cthread_yield` and `NtDelayExecution` in U3's csmt sample; whether the dips line up with that, or with the command stream thread being busy (it waited for work 49% of the time on average), says what to cut next. A night (1.7 times the draws) is still unmeasured; U3's numbers put each thread at about 14 ms of a 16.7 ms frame there, so expect it to be close.
+
+## Overwatch's memory (Overwatch memory thread, Opus 5.5)
+
+Context: `docs/overwatch-memory.md`. On the M3 with 0.4.0, Overwatch's process held 15 GB, about 12 GB of it macOS `malloc`, and the HUD's memory figure was 13.7 to 14.3 GB on the menu (request 6, start 1). On sandboxes the same `malloc` is DXMT keeping every shader the game creates in its parsed form (82,706 shaders, 7.9 GB of 8.0 GB of `malloc`); DXMT patch 0001 parses a shader again on its first compile instead, and took the process from 7.9 GB to 1.8 GB at the Battle.net sign-in screen there. Whether the M3's 12 GB is the same thing has not been measured on the M3.
+
+### M1: Overwatch left alone for three minutes with the DXMT patch (about 15 minutes; his account, nothing clicked in the game)
+
+Build `macron` from branch `dxmt-m1` (commit `66cf62bd01dd7dad4a84cd2500ed05588611c415`: main at `acf610a` plus the pin of the DXMT overlay `runtime-dxmt-0.80-macron.1`; Wine is `macron.11`) and install its runtime into a new `MACRON_HOME`, as for U3:
+
+```sh
+git -C ~/macron-perf/src fetch origin dxmt-m1 && git -C ~/macron-perf/src checkout FETCH_HEAD
+cd ~/macron-perf/src && go build -o ~/macron-perf/macron-m1 ./cmd/macron
+MACRON_HOME=~/macron-perf/home-m1 ~/macron-perf/macron-m1 runtime install
+shasum -a 256 ~/macron-perf/home-m1/runtimes/*/wine-dxmt/lib/wine/x86_64-windows/d3d11.dll
+# must print: 68b71e3cd730e5e5153f9a114d055a045295dbbbe022b5ad4cfe3eefdac54dd4
+```
+
+So that his own Overwatch prefix is not touched by another runtime, start the game on an APFS clone of it (no extra disk; Overwatch's own files stay where Steam put them):
+
+```sh
+compat="$HOME/Library/Application Support/Steam/steamapps/compatdata/2357570"
+cp -cR "$compat" ~/macron-perf/ow-compat-m1
+```
+
+Then the start of request 6's start 1, with `MACRON_HOME=~/macron-perf/home-m1`, `STEAM_COMPAT_DATA_PATH=$HOME/macron-perf/ow-compat-m1`, `~/macron-perf/macron-m1` as the `macron`, `MTL_HUD_ENABLED=1 MTL_HUD_LOG_ENABLED=1` and no `show-fps` file in that `MACRON_HOME`, Steam running. Just before it, in another terminal, start the memory follower from `tools/overwatch-memory/` (on main): it finds the game's process by itself, writes one line every 3 s (`t`, footprint MB, swap MB, memory pressure level, DXMT's shader cache MB) to `mon.tsv`, and a full `footprint` and `vmmap -summary` every 30 s:
+
+```sh
+cd ~/macron-perf/src && tools/overwatch-memory/ow-mon.sh ~/macron-perf/m1 200 &
+```
+
+Leave the game alone for three minutes after its menu shows, then, before quitting it:
+
+```sh
+pid=$(awk 'NR == 1 { print $2 }' ~/macron-perf/m1/pid)
+heap -s -H "$pid" | head -80 > ~/macron-perf/m1/heap.txt
+```
+
+Quit the game the way request 6 did. Commit to `docs/proof/overwatch-memory/m3-m1/`, home folder written `~` (`sed -E 's|/Users/[^/ ]+|~|g'`): `mon.tsv`, `pid`, every `fp-*.txt` and `vm-*.txt`, `heap.txt`, and the `bench.sh summary` of the launch log as in request 6 (`summary.txt`, `hud.csv`) with the HUD's memory figure every 20 s written into the results as request 6's were. No screenshot (it shows his account).
+
+Optional, a second start (5 more minutes), to tell the DXMT patch from everything else that changed since 0.4.0: the same from commit `acf610a` (main without the pin, the same Wine) into `~/macron-perf/home-m1-control`, on a fresh clone of the compatdata (`ow-compat-m1-control`), its follower writing to `~/macron-perf/m1-control`, committed to `m3-m1-control/`.
+
+What the results mean (the M3 with 0.4.0: HUD 13.7 to 14.3 GB on the menu, `footprint` 15 GB with `MALLOC_SMALL` 10 GB):
+
+- **The footprint and the HUD figure level near 2 to 4 GB, and `MALLOC_SMALL` is gone from `fp-*.txt`'s top categories:** the M3's 12 GB was the parsed shaders, as on the sandboxes, and the patch removes it there too. The swapping and the hitches that came with it should then be gone; the DXMT overlay rides in the next release candidate (PROGRESS.md says which).
+- **Level well below 14 GB but well above 4 GB:** the patch removes part of it; `heap.txt` (the largest `malloc` users by class and binary) and the `fp-*.txt` categories say what the rest is, and that is the next thing to look at.
+- **Still about 14 GB:** first check the `shasum` above (the patched `d3d11.dll` must be the one installed); if it is, the M3's `malloc` is something else than on the sandboxes, and `heap.txt` says what. If the control start was run and shows the same, the patch does nothing there.
+- **In every case:** the HUD's frames a second and median GPU time on the menu against request 6's 53.5 fps and 7.8 ms (with `macron.11` in both builds, the control start says whether any difference is the patch's). A shader is now parsed again before its first compile; a lower frame rate or more frames over 50 ms in the first minute would be that cost.
+- **A crash or a black screen:** say when; on the sandboxes one of six patched starts crashed early (`page fault on execute access` inside Overwatch.exe), and none of six with DXMT's own file, which is too few to tell.
