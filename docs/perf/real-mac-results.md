@@ -324,3 +324,36 @@ The requests in those 5 s (`requests.txt`, all of it):
 ```
 
 So 228,472 of 266,302 requests are `select` (86%), and with `event_op`, `create_event`, `close_handle` and `release_semaphore` the synchronisation calls are 98%: about 53,000 server round trips a second, of which window, input and registry requests are a few hundred.
+
+# Batch 3 (2026-11-16 07:05 to 07:13 local, 10:05 to 10:13 UTC)
+
+Two more starts of Overwatch left alone, as request 6's start 1 (Macron 0.4.0, sound off, an empty workspace in front, nothing clicked). Files in `docs/perf/m3-batch3/`.
+
+## Request 16
+
+`sample` attached without asking for anything. The `ps` line (pid, %CPU, command) just before the 5 s sample, 150 s after the script started:
+
+```
+85820  99.2 Z:\Users\~\Library\Application Support\Steam\steamapps\common\
+```
+
+`ow-sample.txt.gz` is the whole sample (5 s at 2 ms).
+
+## Request 17
+
+`handles.txt`, all of it (the launch log was 3.2 GB and is deleted):
+
+```
+thread 01e0, zero-timeout waits in 5 s: 217860
+polls handle  made by (the last reply returning it before the slice)
+217860 03c8 create_event
+217860 03c0 create_event
+217860 03bc create_event
+217860 03b4 create_event
+217860 03b0 create_event
+217860 03ac create_event
+217860 03a4 create_event
+217860 03a0 create_event
+```
+
+So one thread makes 217,860 zero-timeout waits in 5 s (about 43,600 a second), on eight handles that were each made by `create_event`.

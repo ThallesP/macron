@@ -1,0 +1,10 @@
+thread 01e0, zero-timeout waits in 5 s: 217860
+polls handle  made by (the last reply returning it before the slice)
+217860 03c8 create_event
+217860 03c0 create_event
+217860 03bc create_event
+217860 03b4 create_event
+217860 03b0 create_event
+217860 03ac create_event
+217860 03a4 create_event
+217860 03a0 create_event
