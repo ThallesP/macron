@@ -12,8 +12,13 @@
  * (so calls that opengl32 queues are counted with their replay):
  * glGetIntegerv (returns a value, always a call to Wine's Unix side),
  * glUniform1f, glBindBuffer, glBufferSubData of 64 bytes, glUniformMatrix4fv,
- * and the nine calls wined3d makes for each Direct3D 9 draw of Ultimate
- * Custom Night (three binds, two uploads, three uniforms, the draw).
+ * the nine calls wined3d makes for each Direct3D 9 draw of Ultimate
+ * Custom Night (three binds, two uploads, three uniforms, the draw), and the
+ * two ways wined3d uploads a DrawPrimitiveUP's vertices into its 512 KB
+ * streaming buffer before the draw: mapping the whole buffer
+ * (glMapBufferRange, glFlushMappedBufferRange and glUnmapBuffer, each between
+ * two glBindBuffer, as 64-bit wined3d does on Apple's OpenGL without Wine
+ * patch 0008) and glBufferSubData (patches 0003 and 0008).
  * --syscalls N makes N cheap system calls (NtYieldExecution) after the
  * rounds, to tell Wine's 32-to-64 transition apart from OpenGL.
  * --syscall-thread makes such calls on a thread of its own, without any
@@ -78,6 +83,7 @@
 #define GL_VERTEX_SHADER 0x8B31
 #define GL_ARRAY_BUFFER 0x8892
 #define GL_STATIC_DRAW 0x88E4
+#define GL_STREAM_DRAW 0x88E0
 #define GL_COMPILE_STATUS 0x8B81
 #define GL_LINK_STATUS 0x8B82
 #define GL_ELEMENT_ARRAY_BUFFER 0x8893
@@ -87,6 +93,9 @@
 #define GL_FRAMEBUFFER 0x8D40
 #define GL_RENDERBUFFER 0x8D41
 #define GL_COLOR_ATTACHMENT0 0x8CE0
+#define GL_MAP_WRITE_BIT 0x0002
+#define GL_MAP_FLUSH_EXPLICIT_BIT 0x0010
+#define GL_MAP_UNSYNCHRONIZED_BIT 0x0020
 
 typedef HGLRC(WINAPI *CreateContextAttribs)(HDC, HGLRC, const int *);
 typedef BOOL(WINAPI *ChoosePixelFormatARB)(HDC, const int *, const FLOAT *, UINT, int *, UINT *);
@@ -113,6 +122,9 @@ typedef void(WINAPI *EnableVertexAttribArray)(GLuint);
 typedef void(WINAPI *Uniform1f)(GLint, GLfloat);
 typedef GLint(WINAPI *GetUniformLocation)(GLuint, const char *);
 typedef void(WINAPI *BufferSubData)(GLenum, ptrdiff_t, ptrdiff_t, const void *);
+typedef void *(WINAPI *MapBufferRange)(GLenum, ptrdiff_t, ptrdiff_t, GLbitfield);
+typedef void(WINAPI *FlushMappedBufferRange)(GLenum, ptrdiff_t, ptrdiff_t);
+typedef GLboolean(WINAPI *UnmapBuffer)(GLenum);
 typedef void(WINAPI *UniformMatrix4fv)(GLint, GLsizei, GLboolean, const GLfloat *);
 typedef void(WINAPI *Uniform3fv)(GLint, GLsizei, const GLfloat *);
 typedef void(WINAPI *DrawElementsInstancedBaseVertex)(GLenum, GLsizei, GLenum, const void *, GLsizei, GLint);
@@ -335,6 +347,9 @@ static const char *cost(void)
     BindBuffer bind_buffer = proc("glBindBuffer");
     BufferData buffer_data = proc("glBufferData");
     BufferSubData buffer_sub_data = proc("glBufferSubData");
+    MapBufferRange map_buffer_range = proc("glMapBufferRange");
+    FlushMappedBufferRange flush_mapped_buffer_range = proc("glFlushMappedBufferRange");
+    UnmapBuffer unmap_buffer = proc("glUnmapBuffer");
     VertexAttribPointer vertex_attrib_pointer = proc("glVertexAttribPointer");
     EnableVertexAttribArray enable_vertex_attrib_array = proc("glEnableVertexAttribArray");
     Uniform1f uniform1f = proc("glUniform1f");
@@ -346,15 +361,17 @@ static const char *cost(void)
     BindObject bind_framebuffer = proc("glBindFramebuffer"), bind_renderbuffer = proc("glBindRenderbuffer");
     RenderbufferStorage renderbuffer_storage = proc("glRenderbufferStorage");
     FramebufferRenderbuffer framebuffer_renderbuffer = proc("glFramebufferRenderbuffer");
-    GLuint shaders[2], program, vao, buffers[3], fbo, rbo;
+    GLuint shaders[2], program, vao, buffers[4], fbo, rbo;
     GLint s, m, n, k, value;
     float matrix[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}, color[3] = {1, 0.5f, 0.25f};
-    BYTE data[64];
+    const int stream_size = 512 * 1024, stream_slots = stream_size / 64;
+    BYTE data[64], *map;
     double start;
     GLenum error;
     int i, run, count = options.cost, errors = 0;
 
-    if (!create_shader || !buffer_sub_data || !uniform_matrix4fv || !draw_elements || !framebuffer_renderbuffer)
+    if (!create_shader || !buffer_sub_data || !uniform_matrix4fv || !draw_elements || !framebuffer_renderbuffer
+            || !map_buffer_range || !flush_mapped_buffer_range || !unmap_buffer)
         return "cost: missing functions";
     /* draw into a framebuffer object: a hidden window may have no drawable */
     gen_framebuffers(1, &fbo);
@@ -383,7 +400,7 @@ static const char *cost(void)
         return "cost: program";
     gen_vertex_arrays(1, &vao);
     bind_vertex_array(vao);
-    gen_buffers(3, buffers);
+    gen_buffers(4, buffers);
     bind_buffer(GL_ARRAY_BUFFER, buffers[0]);
     buffer_data(GL_ARRAY_BUFFER, 64 * 64, NULL, GL_DYNAMIC_DRAW);
     vertex_attrib_pointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
@@ -431,6 +448,33 @@ static const char *cost(void)
         uniform_matrix4fv(n, 1, GL_FALSE, matrix);
         uniform3fv(k, 1, color);
         draw_elements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (const void *)(INT_PTR)((i % 64) * 64), 1, (i % 64) * 8);
+    });
+
+    /* The streaming buffer, as wined3d creates it (GL_STREAM_DRAW), as the
+     * vertex source of the draws below; the indices are those of slot 0. */
+    bind_buffer(GL_ARRAY_BUFFER, buffers[3]);
+    buffer_data(GL_ARRAY_BUFFER, stream_size, NULL, GL_STREAM_DRAW);
+    vertex_attrib_pointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+    bind_buffer(GL_ARRAY_BUFFER, 0);
+    TIME("up-draw-map-11-calls", 11, {
+        bind_buffer(GL_ARRAY_BUFFER, buffers[3]);
+        map = map_buffer_range(GL_ARRAY_BUFFER, 0, stream_size,
+                GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
+        if (map)
+            memcpy(map + (i % stream_slots) * 64, quad, sizeof(quad));
+        bind_buffer(GL_ARRAY_BUFFER, 0);
+        bind_buffer(GL_ARRAY_BUFFER, buffers[3]);
+        flush_mapped_buffer_range(GL_ARRAY_BUFFER, (i % stream_slots) * 64, sizeof(quad));
+        bind_buffer(GL_ARRAY_BUFFER, 0);
+        bind_buffer(GL_ARRAY_BUFFER, buffers[3]);
+        unmap_buffer(GL_ARRAY_BUFFER);
+        bind_buffer(GL_ARRAY_BUFFER, 0);
+        draw_elements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL, 1, (i % stream_slots) * 8);
+    });
+    TIME("up-draw-subdata-3-calls", 3, {
+        bind_buffer(GL_ARRAY_BUFFER, buffers[3]);
+        buffer_sub_data(GL_ARRAY_BUFFER, (i % stream_slots) * 64, sizeof(quad), quad);
+        draw_elements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL, 1, (i % stream_slots) * 8);
     });
 #undef TIME
     return errors ? "cost: GL error" : NULL;
