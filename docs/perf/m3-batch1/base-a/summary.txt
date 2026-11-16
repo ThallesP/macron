@@ -1,0 +1,49 @@
+bench superposition, 1600x900 windowed, 2026-11-16T07:26:19Z
+macOS 26.5.2, Apple M3, 
+Now drawing from 'AC Power'
+waited 0 s for thermal pressure 0 before starting
+ran 199 s
+
+HUD frames logged: 17473
+frames measured: 15726 (the first 1747 left out)
+frames a second: 48.3
+GPU busy: 118% (sum of GPU time over sum of intervals)
+interval ms: p25 16.67, median 16.67, p75 16.67, p95 33.33, p99 33.33
+GPU time ms: p25 20.46, median 23.98, p75 28.60, p95 31.33, p99 33.77
+thermal pressure levels seen:   48 0   47 1  101 2 
+
+benchmark's own result:
+Superposition Benchmark v1.1 results:
+FPS: 50.9
+Score: 6809
+Min FPS: 32.5
+Max FPS: 76.3
+
+System:
+	Platform: Windows 10 (build 19045) 64-bit
+	CPU model: VirtualApple @ 2.50GHz (999MHz) x8
+	GPU model: Apple M3 35.0.10.1000 (256MB) x1
+
+Settings:
+	Render: DirectX
+	Fullscreen: none
+	App resolution: 1600x900
+	Render resolution: 1600x900
+	Shaders: Medium
+	Textures: medium
+	SSRT: enabled
+	SSAO: enabled
+	SSGI: disabled
+	Parallax: enabled
+	Refraction: enabled
+	Motion blur: enabled
+	DOF: enabled
+
+Powered by UNIGINE Engine (http://unigine.com/products/unigine/)
+Unigine Corp. 2005-2019
+
+DXMT and Metal lines:
+  21 warn:  Emulate stream output
+  21 err:   CreateGeometryShaderWithStreamOutput: not supported, expect problem
+   1 warn:  MakeWindowAssociation: Ignoring flags 3
+   1 macron: superposition.exe exited with 0

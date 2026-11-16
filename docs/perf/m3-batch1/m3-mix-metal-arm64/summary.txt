@@ -1,0 +1,20 @@
+gpuload mix, metal-arm64, 1600x900, 2026-11-16T08:00:35Z
+macOS 26.5.2, Apple M3
+Now drawing from 'AC Power'
+waited waiting for the Mac to cool down (thermal pressure above nominal)
+50 s for thermal pressure 0 before starting
+
+HUD frames logged: 6229
+frames measured: 5607 (the first 622 left out)
+frames a second: 143.5
+GPU busy: 183% (sum of GPU time over sum of intervals)
+interval ms: p25 6.72, median 6.89, p75 7.12, p95 7.58, p99 8.19
+GPU time ms: p25 12.19, median 12.60, p75 13.30, p95 14.29, p99 15.81
+thermal pressure levels seen:   22 0 
+
+benchmark's own result:
+RESULT config api metal-arm64 mode mix size 1600x900 passes 8 draws 4000
+RESULT fps 144.46 frames 2890 interval_ms p50 6.925 p95 8.205 p99 8.972
+RESULT gpu_ms p50 12.592 p95 14.309 frames 2889
+
+DXMT and Metal lines:

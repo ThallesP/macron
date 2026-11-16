@@ -1,0 +1,2 @@
+RESULT config api d3d11 mode draws size 1600x900 passes 0 draws 4000
+RESULT fps 120.00 frames 2400 interval_ms p50 7.909 p95 15.100 p99 15.494

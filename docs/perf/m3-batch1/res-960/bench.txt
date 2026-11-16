@@ -1,0 +1,28 @@
+Superposition Benchmark v1.1 results:
+FPS: 79.4
+Score: 10615
+Min FPS: 21.7
+Max FPS: 125.3
+
+System:
+	Platform: Windows 10 (build 19045) 64-bit
+	CPU model: VirtualApple @ 2.50GHz (999MHz) x8
+	GPU model: Apple M3 35.0.10.1000 (256MB) x1
+
+Settings:
+	Render: DirectX
+	Fullscreen: none
+	App resolution: 960x540
+	Render resolution: 960x540
+	Shaders: Medium
+	Textures: medium
+	SSRT: enabled
+	SSAO: enabled
+	SSGI: disabled
+	Parallax: enabled
+	Refraction: enabled
+	Motion blur: enabled
+	DOF: enabled
+
+Powered by UNIGINE Engine (http://unigine.com/products/unigine/)
+Unigine Corp. 2005-2019

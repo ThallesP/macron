@@ -1,0 +1,19 @@
+gpuload fill, metal-x86_64, 1600x900, 2026-11-16T07:56:44Z
+macOS 26.5.2, Apple M3
+Now drawing from 'AC Power'
+waited 0 s for thermal pressure 0 before starting
+
+HUD frames logged: 5873
+frames measured: 5286 (the first 587 left out)
+frames a second: 136.6
+GPU busy: 173% (sum of GPU time over sum of intervals)
+interval ms: p25 6.22, median 7.38, p75 7.97, p95 9.63, p99 14.59
+GPU time ms: p25 12.22, median 12.90, p75 13.34, p95 13.82, p99 14.12
+thermal pressure levels seen:   15 0    8 1 
+
+benchmark's own result:
+RESULT config api metal-x86_64 mode fill size 1600x900 passes 8 draws 0
+RESULT fps 137.89 frames 2758 interval_ms p50 7.255 p95 8.083 p99 13.061
+RESULT gpu_ms p50 12.895 p95 13.816 frames 2758
+
+DXMT and Metal lines:
