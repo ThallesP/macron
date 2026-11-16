@@ -1,0 +1,45 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Mon, 16 Nov 2026 12:00:00 +0000
+Subject: [PATCH] wined3d: Run the command stream on its own thread in WoW64
+ again.
+
+Reverts what 0004 changed. 0004 kept a 32-bit program's command stream
+on its own thread because 32-bit programs crashed or stopped there under
+Rosetta; that was the far jumps between 32-bit and 64-bit code, which
+0006 fixed. With 0010 a 32-bit program no longer waits for the command
+stream at every map of a system memory buffer, and on an M3 Ultimate
+Custom Night's menu runs at 60 fps with the command stream on its own
+thread against 31 on the game's thread (docs/proof/gate1-m3/macron10/).
+WINE_D3D_CONFIG=csmt=0 still puts it on the application's thread.
+---
+diff --git a/dlls/wined3d/wined3d_main.c b/dlls/wined3d/wined3d_main.c
+index 14523fa..f797f67 100644
+--- a/dlls/wined3d/wined3d_main.c
++++ b/dlls/wined3d/wined3d_main.c
+@@ -274,13 +274,6 @@ static void vkd3d_log_callback(const char *fmt, va_list args)
+     __wine_dbg_output(buffer);
+ }
+ 
+-static BOOL wined3d_is_wow64(void)
+-{
+-    BOOL is_wow64;
+-
+-    return sizeof(void *) == sizeof(int) && IsWow64Process(GetCurrentProcess(), &is_wow64) && is_wow64;
+-}
+-
+ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
+ {
+     DWORD wined3d_context_tls_idx;
+@@ -301,12 +294,6 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
+     }
+     context_set_tls_idx(wined3d_context_tls_idx);
+ 
+-    /* A 32-bit process on 64-bit Wine on macOS (Rosetta) crashes or stops
+-     * making progress when the command stream runs on its own thread. Keep it
+-     * on the application's thread there; the csmt setting still overrides. */
+-    if (wined3d_is_wow64())
+-        wined3d_settings.cs_multithreaded = 0;
+-
+     /* We need our own window class for a fake window which we use to retrieve GL capabilities */
+     /* We might need CS_OWNDC in the future if we notice strange things on Windows.
+      * Various articles/posts about OpenGL problems on Windows recommend this. */
