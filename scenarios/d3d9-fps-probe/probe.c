@@ -5,12 +5,18 @@
  *
  *   probe.exe [mix|up|vb|tex] [--sprites N] [--warmup S] [--seconds S]
  *             [--hold S] [--window WxH] [--throttle-ms N] [--no-present]
- *             [--sprite-size N]
+ *             [--sprite-size N] [--sysmem]
  *
  * --sprite-size N draws every quad of the scene (the sprites, and the
  * backdrop, panel and overlay too) N by N pixels, so with N = 1 a frame
  * costs its draws and next to nothing in rasterising: the per-draw CPU cost
  * of the Direct3D 9 and OpenGL layers, alone.
+ *
+ * --sysmem draws each quad the way Clickteam Fusion games (Ultimate Custom
+ * Night) do: a device with software vertex processing, a dynamic vertex
+ * buffer in system memory locked whole with NOOVERWRITE before each draw
+ * (DISCARD when it wraps), a static index buffer in system memory, and
+ * DrawIndexedPrimitive. The picture is the same as without it.
  */
 #define COBJMACROS
 #include <windows.h>
@@ -48,6 +54,7 @@ typedef struct {
     int window_height;
     BOOL present;
     int sprite_size;
+    BOOL sysmem;
 } Options;
 
 typedef struct {
@@ -63,6 +70,9 @@ typedef struct {
     IDirect3DSurface9 *back_buffer;
     IDirect3DVertexBuffer9 *vertex_buffer;
     UINT vertex_buffer_quad;
+    IDirect3DVertexBuffer9 *sysmem_vertex_buffer;
+    IDirect3DIndexBuffer9 *sysmem_index_buffer;
+    UINT sysmem_quad;
 } Scene;
 
 static const char *mode_names[] = { "mix", "up", "vb", "tex" };
@@ -134,6 +144,7 @@ static BOOL parse_options(int argc, char **argv, Options *o)
     o->window_height = HEIGHT;
     o->present = TRUE;
     o->sprite_size = 0;
+    o->sysmem = FALSE;
     for (i = 1; i < argc; i++) {
         const char *a = argv[i];
         const char *value = i + 1 < argc ? argv[i + 1] : NULL;
@@ -148,6 +159,10 @@ static BOOL parse_options(int argc, char **argv, Options *o)
             continue;
         if (strcmp(a, "--no-present") == 0) {
             o->present = FALSE;
+            continue;
+        }
+        if (strcmp(a, "--sysmem") == 0) {
+            o->sysmem = TRUE;
             continue;
         }
         if (!value)
@@ -172,6 +187,8 @@ static BOOL parse_options(int argc, char **argv, Options *o)
             return FALSE;
         i++;
     }
+    if (o->sysmem && o->mode == MODE_VB)
+        return FALSE;
     return o->sprites > 0 && o->sprites <= VERTEX_BUFFER_QUADS - 8 && o->measure_seconds > 0 && o->warmup_seconds >= 0 &&
            o->hold_seconds >= 0 && o->throttle_ms >= 0 && o->window_width > 0 && o->window_height > 0 &&
            o->sprite_size >= 0;
@@ -298,6 +315,25 @@ static const char *create_resources(Scene *s)
             FAILED(IDirect3DTexture9_GetSurfaceLevel(s->scene_target, 0, &s->scene_surface)))
             return "scene render target";
     }
+    if (s->options.sysmem) {
+        WORD *indices;
+        UINT q;
+
+        if (FAILED(IDirect3DDevice9_CreateVertexBuffer(s->device, VERTEX_BUFFER_QUADS * 4 * sizeof(Vertex),
+                                                       D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, FVF, D3DPOOL_SYSTEMMEM,
+                                                       &s->sysmem_vertex_buffer, NULL)))
+            return "system memory vertex buffer";
+        if (FAILED(IDirect3DDevice9_CreateIndexBuffer(s->device, VERTEX_BUFFER_QUADS * 6 * sizeof(WORD),
+                                                      D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_SYSTEMMEM,
+                                                      &s->sysmem_index_buffer, NULL)) ||
+            FAILED(IDirect3DIndexBuffer9_Lock(s->sysmem_index_buffer, 0, 0, (void **)&indices, 0)))
+            return "system memory index buffer";
+        for (q = 0; q < VERTEX_BUFFER_QUADS; q++) {
+            WORD first = (WORD)(q * 4), quad[6] = { first, first + 1, first + 2, first + 2, first + 1, first + 3 };
+            memcpy(indices + q * 6, quad, sizeof(quad));
+        }
+        IDirect3DIndexBuffer9_Unlock(s->sysmem_index_buffer);
+    }
     if (s->options.mode == MODE_VB) {
         if (FAILED(IDirect3DDevice9_CreateVertexBuffer(s->device, VERTEX_BUFFER_QUADS * 4 * sizeof(Vertex),
                                                        D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, FVF, D3DPOOL_DEFAULT,
@@ -334,6 +370,25 @@ static HRESULT draw_quad(Scene *s, const Vertex *v)
     DWORD flags = D3DLOCK_NOOVERWRITE;
     HRESULT hr;
 
+    if (s->options.sysmem) {
+        Vertex *vertices;
+
+        if (s->sysmem_quad >= VERTEX_BUFFER_QUADS) {
+            flags = D3DLOCK_DISCARD;
+            s->sysmem_quad = 0;
+        }
+        hr = IDirect3DVertexBuffer9_Lock(s->sysmem_vertex_buffer, 0, 0, (void **)&vertices, flags);
+        if (FAILED(hr))
+            return hr;
+        memcpy(vertices + s->sysmem_quad * 4, v, 4 * sizeof(Vertex));
+        IDirect3DVertexBuffer9_Unlock(s->sysmem_vertex_buffer);
+        IDirect3DDevice9_SetStreamSource(s->device, 0, s->sysmem_vertex_buffer, 0, sizeof(Vertex));
+        IDirect3DDevice9_SetIndices(s->device, s->sysmem_index_buffer);
+        hr = IDirect3DDevice9_DrawIndexedPrimitive(s->device, D3DPT_TRIANGLELIST, 0, s->sysmem_quad * 4, 4,
+                                                   s->sysmem_quad * 6, 2);
+        s->sysmem_quad++;
+        return hr;
+    }
     if (s->options.mode != MODE_VB)
         return IDirect3DDevice9_DrawPrimitiveUP(s->device, D3DPT_TRIANGLESTRIP, 2, v, sizeof(Vertex));
     if (s->vertex_buffer_quad == 0 || s->vertex_buffer_quad >= VERTEX_BUFFER_QUADS) {
@@ -461,7 +516,7 @@ static float percentile(const float *sorted, size_t n, double q)
     return sorted[rank - 1];
 }
 
-static IDirect3DDevice9 *create_device(IDirect3D9 *d3d, HWND hwnd, const char **processing)
+static IDirect3DDevice9 *create_device(IDirect3D9 *d3d, HWND hwnd, BOOL sysmem, const char **processing)
 {
     D3DPRESENT_PARAMETERS pp;
     IDirect3DDevice9 *device = NULL;
@@ -476,6 +531,15 @@ static IDirect3DDevice9 *create_device(IDirect3D9 *d3d, HWND hwnd, const char **
     pp.hDeviceWindow = hwnd;
     pp.Windowed = TRUE;
     pp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+    if (sysmem) {
+        *processing = "software";
+        hr = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd,
+                                     D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED, &pp, &device);
+        if (SUCCEEDED(hr))
+            return device;
+        say("RESULT d3d9 device: FAILED (CreateDevice hr=0x%08lx)\n", (unsigned long)hr);
+        return NULL;
+    }
     *processing = "hardware";
     hr = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &pp,
                                  &device);
@@ -519,7 +583,7 @@ int main(int argc, char **argv)
 
     memset(&s, 0, sizeof(s));
     if (!parse_options(argc, argv, &s.options)) {
-        say("usage: probe.exe [mix|up|vb|tex] [--sprites N] [--warmup S] [--seconds S] [--hold S] [--window WxH] "
+        say("usage: probe.exe [mix|up|vb|tex] [--sysmem] [--sprites N] [--warmup S] [--seconds S] [--hold S] [--window WxH] "
                "[--throttle-ms N] [--no-present] [--sprite-size N]\n");
         return 2;
     }
@@ -538,7 +602,7 @@ int main(int argc, char **argv)
     if (SUCCEEDED(IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter)))
         say("RESULT adapter %s (vendor 0x%04lx, device 0x%04lx)\n", adapter.Description,
                (unsigned long)adapter.VendorId, (unsigned long)adapter.DeviceId);
-    s.device = create_device(d3d, hwnd, &processing);
+    s.device = create_device(d3d, hwnd, s.options.sysmem, &processing);
     if (!s.device)
         return 1;
     say("RESULT d3d9 device: OK (%s vertex processing)\n", processing);
@@ -549,11 +613,11 @@ int main(int argc, char **argv)
     }
     sprite_size = s.options.sprite_size;
     say("RESULT config mode %s sprites %d bits %d back_buffer %dx%d window %dx%d warmup_s %.1f measure_s %.1f "
-           "throttle_ms %d present %s dynamic_panel %s sprite_size %d\n",
+           "throttle_ms %d present %s dynamic_panel %s sprite_size %d sysmem %s\n",
            mode_names[s.options.mode], s.options.sprites, (int)(sizeof(void *) * 8), WIDTH, HEIGHT,
            s.options.window_width, s.options.window_height, s.options.warmup_seconds, s.options.measure_seconds,
            s.options.throttle_ms, s.options.present ? "yes" : "no", s.panel_is_dynamic ? "yes" : "no",
-           s.options.sprite_size);
+           s.options.sprite_size, s.options.sysmem ? "yes" : "no");
 
     QueryPerformanceFrequency(&frequency);
     QueryPerformanceCounter(&started);
