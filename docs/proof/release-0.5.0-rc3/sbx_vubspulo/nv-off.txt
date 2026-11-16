@@ -1,0 +1,4 @@
+RESULT DXMT_ENABLE_NVEXT=(unset)
+RESULT adapter vendor 0x106b device 0x0000 "Apple Paravirtual device" dedicated 2389 MB
+RESULT NvAPI_Initialize: failed
+RESULT nvngx.dll: not loaded (error 1114)

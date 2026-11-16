@@ -1,0 +1,6 @@
+RESULT DXMT_ENABLE_NVEXT=1
+RESULT adapter vendor 0x10de device 0x0000 "Apple Paravirtual device" dedicated 2389 MB
+RESULT NvAPI_Initialize: OK
+RESULT NGX init: OK
+RESULT NGX SuperSampling.Available=1
+RESULT DLSS feature 1280x720->1920x1080: not created (0xbad0001)
