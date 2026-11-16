@@ -75,9 +75,22 @@ Overwatch on these sandboxes does not reach the sign-in screen every time, with 
 - R6 (patched, shell) crashed 12 s in, after `d3d11.dll` was loaded: `Unhandled page fault on execute access to 00000001400AFD90` inside Overwatch.exe's own image. It happened in one of six patched starts and in none of six starts with the released file (two on the first sandbox); one in six is too few to tell whether the patch has anything to do with it.
 - P2 (released, Play) was at 6.7 GB when `ow-mon.sh` went 50 s without a reading, and Overwatch exited with code 5 at 186 s. The sandbox has 7.5 GB of memory and 1 GB of swap; whether memory made the game exit is not established.
 
+## On Thalles's M3 (request M1)
+
+Run for this thread on his MacBook Air M3 on 2026-11-16 (`docs/proof/overwatch-memory/m3-m1/README.md`): Overwatch started the way Steam starts it, on APFS clones of his Overwatch Windows environment, signed in to his account, left alone about four minutes on the screen it shows by itself after signing in, with `ow-mon.sh` following the process and the Metal HUD logging. Both builds use the same Wine (`macron.11`); only DXMT's `d3d11.dll` differs.
+
+| start | `d3d11.dll` | footprint, level | memory pressure | swap in use |
+|---|---|---|---|---|
+| `dxmt-m1` (the patch) | `68b71e3c...` (the published overlay's) | **3.40 to 3.47 GB** from 55 s on | 1 (normal) throughout | 5,990 to 5,974 MB |
+| control, main at `acf610a` | `7ca382af...` (DXMT 0.80 as released) | **14.24 to 14.25 GB** from 111 s on | 2 (warning) from the first reading | 5,966 to 7,699 MB |
+
+The HUD's memory figure agrees: 3.4 GB patched, 14.2 to 14.3 GB in the control (14.3 GB with 0.4.0 in request 6). In the patched start's `footprint` no `MALLOC` category is among the first rows; the game's Windows memory is 2.4 GB and graphics 0.66 GB. **So the M3's 12 GB of `malloc` was the parsed shaders, as on the sandboxes, and the patch removes it there: 14.25 GB to 3.4 GB, with no swapping and no memory pressure.** Neither start crashed. The frame rates (50.0 patched, 43.3 control, 53.5 for 0.4.0 earlier in the night) come from starts minutes apart on a Mac that had run benchmarks for hours, so they say nothing about the patch either way; frames over 50 ms after the first 20 s were 38 patched and 39 control.
+
 ## What is established and what is not
 
 Established, with the measurements above:
+
+- On Thalles's M3 the same: 14.25 GB with DXMT as released, 3.4 GB with the patch, on the same Wine, the same screen and his account (M1).
 
 - On a sandbox, Overwatch's process grows to 7.9 GB before its sign-in screen and then stays level; about 7 GB of it is macOS `malloc` (run A: `MALLOC_SMALL` 5.65 GB, `MEDIUM` 0.65, `NANO` 0.51, `TINY` 0.22), the same categories as on the M3.
 - 7.93 GB of the 8.04 GB of live `malloc` was allocated by DXMT's shader parser (`SM50Initialize`, in `winemetal.so`): 82,706 parsed shaders, about 96 KB each, all kept alive by DXMT's pipeline cache, which never frees them.
@@ -86,7 +99,7 @@ Established, with the measurements above:
 
 Not established:
 
-- **The M3's numbers.** There the process held about 12 GB of `malloc` (10 GB `MALLOC_SMALL`) and 15 GB in all, against 8 GB on the sandbox. Overwatch may create more shaders on an Apple GPU than on the Paravirtual device, or the M3's session (signed in, past the menu, in the practice range) may have created more; that its 12 GB is the same parsed shaders is likely from the categories and the timing (grown within 21 s of the first frame, before any map) but was not measured on that Mac. The release candidate with the patch is for Thalles to check there: the footprint (`footprint <pid>` on the `wine` process, or the Metal HUD's memory figure) and whether the hitches during swapping go away.
+- **A match or the practice range.** Where 0.4.0 held 15.2 to 15.6 GB on the M3; M1 measured the screen after signing in, and a match needs Thalles at the keyboard. Whether the hitches he felt during swapping are gone is his to say after playing the release candidate.
 - **Frame time.** A shader that is drawn for the first time is now parsed again before it is compiled. That is once per shader, next to an LLVM and Metal compile that takes much longer, and a variant DXMT's on-disk cache already has needs no parse; but it was not measured, and the sandbox's GPU cannot show the frame rate the M3 has. The 16 hitches where DXMT's shader cache grew are a separate question this change does not address.
 - **Games other than Overwatch.** The change is in DXMT's `d3d11.dll` for every Direct3D 10 and 11 game on the default backend. The scenario checks (the Direct3D 11 probe) cover that it still draws; a game that creates few shaders gains nothing and keeps a bytecode copy per shader.
 - **The Windows side.** The 877 MB growth of `WINE_RESERVE` is attributed to the bytecode copies by size, not measured.
@@ -96,7 +109,7 @@ Not established:
 - The overlay is published as [runtime-dxmt-0.80-macron.1](https://github.com/ThallesP/macron/releases/tag/runtime-dxmt-0.80-macron.1) (`dxmt-0.80-macron.1-overlay.tar.xz`, SHA-256 `d3982b6ad010d45d9330ba73ec2b1af7a95b5423956ffabe2ab86ceea79264e2`, 1,353,168 bytes), built by the `DXMT build` workflow on main. It holds `lib/wine/x86_64-windows/d3d11.dll` (SHA-256 `68b71e3c...`) and `lib/wine/i386-windows/d3d11.dll` (`3a601ced...`), both marked as Wine builtins, and under `share/macron/dxmt/` the patch, the patched source file, DXMT's licence and the build's compiler.
 - The runtime pins it in `Manifest.DXMTOverlay`; the runtime's version names it (`...-dxmt-0.80-macron.1-...`), so an installed Macron that updates gets a fresh runtime with it.
 - It goes to Thalles in v0.5.0-rc3, the release candidate after rc2 (rc2 was already built and under test when the pin was ready).
-- On his M3: request M1 in `docs/perf/real-mac-requests.md` (branch `dxmt-m1`).
+- On his M3: request M1 in `docs/perf/real-mac-requests.md` (branch `dxmt-m1`), answered above: 14.25 GB to 3.4 GB.
 
 ## Upstream
 
