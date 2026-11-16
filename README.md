@@ -4,7 +4,7 @@ Mac + Proton. Press Play on a Windows-only game in the Mac Steam client and have
 
 **Status:** early; [release 0.2.0](https://github.com/ThallesP/macron/releases/tag/v0.2.0) is the first to try. On a Mac sandbox, with Steam signed in to a test account: a Windows-only game (Ultimate Custom Night) gets a working Install button, Steam downloads it into its normal library, Play starts it through `macron`, Steam shows it running, and quitting it or pressing Stop returns Steam to Play; a Mac-native game still installs and runs as before; `macron uninstall` puts Steam back byte for byte. docs/install.md says how to install it; PROGRESS.md has the evidence and the table below has every game tried.
 
-What is in it: the launcher (`macron`) with its pinned runtime (Wine 11.21 with Macron's six Wine patches, DXMT and DXVK), the Steam Play switch (`steamplay/`), the fixes database, an installer (a DMG with a pkg, and `macron uninstall`), and the scenario checks (`macron-check`): three real games and three programs of ours pass in CI on GitHub's macOS runners, checked against the originals on Windows, including a frame-rate check of the 32-bit Direct3D 9 path.
+What is in it: the launcher (`macron`) with its pinned runtime (Wine 11.21 with Macron's Wine patches, DXMT with one Macron patch, and DXVK), the Steam Play switch (`steamplay/`), the fixes database, an installer (a DMG with a pkg, and `macron uninstall`), and the scenario checks (`macron-check`): three real games and three programs of ours pass in CI on GitHub's macOS runners, checked against the originals on Windows, including a frame-rate check of the 32-bit Direct3D 9 path.
 
 Not working yet:
 - **The Steam bridge:** built (`lsteamclient/`, `steam_helper/`) and checked on sandboxes without a signed-in Steam (`SteamAPI_Init` reaches the Mac client and fails cleanly), but not released yet, so games that talk to Steam (`SteamAPI_Init`, achievements, cloud saves) do not find it yet (docs/steam-bridge.md).
@@ -29,7 +29,7 @@ Not working yet:
 ## The launcher (`macron`)
 
 ```sh
-macron runtime install                       # Wine 11.21 + Macron's Wine patches + DXMT 0.80 + DXVK, pinned URLs and checksums
+macron runtime install                       # Wine 11.21 + Macron's Wine patches + DXMT 0.80 (+ Macron's patch) + DXVK, pinned URLs and checksums
 macron launch --game d3d11-probe -- probe.exe # start a program with its profile from fixes/games/
 macron kill --game d3d11-probe               # stop everything in that game's Windows environment
 macron waitforexitandrun <exe> [args]        # what Steam calls; the profile comes from SteamAppId
@@ -147,7 +147,8 @@ Every game tried. The first three are scenarios that pass in CI; the next five c
 |---|---|---|
 | Wine (Gcenx/macOS_Wine_builds 11.21) | LGPL 2.1+ | downloaded at install time, unmodified |
 | Wine 11.21 `winemac.so`, `wined3d.dll` and `wow64cpu.dll` with Macron's patches (this repository's `runtime-wine-11.21-macron.5` release) | LGPL 2.1+ | downloaded at install time: `winemac.so` into the DXMT tree, `wined3d.dll` and `wow64cpu.dll` into both trees; source and patches are published with the release |
-| DXMT 0.80 (3Shain/dxmt) | LGPL 2.1+ | downloaded at install time, unmodified |
+| DXMT 0.80 (3Shain/dxmt) | LGPL 2.1+ | downloaded at install time; its `d3d11.dll` is then replaced by the patched one below |
+| DXMT 0.80 `d3d11.dll` (i386 and x86_64) with Macron's patch (this repository's `runtime-dxmt-0.80-macron.1` release, built by `runtime/dxmt/build.sh`) | LGPL 2.1+ | downloaded at install time into the DXMT tree only; the patch, the patched source file and DXMT's licence are in the archive and the release. It stops DXMT from keeping every shader a game creates in its parsed form (docs/overwatch-memory.md) |
 | DXVK-macOS 1.10.3-20230507 (Gcenx/DXVK-macOS) | zlib | downloaded at install time, unmodified (the `dxvk` backend) |
 | Mesa 26.1.8 for Windows (pal1000/mesa-dist-win) | MIT | downloaded on Windows runners for OpenGL references, and by macron when `MACRON_OPENGL=llvmpipe` |
 | Go standard library | BSD 3-Clause | built into macron and macron-check |

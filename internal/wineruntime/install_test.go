@@ -70,6 +70,11 @@ func serve(t *testing.T) *fixture {
 		"lib/wine/x86_64-unix/opengl32.so":    "macron opengl32 unix",
 		"share/doc/macron-wine/COPYING.LIB":   "licence",
 	})
+	dxmtOverlay := tarball(t, map[string]string{
+		"lib/wine/x86_64-windows/d3d11.dll": "macron dxmt d3d11",
+		"lib/wine/i386-windows/d3d11.dll":   "macron dxmt d3d11 32",
+		"share/macron/dxmt/LICENSE":         "dxmt licence",
+	})
 	dxvk := tarball(t, map[string]string{
 		"dxvk-macOS/x64/d3d11.dll":     "dxvk d3d11",
 		"dxvk-macOS/x64/d3d10core.dll": "dxvk d3d10core",
@@ -78,7 +83,7 @@ func serve(t *testing.T) *fixture {
 	f := &fixture{}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		f.requests++
-		bodies := map[string][]byte{"/wine.tar.gz": wine, "/winemac.tar.gz": winemac, "/dxmt.tar.gz": dxmt, "/dxvk.tar.gz": dxvk}
+		bodies := map[string][]byte{"/wine.tar.gz": wine, "/winemac.tar.gz": winemac, "/dxmt.tar.gz": dxmt, "/dxmt-overlay.tar.gz": dxmtOverlay, "/dxvk.tar.gz": dxvk}
 		body, ok := bodies[r.URL.Path]
 		if !ok {
 			http.NotFound(w, r)
@@ -92,6 +97,7 @@ func serve(t *testing.T) *fixture {
 		Wine:        Archive{Name: "wine.tar.gz", URL: server.URL + "/wine.tar.gz", SHA256: sum(wine), SizeBytes: int64(len(wine))},
 		WineOverlay: Archive{Name: "winemac.tar.gz", URL: server.URL + "/winemac.tar.gz", SHA256: sum(winemac), SizeBytes: int64(len(winemac))},
 		DXMT:        Archive{Name: "dxmt.tar.gz", URL: server.URL + "/dxmt.tar.gz", SHA256: sum(dxmt), SizeBytes: int64(len(dxmt))},
+		DXMTOverlay: Archive{Name: "dxmt-overlay.tar.gz", URL: server.URL + "/dxmt-overlay.tar.gz", SHA256: sum(dxmtOverlay), SizeBytes: int64(len(dxmtOverlay))},
 		DXVK:        Archive{Name: "dxvk.tar.gz", URL: server.URL + "/dxvk.tar.gz", SHA256: sum(dxvk), SizeBytes: int64(len(dxvk))},
 	}
 	return f
@@ -118,11 +124,20 @@ func TestInstallBuildsAPlainAndADXMTTree(t *testing.T) {
 	if got := read(t, filepath.Join(installed.Root(TreePlain), "lib/wine/x86_64-windows/d3d11.dll")); got != "wine d3d11" {
 		t.Errorf("plain tree d3d11.dll = %q", got)
 	}
-	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/x86_64-windows/d3d11.dll")); got != "dxmt d3d11" {
+	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/x86_64-windows/d3d11.dll")); got != "macron dxmt d3d11" {
 		t.Errorf("DXMT tree d3d11.dll = %q", got)
 	}
-	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/i386-windows/d3d11.dll")); got != "dxmt d3d11 32" {
+	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/i386-windows/d3d11.dll")); got != "macron dxmt d3d11 32" {
 		t.Errorf("DXMT tree 32-bit d3d11.dll = %q", got)
+	}
+	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/x86_64-windows/winemetal.dll")); got != "winemetal" {
+		t.Errorf("DXMT tree winemetal.dll = %q", got)
+	}
+	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "share/macron/dxmt/LICENSE")); got != "dxmt licence" {
+		t.Errorf("DXMT tree DXMT licence = %q", got)
+	}
+	if got := read(t, filepath.Join(installed.Root(TreePlain), "lib/wine/i386-windows/d3d11.dll")); got != "wine d3d11 32" {
+		t.Errorf("plain tree 32-bit d3d11.dll = %q", got)
 	}
 	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/x86_64-unix/winemetal.so")); got != "winemetal unix" {
 		t.Errorf("DXMT tree winemetal.so = %q", got)
@@ -178,8 +193,8 @@ func TestInstallTwiceDownloadsOnce(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if f.requests != 4 {
-		t.Fatalf("made %d downloads, want 4 (cached after the first install)", f.requests)
+	if f.requests != 5 {
+		t.Fatalf("made %d downloads, want 5 (cached after the first install)", f.requests)
 	}
 }
 
@@ -193,7 +208,7 @@ func TestChecksumMismatchInstallsNothing(t *testing.T) {
 	if failure.CodeOf(err) != failure.CodeChecksumMismatch {
 		t.Fatalf("got %v, want %s", err, failure.CodeChecksumMismatch)
 	}
-	if f.requests != 4 {
+	if f.requests != 5 {
 		t.Errorf("retried a checksum mismatch: %d requests", f.requests)
 	}
 	if _, err := Find(layout, f.manifest); failure.CodeOf(err) != failure.CodeRuntimeMissing {
