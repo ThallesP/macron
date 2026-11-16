@@ -16,6 +16,7 @@ import (
 type Game struct {
 	Exe string
 	Cwd string
+	Env []string
 }
 
 func PrepareGame(ctx context.Context, s scenario.Scenario, cacheDir, workDir string) (Game, error) {

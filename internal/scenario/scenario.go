@@ -47,6 +47,16 @@ func (f FrameRate) HasThreshold() bool {
 	return f.MinFPS > 0 || f.MinShareOfBaseline > 0
 }
 
+// Uploads starts each exe with an OpenGL trace and requires that its buffer
+// uploads while it measures make the host OpenGL wait for nothing (no
+// glBufferSubData, no synchronized map), and that a control run with the
+// unsynchronized writes switched off shows the waiting uploads.
+type Uploads struct {
+	Exes   []string `json:"exes"`
+	Args   []string `json:"args"`
+	Source string   `json:"source"`
+}
+
 type Download struct {
 	wineruntime.Archive
 	Unpack string `json:"unpack"`
@@ -71,6 +81,7 @@ type Scenario struct {
 	OtherGame     string            `json:"otherGame"`
 	WindowsExtra  []string          `json:"windowsExtra"`
 	FrameRate     *FrameRate        `json:"frameRate,omitempty"`
+	Uploads       *Uploads          `json:"uploads,omitempty"`
 	StartAttempts int               `json:"startAttempts,omitempty"`
 	CI            bool              `json:"ci"`
 
@@ -78,6 +89,13 @@ type Scenario struct {
 }
 
 const FrameRateLine = "RESULT fps"
+
+func uploadExes(uploads *Uploads) []string {
+	if uploads == nil {
+		return nil
+	}
+	return uploads.Exes
+}
 
 var (
 	validName     = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
@@ -167,6 +185,17 @@ func (s Scenario) validate() error {
 	}
 	if s.FrameRate != nil && s.Reached.Output != FrameRateLine {
 		return invalid("a frame-rate scenario is reached when the probe prints %q", FrameRateLine)
+	}
+	if s.Uploads != nil && (len(s.Uploads.Exes) == 0 || len(s.Uploads.Args) == 0 || s.Uploads.Source == "") {
+		return invalid("uploads needs exes, args and a source saying why the rule holds")
+	}
+	if s.Uploads != nil && s.Reached.Output != FrameRateLine {
+		return invalid("an uploads scenario is reached when the probe prints %q", FrameRateLine)
+	}
+	for _, exe := range uploadExes(s.Uploads) {
+		if strings.ContainsAny(exe, `/\`) || !strings.HasSuffix(exe, ".exe") {
+			return invalid("uploads.exes are .exe files next to the scenario's exe, not paths")
+		}
 	}
 	for _, extra := range s.WindowsExtra {
 		if !slices.Contains(windowsExtras, extra) {

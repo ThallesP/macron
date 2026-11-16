@@ -140,6 +140,9 @@ func (r *macRun) do(ctx context.Context) error {
 	if r.Scenario.FrameRate != nil {
 		r.measureFrameRate(ctx, game, output.String())
 	}
+	if r.Scenario.Uploads != nil {
+		r.checkUploads(ctx, game)
+	}
 
 	r.stage("comparing with the reference")
 	reference, err := ReadPNG(r.Scenario.ReferencePath())
@@ -201,6 +204,34 @@ func (r *macRun) measureFrameRate(ctx context.Context, game Game, measuredOutput
 	r.report.FrameRate = &verdict
 }
 
+func (r *macRun) checkUploads(ctx context.Context, game Game) {
+	r.stopGame()
+	uploads := *r.Scenario.Uploads
+	runs := []UploadsRunOutput{}
+	timings := maps.Clone(r.report.TimingsSecs)
+	for _, exe := range uploads.Exes {
+		for _, control := range []bool{false, true} {
+			env := []string{UploadsTraceEnv}
+			logName := "uploads-" + strings.TrimSuffix(exe, ".exe") + ".log"
+			if control {
+				env = append(env, UploadsControlEnv)
+				logName = "uploads-" + strings.TrimSuffix(exe, ".exe") + "-control.log"
+			}
+			r.stage(fmt.Sprintf("tracing the buffer uploads of %s%s", exe, controlLabel(control)))
+			traced := Game{Exe: filepath.Join(filepath.Dir(game.Exe), exe), Cwd: game.Cwd, Env: env}
+			_, output, err := r.launchWithAttempts(ctx, traced, uploads.Args, logName)
+			r.stopGame()
+			if err != nil {
+				r.report.Notes = append(r.report.Notes, fmt.Sprintf("the traced run of %s failed: %s", logName, err))
+			}
+			runs = append(runs, UploadsRunOutput{Exe: exe, Control: control, Output: output.String()})
+		}
+	}
+	r.report.TimingsSecs = timings
+	verdict := EvaluateUploads(UploadsInput{Threshold: uploads, Runs: runs})
+	r.report.Uploads = &verdict
+}
+
 func (r *macRun) runBaseline(ctx context.Context, game Game, frameRate scenario.FrameRate) string {
 	if frameRate.BaselineExe == "" {
 		return ""
@@ -256,6 +287,7 @@ func (r *macRun) launchAndWait(ctx context.Context, g Game, args []string, logNa
 	for name, value := range r.Scenario.MacronEnv {
 		game.Env = append(game.Env, name+"="+value)
 	}
+	game.Env = append(game.Env, g.Env...)
 	game.Stdout = io.MultiWriter(log, output)
 	game.Stderr = game.Stdout
 	launched := time.Now()
@@ -405,7 +437,8 @@ func (r *macRun) judge(ctx context.Context, reference, frame image.Image, deskto
 		RecognisedText: text,
 	})
 	r.report.Verdict = &verdict
-	r.report.Passed = verdict.Passed && (r.report.FrameRate == nil || r.report.FrameRate.Passed)
+	r.report.Passed = verdict.Passed && (r.report.FrameRate == nil || r.report.FrameRate.Passed) &&
+		(r.report.Uploads == nil || r.report.Uploads.Passed)
 	r.report.Stage = "done"
 	return nil
 }

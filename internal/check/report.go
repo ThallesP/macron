@@ -16,6 +16,7 @@ type Report struct {
 	Error       string             `json:"error,omitempty"`
 	Verdict     *Verdict           `json:"verdict,omitempty"`
 	FrameRate   *FrameRateVerdict  `json:"frameRate,omitempty"`
+	Uploads     *UploadsVerdict    `json:"uploads,omitempty"`
 	Window      *MacWindow         `json:"window,omitempty"`
 	TimingsSecs map[string]float64 `json:"timingsSeconds"`
 	Notes       []string           `json:"notes"`
@@ -61,6 +62,10 @@ func (r Report) Summary() string {
 	if r.FrameRate != nil {
 		b.WriteString("\n")
 		b.WriteString(r.FrameRate.Summary())
+	}
+	if r.Uploads != nil {
+		b.WriteString("\n")
+		b.WriteString(r.Uploads.Summary())
 	}
 	if len(r.TimingsSecs) > 0 {
 		b.WriteString("\nTimings (s):")
