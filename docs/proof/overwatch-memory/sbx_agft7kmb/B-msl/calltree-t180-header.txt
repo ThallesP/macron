@@ -1,0 +1,32 @@
+malloc_history Report Version:  2.0
+Process:         Overwatch.exe [1539]
+Path:            */Library/Application Support/*/wine
+Load Address:    0x200000000
+Identifier:      wine
+Version:         11.21 (0)
+Code Type:       X86-64 (translated)
+Platform:        macOS
+Parent Process:  launchd [1]
+Target Type:     live task
+
+Date/Time:       2026-11-16 06:08:34.427 +0000
+Launch Time:     2026-11-16 06:02:43.660 +0000
+OS Version:      macOS 26.7.2 (25G332)
+Report Version:  7
+Analysis Tool:   /usr/bin/malloc_history
+
+Physical footprint:         8.9G
+Physical footprint (peak):  8.9G
+Idle exit:                  untracked
+----
+
+VM region sizes shown as dirty + swapped/compressed - purgableVolatile.
+
+Stack logging was dynamically enabled in target process after it was launched so no backtraces are available for earlier allocations.
+Stack logging was enabled for 197.0 seconds, which is 56.2% of the process's total lifetime of 350.8 seconds.
+
+Malloc blocks with no stack:   1973   total size: 541K
+   VM regions with no stack:   9770   total size: 167.9M
+
+Call graph:
+    6408105 (8040M) << TOTAL >>

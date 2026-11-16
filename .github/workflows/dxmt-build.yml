@@ -1,0 +1,73 @@
+# Builds DXMT's d3d11.dll with Macron's patches (runtime/dxmt) on a GitHub
+# macOS runner and, when started on main, publishes it as a release asset that
+# internal/wineruntime pins by URL and SHA-256. DXMT is LGPL: the release
+# carries the patches and the patched source file and names the exact source
+# it was built from.
+#
+# Manual trigger only. Never add a pull_request, push or schedule trigger here.
+name: DXMT build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the patched modules
+        run: runtime/dxmt/build.sh "$RUNNER_TEMP/work" out
+      - name: Summary
+        if: always()
+        run: |
+          { echo '```'; cat out/overlay/share/macron/dxmt/VERSION; cat out/*.sha256; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dxmt-overlay
+          path: out/*.tar.xz*
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dxmt-overlay
+          path: out
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          . runtime/dxmt/release.env
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "$RELEASE_TAG is already published; bump RELEASE_TAG in runtime/dxmt/release.env" >&2
+            exit 1
+          fi
+          sha=$(cut -d ' ' -f 1 "out/$ASSET_NAME.sha256")
+          cp runtime/dxmt/patches/*.patch out/
+          patches=$(cd out && ls *.patch)
+          {
+            echo "DXMT $DXMT_TAG's \`d3d11.dll\` (x86_64 and i386) with Macron's patches, as an overlay for DXMT's [$DXMT_TAG release](https://github.com/3Shain/dxmt/releases/tag/$DXMT_TAG) in Macron's DXMT tree. Unpack it over that tree. It stops DXMT from keeping every shader a game creates in its parsed form: on a sandbox, Overwatch's process at its sign-in screen went from 7.9 GB to 1.8 GB (docs/overwatch-memory.md)."
+            echo
+            echo "- \`$ASSET_NAME\`: SHA-256 \`$sha\`"
+            echo "- Source: DXMT \`$DXMT_TAG\` (commit \`$DXMT_COMMIT\`, $DXMT_REPO) with these patches, attached below and in the archive under \`share/macron/dxmt/\`:"
+            for patch in $patches; do
+              echo "  - [\`$patch\`]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/runtime/dxmt/patches/$patch)"
+            done
+            echo "- Built by $RUN_URL from $GITHUB_SHA with [runtime/dxmt/build.sh]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/runtime/dxmt/build.sh)."
+            echo
+            echo "DXMT and these patches are licensed under the GNU LGPL 2.1 or later; the licence text is in the archive under \`share/macron/dxmt/LICENSE\`."
+          } > notes.md
+          gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --title "DXMT ${DXMT_TAG#v} for Macron (${RELEASE_TAG#runtime-dxmt-})" \
+            --notes-file notes.md "out/$ASSET_NAME" "out/$ASSET_NAME.sha256" $(for patch in $patches; do echo "out/$patch"; done)

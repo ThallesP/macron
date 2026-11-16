@@ -1,0 +1,44 @@
+wine [41538]: bailing out due to error: mach_vm_region_recurse - (os/kern) invalid argument
+======================================================================
+wine [41538]: 64-bit (translated)
+Errors were encountered while examining the process. Results may be incomplete or incorrect.
+    mach_vm_region_recurse - (os/kern) invalid argument
+======================================================================
+
+  Dirty      Clean  Reclaimable    Regions    Category
+    ---        ---          ---        ---    ---
+ 543 MB      66 MB          0 B       6386    WINE_RESERVE
+ 119 MB        0 B          0 B          1    Rosetta JIT
+  85 MB        0 B          0 B        565    Owned physical footprint (unmapped) (graphics)
+  24 MB        0 B          0 B         63    untagged (VM_ALLOCATE)
+  20 MB        0 B          0 B          1    page table
+  14 MB        0 B          0 B       3505    Rosetta Generic
+9808 KB        0 B          0 B         23    Owned physical footprint (unmapped)
+ 876 KB        0 B          0 B         41    __DATA
+ 544 KB        0 B          0 B          2    Rosetta Arena
+ 488 KB        0 B          0 B         11    __DATA_CONST
+ 128 KB        0 B          0 B          3    IOAccelerator
+ 120 KB        0 B          0 B          5    IOKit
+ 112 KB        0 B          0 B         27    MALLOC metadata
+  60 KB        0 B          0 B         22    Rosetta Thread Context
+  40 KB        0 B          0 B         20    Rosetta Return Stack
+  32 KB        0 B          0 B          2    IOAccelerator (graphics)
+  32 KB        0 B          0 B          1    Activity Tracing
+  16 KB    5804 KB          0 B        111    mapped file
+ 8192 B        0 B          0 B          1    os_alloc_once
+ 4096 B        0 B          0 B          1    Foundation
+ 4096 B        0 B          0 B          1    CoreGraphics
+    0 B    2496 KB          0 B         35    __TEXT
+    0 B    1028 KB          0 B         36    __LINKEDIT
+    ---        ---          ---        ---    ---
+    0 B        0 B          0 B          0    TOTAL
+
+Auxiliary data:
+    phys_footprint: 6763 MB
+    phys_footprint_peak: 6763 MB
+
+
+Errors were encountered while examining the following processes:
+    wine
+
+Due to errors, summary results may be incomplete or incorrect

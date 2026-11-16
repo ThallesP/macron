@@ -1,0 +1,116 @@
+From: Macron <noreply@github.com>
+Subject: [PATCH] d3d11: parse a shader again on its first compile instead of
+ keeping every parsed shader
+
+The pipeline cache keeps every shader a game creates for the life of the
+device, and with it the shader's parsed form (SM50Initialize). That form is
+only read when one of the shader's variants is compiled, which happens on
+first use and only when the shader cache does not have the variant. It is
+large: Overwatch creates 82,706 shaders before its sign-in screen and their
+parsed forms held 7.9 GB of the process's 8.0 GB of malloc on a Mac (about
+96 KB a shader, measured with MallocStackLogging and malloc_history).
+
+Keep a copy of the bytecode instead, take the reflection and argument
+information from the parse at creation as before, free the parsed form, and
+parse again, once, when a compile first asks for it. A shader that is drawn
+ends up as before; one that is never drawn costs its bytecode.
+
+--- a/src/d3d11/d3d11_pipeline_cache.cpp
++++ b/src/d3d11/d3d11_pipeline_cache.cpp
+@@ -10,7 +10,9 @@
+ #include "../d3d10/d3d10_shader.hpp"
+ #include "../d3d10/d3d10_input_layout.hpp"
+ #include <cstring>
++#include <mutex>
+ #include <shared_mutex>
++#include <vector>
+ 
+ namespace dxmt {
+ 
+@@ -67,44 +69,67 @@
+ 
+ class PipelineCache : public MTLD3D11PipelineCacheBase {
+ 
++  // The parsed form of a shader (SM50Initialize) is only read when one of its
++  // variants is compiled, which happens on first use and only when DXMT's
++  // shader cache does not have it. Games such as Overwatch create tens of
++  // thousands of shaders up front and draw with a few, and the parsed form is
++  // tens of times the size of the bytecode (about 96 KB a shader there). So a
++  // shader keeps a copy of its bytecode and is parsed again, once, when a
++  // compile first needs it.
+   class CachedSM50Shader final : public Shader {
+     PipelineCache *cache;
+     sm50_shader_t shader = nullptr;
++    std::once_flag parsed_;
++    std::vector<uint8_t> bytecode_;
+     Sha1Digest sha1_;
+     MTL_SHADER_REFLECTION reflection_;
+     MTL_SM50_SHADER_ARGUMENT *arguments_info_buffer;
+     std::unordered_map<ShaderVariant, std::unique_ptr<CompiledShader>> variants;
+ 
+   public:
+-    CachedSM50Shader(PipelineCache *cache, sm50_shader_t shader_transferred,
++    CachedSM50Shader(PipelineCache *cache, sm50_shader_t shader_parsed,
++                     const void *pBytecode, uint32_t BytecodeLength,
+                      const Sha1Digest &hash, MTL_SHADER_REFLECTION &reflection)
+-        : cache(cache), shader(shader_transferred), sha1_(hash),
+-          reflection_(reflection) {
++        : cache(cache), bytecode_((const uint8_t *)pBytecode, (const uint8_t *)pBytecode + BytecodeLength),
++          sha1_(hash), reflection_(reflection) {
+       if (reflection_.NumConstantBuffers + reflection_.NumArguments) {
+         arguments_info_buffer = (MTL_SM50_SHADER_ARGUMENT *)malloc(
+             sizeof(MTL_SM50_SHADER_ARGUMENT) *
+             (reflection_.NumConstantBuffers + reflection_.NumArguments));
+-        SM50GetArgumentsInfo(shader, arguments_info_buffer,
++        SM50GetArgumentsInfo(shader_parsed, arguments_info_buffer,
+                              arguments_info_buffer +
+                                  reflection_.NumConstantBuffers);
+       } else {
+         arguments_info_buffer = nullptr;
+       }
++      SM50Destroy(shader_parsed);
+     }
+ 
+     ~CachedSM50Shader() {
+-      if (shader) {
++      if (shader)
+         SM50Destroy(shader);
+-        if (arguments_info_buffer)
+-          free(arguments_info_buffer);
+-        shader = nullptr;
+-      }
++      if (arguments_info_buffer)
++        free(arguments_info_buffer);
+     };
+ 
+     CachedSM50Shader(CachedSM50Shader &&moved) = delete;
+     CachedSM50Shader(const CachedSM50Shader &copy) = delete;
+ 
+-    virtual sm50_shader_t handle() { return shader; };
++    virtual sm50_shader_t handle() {
++      std::call_once(parsed_, [this]() {
++        sm50_error_t err;
++        MTL_SHADER_REFLECTION reflection;
++        if (SM50Initialize(bytecode_.data(), bytecode_.size(), &shader, &reflection, &err)) {
++          ERR("Failed to parse shader again: ", SM50GetErrorMessageString(err));
++          SM50FreeError(err);
++          shader = nullptr;
++        }
++#ifndef DXMT_DEBUG
++        std::vector<uint8_t>().swap(bytecode_);
++#endif
++      });
++      return shader;
++    };
+     virtual MTL_SHADER_REFLECTION &reflection() { return reflection_; }
+     virtual MTL_SM50_SHADER_ARGUMENT *constant_buffers_info() {
+       return arguments_info_buffer;
+@@ -235,7 +260,7 @@
+       SM50FreeError(err);
+       return nullptr;
+     }
+-    auto shader = std::make_unique<CachedSM50Shader>(this, sm50, sha1, reflection);
++    auto shader = std::make_unique<CachedSM50Shader>(this, sm50, pBytecode, BytecodeLength, sha1, reflection);
+     {
+       std::unique_lock<std::shared_mutex> lock(mutex_shares);
+       auto result = shaders_.find(sha1);

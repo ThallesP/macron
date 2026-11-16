@@ -1,0 +1,2 @@
+0144:trace:loaddll:build_module Loaded L"C:\\windows\\system32\\winemetal.dll" at 00006FFFFBA10000: builtin
+0144:trace:loaddll:build_module Loaded L"C:\\windows\\system32\\d3d11.dll" at 00006FFFFBB80000: builtin
