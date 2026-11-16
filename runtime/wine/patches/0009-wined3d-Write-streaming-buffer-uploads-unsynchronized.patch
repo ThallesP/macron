@@ -1,0 +1,486 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Mon, 16 Nov 2026 12:00:00 +0000
+Subject: [PATCH] wined3d, opengl32: Write NOOVERWRITE and DISCARD buffer
+ uploads without waiting for the GPU.
+
+With buffer maps going through heap memory (0003, 0008), every
+DrawPrimitiveUP and every NOOVERWRITE or DISCARD lock of a dynamic
+buffer reached the host OpenGL as glBufferSubData into a buffer that
+draws already issued still use. Apple's OpenGL on Apple silicon is a
+layer over Metal, and there such a glBufferSubData submits the command
+buffer and waits for the GPU each time: Ultimate Custom Night spent 77%
+of its thread there on an M3, at 5 frames a second.
+
+The heap upload now keeps the map's NOOVERWRITE or DISCARD flag. Such an
+upload goes through glBufferWriteUnsynchronizedWINE, which opengl32
+hands out from wglGetProcAddress: on the Unix side it maps the range
+with GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_INVALIDATE_RANGE_BIT, copies the
+data and unmaps, so a 32-bit program never sees a 64-bit pointer. It
+returns nothing, so the batching of 0007 queues it like
+glBufferSubData. A DISCARD upload first orphans the buffer object with
+glBufferData(NULL), so the draws already issued keep the old storage.
+Uploads without either flag (UpdateSubResource, initial data) keep
+glBufferSubData. WINE_OPENGL_UNSYNCHRONIZED=0 hides the function, and
+wined3d falls back to glBufferSubData.
+
+Also fixes a use after free: drawing from a buffer that is still mapped
+(wined3d_device_context_flush_mapped_buffer) uploaded the heap copy with
+UPLOAD_BO_FREE_ON_UNMAP, so the heap memory was freed while the
+application could still write to it and the unmap uploaded it again.
+The early upload no longer frees it, and the upload at unmap waits for
+the draws that read it.
+---
+diff --git a/dlls/opengl32/batch.c b/dlls/opengl32/batch.c
+index 9d8c7b2..88e8440 100644
+--- a/dlls/opengl32/batch.c
++++ b/dlls/opengl32/batch.c
+@@ -108,6 +108,7 @@ struct batch
+ };
+ 
+ static BOOL batch_disabled;
++static BOOL unsynchronized_writes_disabled;
+ static LONG client_arrays; /* a vertex array was set in client memory */
+ 
+ static inline UINT batch_align( SIZE_T size )
+@@ -214,12 +215,36 @@ NTSTATUS opengl_unix_call( UINT code, void *args )
+     return STATUS_SUCCESS;
+ }
+ 
++/* Not an OpenGL function: wined3d asks for it with wglGetProcAddress to write
++ * streaming vertex and index data without a GPU wait (unix_wgl.c). It returns
++ * nothing, so it is queued like glBufferSubData. WINE_OPENGL_UNSYNCHRONIZED=0
++ * hides it, and wined3d then uploads with glBufferSubData as before. */
++PROC get_buffer_write_unsynchronized(void)
++{
++    return unsynchronized_writes_disabled ? NULL : (PROC)glBufferWriteUnsynchronizedWINE;
++}
++
++void WINAPI glBufferWriteUnsynchronizedWINE( GLenum target, GLintptr offset, GLsizeiptr size, const void *data )
++{
++    struct buffer_write_unsynchronized_params args = { .teb = NtCurrentTeb(), .target = target, .offset = offset,
++                                                       .size = size, .data = data };
++    NTSTATUS status;
++
++    TRACE( "target %d, offset %Id, size %Id, data %p\n", target, offset, size, data );
++    if ((status = UNIX_CALL( buffer_write_unsynchronized, &args )))
++        WARN( "buffer_write_unsynchronized returned %#lx\n", status );
++    set_context_attribute( -1 /* unsupported */, NULL, 0 );
++}
++
+ void batch_process_attach(void)
+ {
+     char value[8];
+ 
+     if (GetEnvironmentVariableA( "WINE_OPENGL_BATCH", value, sizeof(value) ) && value[0] == '0') batch_disabled = TRUE;
+     TRACE( "OpenGL call batching %s\n", batch_disabled ? "disabled" : "enabled" );
++    if (GetEnvironmentVariableA( "WINE_OPENGL_UNSYNCHRONIZED", value, sizeof(value) ) && value[0] == '0')
++        unsynchronized_writes_disabled = TRUE;
++    TRACE( "Unsynchronized buffer writes %s\n", unsynchronized_writes_disabled ? "disabled" : "enabled" );
+ }
+ 
+ void batch_thread_detach(void)
+diff --git a/dlls/opengl32/batch_table.h b/dlls/opengl32/batch_table.h
+index 26080aa..18f59f2 100644
+--- a/dlls/opengl32/batch_table.h
++++ b/dlls/opengl32/batch_table.h
+@@ -2,6 +2,7 @@
+ 
+ static const struct batch_desc batch_descs[funcs_count] =
+ {
++    BATCH_COPY_N( buffer_write_unsynchronized, data, size, 1 ),
+     BATCH_FLAGS( wglDeleteContext, BATCH_FORGET_BINDINGS ),
+     BATCH_VALUE( glAccum ),
+     BATCH_VALUE( glAlphaFunc ),
+diff --git a/dlls/opengl32/make_opengl b/dlls/opengl32/make_opengl
+index 836dbf1..4b9befb 100755
+--- a/dlls/opengl32/make_opengl
++++ b/dlls/opengl32/make_opengl
+@@ -1831,6 +1831,15 @@ print OUT "    const void *data;\n";
+ print OUT "    UINT size;\n";
+ print OUT "};\n\n";
+ 
++print OUT "struct buffer_write_unsynchronized_params\n";
++print OUT "{\n";
++print OUT "    TEB *teb;\n";
++print OUT "    GLenum target;\n";
++print OUT "    GLintptr offset;\n";
++print OUT "    GLsizeiptr size;\n";
++print OUT "    const void *data;\n";
++print OUT "};\n\n";
++
+ print OUT "struct batch_entry\n";
+ print OUT "{\n";
+ print OUT "    UINT code;\n";
+@@ -1847,6 +1856,7 @@ print OUT "    unix_thread_detach,\n";
+ print OUT "    unix_set_root_context,\n";
+ print OUT "    unix_get_pixel_formats,\n";
+ print OUT "    unix_flush_batch,\n";
++print OUT "    unix_buffer_write_unsynchronized,\n";
+ foreach (sort keys %wgl_functions)
+ {
+     next if defined $manual_win_functions{$_};
+@@ -2099,6 +2109,7 @@ print OUT "    thread_detach,\n";
+ print OUT "    set_root_context,\n";
+ print OUT "    get_pixel_formats,\n";
+ print OUT "    flush_batch,\n";
++print OUT "    buffer_write_unsynchronized,\n";
+ foreach (sort keys %wgl_functions)
+ {
+     next if defined $manual_win_functions{$_};
+@@ -2124,7 +2135,8 @@ print OUT "extern NTSTATUS wow64_process_detach( void *args );\n";
+ print OUT "extern NTSTATUS wow64_thread_detach( void *args );\n";
+ print OUT "extern NTSTATUS wow64_set_root_context( void *args );\n\n";
+ print OUT "extern NTSTATUS wow64_get_pixel_formats( void *args );\n";
+-print OUT "extern NTSTATUS wow64_flush_batch( void *args );\n\n";
++print OUT "extern NTSTATUS wow64_flush_batch( void *args );\n";
++print OUT "extern NTSTATUS wow64_buffer_write_unsynchronized( void *args );\n\n";
+ 
+ foreach (sort keys %wgl_functions)
+ {
+@@ -2152,6 +2164,7 @@ print OUT "    wow64_thread_detach,\n";
+ print OUT "    wow64_set_root_context,\n";
+ print OUT "    wow64_get_pixel_formats,\n";
+ print OUT "    wow64_flush_batch,\n";
++print OUT "    wow64_buffer_write_unsynchronized,\n";
+ foreach (sort keys %wgl_functions)
+ {
+     next if defined $manual_win_functions{$_};
+diff --git a/dlls/opengl32/private.h b/dlls/opengl32/private.h
+index 4d17db9..664daa5 100644
+--- a/dlls/opengl32/private.h
++++ b/dlls/opengl32/private.h
+@@ -83,6 +83,8 @@ extern GLuint *map_context_objects( enum object_type type, UINT n, GLuint *handl
+ extern NTSTATUS opengl_unix_call( UINT code, void *args );
+ extern void batch_process_attach(void);
+ extern void batch_thread_detach(void);
++extern void WINAPI glBufferWriteUnsynchronizedWINE( GLenum target, GLintptr offset, GLsizeiptr size, const void *data );
++extern PROC get_buffer_write_unsynchronized(void);
+ 
+ #undef UNIX_CALL
+ #define UNIX_CALL( func, params ) opengl_unix_call( unix_ ## func, params )
+diff --git a/dlls/opengl32/unix_private.h b/dlls/opengl32/unix_private.h
+index 753e27c..5968e5a 100644
+--- a/dlls/opengl32/unix_private.h
++++ b/dlls/opengl32/unix_private.h
+@@ -92,6 +92,7 @@ extern NTSTATUS thread_detach( void *args );
+ extern NTSTATUS set_root_context( void *args );
+ extern NTSTATUS get_pixel_formats( void *args );
+ extern NTSTATUS flush_batch( void *args );
++extern NTSTATUS buffer_write_unsynchronized( void *args );
+ extern void set_current_fbo( TEB *teb, GLenum target, GLuint framebuffer );
+ extern GLuint get_default_fbo( TEB *teb, GLenum target );
+ extern void push_default_fbo( TEB *teb );
+diff --git a/dlls/opengl32/unix_thunks.c b/dlls/opengl32/unix_thunks.c
+index 0bdf434..7b1dab7 100644
+--- a/dlls/opengl32/unix_thunks.c
++++ b/dlls/opengl32/unix_thunks.c
+@@ -27934,6 +27934,7 @@ const unixlib_entry_t __wine_unix_call_funcs[] =
+     set_root_context,
+     get_pixel_formats,
+     flush_batch,
++    buffer_write_unsynchronized,
+     wgl_wglDeleteContext,
+     wgl_wglGetPixelFormat,
+     wgl_wglSetPixelFormat,
+@@ -31037,6 +31038,7 @@ extern NTSTATUS wow64_set_root_context( void *args );
+ 
+ extern NTSTATUS wow64_get_pixel_formats( void *args );
+ extern NTSTATUS wow64_flush_batch( void *args );
++extern NTSTATUS wow64_buffer_write_unsynchronized( void *args );
+ 
+ static NTSTATUS wow64_wgl_wglDeleteContext( void *args )
+ {
+@@ -81588,6 +81590,7 @@ const unixlib_entry_t __wine_unix_call_wow64_funcs[] =
+     wow64_set_root_context,
+     wow64_get_pixel_formats,
+     wow64_flush_batch,
++    wow64_buffer_write_unsynchronized,
+     wow64_wgl_wglDeleteContext,
+     wow64_wgl_wglGetPixelFormat,
+     wow64_wgl_wglSetPixelFormat,
+diff --git a/dlls/opengl32/unix_wgl.c b/dlls/opengl32/unix_wgl.c
+index 5892a75..ed279e1 100644
+--- a/dlls/opengl32/unix_wgl.c
++++ b/dlls/opengl32/unix_wgl.c
+@@ -1256,6 +1256,40 @@ NTSTATUS flush_batch( void *args )
+     return STATUS_SUCCESS;
+ }
+ 
++/* Writes data into a buffer object without waiting for the GPU, for writes
++ * that Direct3D guarantees do not touch anything a draw already issued still
++ * reads (NOOVERWRITE locks, and DISCARD locks after the buffer was orphaned).
++ * Apple's OpenGL on Apple silicon is a layer over Metal: there glBufferSubData
++ * into a buffer that issued draws still use submits the command buffer and
++ * waits for the GPU every time, an unsynchronized map does not. The map and
++ * the copy happen here, so a 32-bit program never sees a 64-bit pointer. */
++static void write_buffer_unsynchronized( const struct opengl_funcs *funcs, GLenum target, GLintptr offset,
++                                         GLsizeiptr size, const void *data )
++{
++    void *ptr = NULL;
++
++    if (funcs->p_glMapBufferRange && funcs->p_glUnmapBuffer)
++        ptr = funcs->p_glMapBufferRange( target, offset, size, GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT |
++                                         GL_MAP_INVALIDATE_RANGE_BIT );
++    if (!ptr)
++    {
++        funcs->p_glBufferSubData( target, offset, size, data );
++        return;
++    }
++    memcpy( ptr, data, size );
++    funcs->p_glUnmapBuffer( target );
++}
++
++NTSTATUS buffer_write_unsynchronized( void *args )
++{
++    struct buffer_write_unsynchronized_params *params = args;
++    const struct opengl_funcs *funcs = params->teb->glTable;
++
++    if (!funcs->p_glBufferSubData) return STATUS_NOT_IMPLEMENTED;
++    write_buffer_unsynchronized( funcs, params->target, params->offset, params->size, params->data );
++    return STATUS_SUCCESS;
++}
++
+ NTSTATUS get_pixel_formats( void *args )
+ {
+     struct get_pixel_formats_params *params = args;
+@@ -2059,6 +2093,25 @@ NTSTATUS wow64_get_pixel_formats( void *args )
+     return status;
+ }
+ 
++NTSTATUS wow64_buffer_write_unsynchronized( void *args )
++{
++    struct
++    {
++        PTR32 teb;
++        GLenum target;
++        PTR32 offset;
++        PTR32 size;
++        PTR32 data;
++    } *params32 = args;
++    TEB *teb = get_teb64( params32->teb );
++    const struct opengl_funcs *funcs = teb->glTable;
++
++    if (!funcs->p_glBufferSubData) return STATUS_NOT_IMPLEMENTED;
++    write_buffer_unsynchronized( funcs, params32->target, (GLintptr)ULongToPtr( params32->offset ),
++                                 (GLsizeiptr)ULongToPtr( params32->size ), ULongToPtr( params32->data ) );
++    return STATUS_SUCCESS;
++}
++
+ NTSTATUS wow64_flush_batch( void *args )
+ {
+     struct
+diff --git a/dlls/opengl32/unixlib.h b/dlls/opengl32/unixlib.h
+index 7aeae09..1d16f6b 100644
+--- a/dlls/opengl32/unixlib.h
++++ b/dlls/opengl32/unixlib.h
+@@ -25788,6 +25788,15 @@ struct flush_batch_params
+     UINT size;
+ };
+ 
++struct buffer_write_unsynchronized_params
++{
++    TEB *teb;
++    GLenum target;
++    GLintptr offset;
++    GLsizeiptr size;
++    const void *data;
++};
++
+ struct batch_entry
+ {
+     UINT code;
+@@ -25804,6 +25813,7 @@ enum unix_funcs
+     unix_set_root_context,
+     unix_get_pixel_formats,
+     unix_flush_batch,
++    unix_buffer_write_unsynchronized,
+     unix_wglDeleteContext,
+     unix_wglGetPixelFormat,
+     unix_wglSetPixelFormat,
+diff --git a/dlls/opengl32/wgl.c b/dlls/opengl32/wgl.c
+index 8c44070..6fca0eb 100644
+--- a/dlls/opengl32/wgl.c
++++ b/dlls/opengl32/wgl.c
+@@ -2340,6 +2340,8 @@ PROC WINAPI wglGetProcAddress( LPCSTR name )
+ 
+     if (!(ctx = get_current_context())) return NULL;
+ 
++    if (!strcmp( name, "glBufferWriteUnsynchronizedWINE" )) return get_buffer_write_unsynchronized();
++
+     if (!(func = get_function_entry( name )))
+     {
+         WARN( "Function %s unknown\n", name );
+diff --git a/dlls/wined3d/adapter_gl.c b/dlls/wined3d/adapter_gl.c
+index 807fd99..8515ee7 100644
+--- a/dlls/wined3d/adapter_gl.c
++++ b/dlls/wined3d/adapter_gl.c
+@@ -2063,6 +2063,9 @@ static void enumerate_gl_extensions(struct wined3d_gl_info *gl_info,
+ 
+ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
+ {
++    gl_info->p_glBufferWriteUnsynchronizedWINE = (void *)wglGetProcAddress("glBufferWriteUnsynchronizedWINE");
++    TRACE("Unsynchronized buffer writes %savailable.\n", gl_info->p_glBufferWriteUnsynchronizedWINE ? "" : "not ");
++
+ #define USE_GL_FUNC(pfn) gl_info->gl_ops.ext.p_##pfn = (void *)wglGetProcAddress(#pfn);
+     /* GL_APPLE_fence */
+     USE_GL_FUNC(glDeleteFencesAPPLE)
+diff --git a/dlls/wined3d/buffer.c b/dlls/wined3d/buffer.c
+index 5e1f0de..e067778 100644
+--- a/dlls/wined3d/buffer.c
++++ b/dlls/wined3d/buffer.c
+@@ -787,10 +787,21 @@ void wined3d_buffer_acquire_bo_for_write(struct wined3d_buffer *buffer, struct w
+     wined3d_context_copy_bo_address(context, &dst, &src, 1, &range, WINED3D_MAP_WRITE | WINED3D_MAP_DISCARD);
+ }
+ 
++static void wined3d_buffer_copy_bo_address_flags(struct wined3d_buffer *dst_buffer, struct wined3d_context *context,
++        unsigned int dst_offset, const struct wined3d_const_bo_address *src_addr, unsigned int size, uint32_t map_flags);
++
+ void wined3d_buffer_copy_bo_address(struct wined3d_buffer *dst_buffer, struct wined3d_context *context,
+         unsigned int dst_offset, const struct wined3d_const_bo_address *src_addr, unsigned int size)
+ {
+-    uint32_t map_flags = WINED3D_MAP_WRITE;
++    wined3d_buffer_copy_bo_address_flags(dst_buffer, context, dst_offset, src_addr, size, WINED3D_MAP_WRITE);
++}
++
++/* map_flags may carry WINED3D_MAP_NOOVERWRITE or WINED3D_MAP_DISCARD from the
++ * application's map; DISCARD then discards the whole buffer even though only
++ * [dst_offset, dst_offset + size) is written. */
++static void wined3d_buffer_copy_bo_address_flags(struct wined3d_buffer *dst_buffer, struct wined3d_context *context,
++        unsigned int dst_offset, const struct wined3d_const_bo_address *src_addr, unsigned int size, uint32_t map_flags)
++{
+     struct wined3d_bo_address dst_addr;
+     struct wined3d_range range;
+     DWORD dst_location;
+@@ -807,7 +818,10 @@ void wined3d_buffer_copy_bo_address(struct wined3d_buffer *dst_buffer, struct wi
+     range.offset = 0;
+     range.size = size;
+     wined3d_context_copy_bo_address(context, &dst_addr, (const struct wined3d_bo_address *)src_addr, 1, &range, map_flags);
+-    wined3d_buffer_invalidate_range(dst_buffer, ~dst_location, dst_offset, size);
++    if (map_flags & WINED3D_MAP_DISCARD)
++        wined3d_buffer_invalidate_location(dst_buffer, ~dst_location);
++    else
++        wined3d_buffer_invalidate_range(dst_buffer, ~dst_location, dst_offset, size);
+ }
+ 
+ void wined3d_buffer_copy(struct wined3d_buffer *dst_buffer, unsigned int dst_offset,
+@@ -878,7 +892,13 @@ void wined3d_buffer_update_sub_resource(struct wined3d_buffer *buffer, struct wi
+     }
+     else
+     {
+-        wined3d_buffer_copy_bo_address(buffer, context, offset, &upload_bo->addr, size);
++        uint32_t map_flags = WINED3D_MAP_WRITE;
++
++        if (upload_bo->flags & UPLOAD_BO_DISCARD)
++            map_flags |= WINED3D_MAP_DISCARD;
++        else if (upload_bo->flags & UPLOAD_BO_NOOVERWRITE)
++            map_flags |= WINED3D_MAP_NOOVERWRITE;
++        wined3d_buffer_copy_bo_address_flags(buffer, context, offset, &upload_bo->addr, size, map_flags);
+     }
+ }
+ 
+diff --git a/dlls/wined3d/context_gl.c b/dlls/wined3d/context_gl.c
+index 229153b..0151c6e 100644
+--- a/dlls/wined3d/context_gl.c
++++ b/dlls/wined3d/context_gl.c
+@@ -3036,6 +3036,39 @@ void wined3d_context_gl_copy_bo_address(struct wined3d_context_gl *context_gl,
+             memcpy(dst_ptr, src->addr, dst_bo->size);
+             wined3d_context_gl_unmap_bo_address(context_gl, dst, range_count, ranges);
+         }
++        else if ((map_flags & (WINED3D_MAP_DISCARD | WINED3D_MAP_NOOVERWRITE))
++                && context_gl->c.d3d_info->heap_buffer_maps && gl_info->p_glBufferWriteUnsynchronizedWINE)
++        {
++            /* A NOOVERWRITE or DISCARD map through heap memory: nothing an
++             * issued draw reads is overwritten, once a DISCARD has given the
++             * buffer object new storage. glBufferSubData would wait for the
++             * GPU on Apple's OpenGL over Metal whenever earlier draws use the
++             * buffer, which for a streaming buffer is every upload. */
++            wined3d_context_gl_bind_bo(context_gl, dst_bo->binding, dst_bo->id);
++            if ((map_flags & WINED3D_MAP_DISCARD) && !dst_bo->memory && !dst_bo->b.buffer_offset)
++            {
++                TRACE_(d3d_perf)("Orphaning BO %u for a DISCARD upload.\n", dst_bo->id);
++                GL_EXTCALL(glBufferData(dst_bo->binding, dst_bo->size, NULL, dst_bo->usage));
++            }
++            else if (map_flags & WINED3D_MAP_DISCARD)
++            {
++                /* Not a buffer object of its own: keep the waiting upload. */
++                map_flags &= ~WINED3D_MAP_DISCARD;
++            }
++            for (i = 0; i < range_count; ++i)
++            {
++                GLintptr offset = dst_bo->b.buffer_offset + (GLintptr)dst->addr + ranges[i].offset;
++
++                if (map_flags & (WINED3D_MAP_DISCARD | WINED3D_MAP_NOOVERWRITE))
++                    gl_info->p_glBufferWriteUnsynchronizedWINE(dst_bo->binding, offset,
++                            ranges[i].size, src->addr + ranges[i].offset);
++                else
++                    GL_EXTCALL(glBufferSubData(dst_bo->binding, offset, ranges[i].size, src->addr + ranges[i].offset));
++            }
++            checkGLcall("unsynchronized buffer upload");
++
++            wined3d_context_gl_reference_bo(context_gl, dst_bo);
++        }
+         else
+         {
+             wined3d_context_gl_bind_bo(context_gl, dst_bo->binding, dst_bo->id);
+diff --git a/dlls/wined3d/cs.c b/dlls/wined3d/cs.c
+index d754ef3..f00975a 100644
+--- a/dlls/wined3d/cs.c
++++ b/dlls/wined3d/cs.c
+@@ -3338,6 +3338,10 @@ static bool wined3d_cs_map_upload_bo(struct wined3d_device_context *context, str
+     client->mapped_upload.addr.buffer_object = 0;
+     client->mapped_upload.addr.addr = map_desc->data;
+     client->mapped_upload.flags = UPLOAD_BO_UPLOAD_ON_UNMAP | UPLOAD_BO_FREE_ON_UNMAP;
++    if (flags & WINED3D_MAP_DISCARD)
++        client->mapped_upload.flags |= UPLOAD_BO_DISCARD;
++    else if (flags & WINED3D_MAP_NOOVERWRITE)
++        client->mapped_upload.flags |= UPLOAD_BO_NOOVERWRITE;
+     client->mapped_box = *box;
+     return true;
+ }
+@@ -3705,8 +3709,16 @@ void CDECL wined3d_device_context_flush_mapped_buffer(struct wined3d_device_cont
+         return;
+ 
+     if (client->mapped_upload.flags & UPLOAD_BO_UPLOAD_ON_UNMAP)
++    {
++        struct upload_bo upload = client->mapped_upload;
++
++        /* Heap memory stays mapped, and the unmap uploads it again, after
++         * draws that read this range: that upload has to wait for them. */
++        upload.flags &= ~UPLOAD_BO_FREE_ON_UNMAP;
+         wined3d_device_context_upload_bo(context, &buffer->resource, 0,
+-                &client->mapped_box, &client->mapped_upload, buffer->resource.size, buffer->resource.size);
++                &client->mapped_box, &upload, buffer->resource.size, buffer->resource.size);
++        client->mapped_upload.flags &= ~(UPLOAD_BO_NOOVERWRITE | UPLOAD_BO_DISCARD);
++    }
+ 
+     if (client->mapped_upload.flags & UPLOAD_BO_RENAME_ON_UNMAP)
+     {
+diff --git a/dlls/wined3d/wined3d_gl.h b/dlls/wined3d/wined3d_gl.h
+index c52dd3f..0ae8394 100644
+--- a/dlls/wined3d/wined3d_gl.h
++++ b/dlls/wined3d/wined3d_gl.h
+@@ -368,6 +368,9 @@ struct wined3d_gl_info
+     float filling_convention_offset;
+ 
+     HGLRC (WINAPI *p_wglCreateContextAttribsARB)(HDC dc, HGLRC share, const GLint *attribs);
++    /* Macron's opengl32: writes into a buffer object without waiting for the GPU. */
++    void (WINE_GLAPI *p_glBufferWriteUnsynchronizedWINE)(GLenum target, GLintptr offset, GLsizeiptr size,
++            const void *data);
+     struct wined3d_ffp_attrib_ops ffp_attrib_ops;
+     struct wined3d_gl_funcs gl_ops;
+     struct wined3d_fbo_ops fbo_ops;
+diff --git a/dlls/wined3d/wined3d_private.h b/dlls/wined3d/wined3d_private.h
+index 96427ec..a66193f 100644
+--- a/dlls/wined3d/wined3d_private.h
++++ b/dlls/wined3d/wined3d_private.h
+@@ -2497,6 +2497,10 @@ bool wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
+ #define UPLOAD_BO_UPLOAD_ON_UNMAP   0x1
+ #define UPLOAD_BO_RENAME_ON_UNMAP   0x2
+ #define UPLOAD_BO_FREE_ON_UNMAP     0x4
++/* The upload comes from a NOOVERWRITE or DISCARD map through heap memory:
++ * nothing issued earlier reads the range, or the buffer may be orphaned. */
++#define UPLOAD_BO_NOOVERWRITE       0x8
++#define UPLOAD_BO_DISCARD           0x10
+ 
+ struct upload_bo
+ {
