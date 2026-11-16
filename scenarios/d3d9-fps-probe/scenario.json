@@ -33,6 +33,11 @@
     "minShareOfBaseline": 0.8,
     "minFpsSource": "Windows runner (WARP): the 32-bit probe in mix mode ran at 0.885 of the 64-bit one on main (17.43 against 19.69 fps, https://github.com/ThallesP/macron/actions/runs/43634976736) and at 0.911 and 0.884 in branch runs (https://github.com/ThallesP/macron/actions/runs/43634196191); 0.8 leaves room for noise. Macron's own numbers are not part of it."
   },
+  "uploads": {
+    "exes": ["probe32.exe", "probe64.exe"],
+    "args": ["mix", "--window", "960x540", "--warmup", "2", "--seconds", "3", "--hold", "30"],
+    "source": "On a real Apple GPU (Thalles's M3, docs/proof/gate1-m3/), Apple's OpenGL is a layer over Metal and every glBufferSubData or synchronized map into a buffer that issued draws still use submits the command buffer and waits for the GPU: a native program with 3,900 draws a frame ran at 3 fps that way and at 120 with unsynchronized mapped writes. The sandboxes' software renderer does not wait, so their frame rate cannot show it; the trace can. The control runs with WINE_OPENGL_UNSYNCHRONIZED=0, which brings back wined3d's glBufferSubData uploads."
+  },
   "otherGame": "d3d11-probe",
   "windowsExtra": [],
   "ci": true
