@@ -23,6 +23,27 @@ Uploads without either flag (UpdateSubResource, initial data) keep
 glBufferSubData. WINE_OPENGL_UNSYNCHRONIZED=0 hides the function, and
 wined3d falls back to glBufferSubData.
 
+Ultimate Custom Night needed more than that: Clickteam Fusion creates its
+device with D3DCREATE_SOFTWARE_VERTEXPROCESSING, its vertex buffer is a
+dynamic D3DPOOL_SYSTEMMEM one locked with NOOVERWRITE before each draw,
+and its index buffer is in system memory too.
+
+- With software vertex processing, wined3d kept a pinned system memory
+  copy of every buffer, its own streaming buffers and d3d9's GPU copies
+  of system memory buffers included, so none of them took the heap path
+  and every upload into them was a glBufferSubData. The pinning is for
+  buffers the application maps; it is no longer applied to buffers
+  without map access or to wined3d's streaming buffers. The game's
+  indices, streamed by d3d9 before each draw, now take the path above.
+- d3d9 copies a system memory vertex buffer into its GPU copy before
+  each draw (copy_sub_resource_region at the same offsets), which ended
+  in glBufferSubData. wined3d now notes on such a buffer how the
+  application wrote it since its last copy to that destination (only
+  NOOVERWRITE locks, a DISCARD lock, or anything else; sanitise_map_flags
+  drops the flags for buffers the GPU cannot read, so this is noted
+  before it), and the copy becomes an unsynchronized write, an orphan
+  and write, or stays a glBufferSubData.
+
 Also fixes a use after free: drawing from a buffer that is still mapped
 (wined3d_device_context_flush_mapped_buffer) uploaded the heap copy with
 UPLOAD_BO_FREE_ON_UNMAP, so the heap memory was freed while the
@@ -325,7 +346,7 @@ index 807fd99..8515ee7 100644
      /* GL_APPLE_fence */
      USE_GL_FUNC(glDeleteFencesAPPLE)
 diff --git a/dlls/wined3d/buffer.c b/dlls/wined3d/buffer.c
-index 5e1f0de..e067778 100644
+index 5e1f0de..fdecef0 100644
 --- a/dlls/wined3d/buffer.c
 +++ b/dlls/wined3d/buffer.c
 @@ -787,10 +787,21 @@ void wined3d_buffer_acquire_bo_for_write(struct wined3d_buffer *buffer, struct w
@@ -351,7 +372,7 @@ index 5e1f0de..e067778 100644
      struct wined3d_bo_address dst_addr;
      struct wined3d_range range;
      DWORD dst_location;
-@@ -807,7 +818,10 @@ void wined3d_buffer_copy_bo_address(struct wined3d_buffer *dst_buffer, struct wi
+@@ -807,11 +818,14 @@ void wined3d_buffer_copy_bo_address(struct wined3d_buffer *dst_buffer, struct wi
      range.offset = 0;
      range.size = size;
      wined3d_context_copy_bo_address(context, &dst_addr, (const struct wined3d_bo_address *)src_addr, 1, &range, map_flags);
@@ -363,6 +384,20 @@ index 5e1f0de..e067778 100644
  }
  
  void wined3d_buffer_copy(struct wined3d_buffer *dst_buffer, unsigned int dst_offset,
+-        struct wined3d_buffer *src_buffer, unsigned int src_offset, unsigned int size)
++        struct wined3d_buffer *src_buffer, unsigned int src_offset, unsigned int size, uint32_t map_flags)
+ {
+     struct wined3d_context *context;
+     struct wined3d_bo_address src;
+@@ -824,7 +838,7 @@ void wined3d_buffer_copy(struct wined3d_buffer *dst_buffer, unsigned int dst_off
+     wined3d_buffer_get_memory(src_buffer, context, &src);
+     src.addr += src_offset;
+ 
+-    wined3d_buffer_copy_bo_address(dst_buffer, context, dst_offset, wined3d_const_bo_address(&src), size);
++    wined3d_buffer_copy_bo_address_flags(dst_buffer, context, dst_offset, wined3d_const_bo_address(&src), size, map_flags);
+ 
+     context_release(context);
+ }
 @@ -878,7 +892,13 @@ void wined3d_buffer_update_sub_resource(struct wined3d_buffer *buffer, struct wi
      }
      else
@@ -378,6 +413,21 @@ index 5e1f0de..e067778 100644
      }
  }
  
+@@ -984,7 +1004,13 @@ static HRESULT wined3d_buffer_init(struct wined3d_buffer *buffer, struct wined3d
+     TRACE("buffer %p, size %#x, usage %#x, memory @ %p.\n",
+             buffer, buffer->resource.size, buffer->resource.usage, buffer->resource.heap_memory);
+ 
+-    if (device->create_parms.flags & WINED3DCREATE_SOFTWARE_VERTEXPROCESSING
++    /* Only buffers the application maps need that: not the streaming buffers
++     * wined3d writes itself, and not d3d9's GPU copies of system memory
++     * buffers, which nobody maps. Keeping those in system memory would turn
++     * every upload into one that waits for the GPU. */
++    if ((device->create_parms.flags & WINED3DCREATE_SOFTWARE_VERTEXPROCESSING
++            && (desc->access & (WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W))
++            && parent_ops != &wined3d_null_parent_ops)
+             || (desc->usage & WINED3DUSAGE_MANAGED))
+     {
+         /* SWvp and managed buffers always return the same pointer in buffer
 diff --git a/dlls/wined3d/context_gl.c b/dlls/wined3d/context_gl.c
 index 229153b..0151c6e 100644
 --- a/dlls/wined3d/context_gl.c
@@ -423,10 +473,43 @@ index 229153b..0151c6e 100644
          {
              wined3d_context_gl_bind_bo(context_gl, dst_bo->binding, dst_bo->id);
 diff --git a/dlls/wined3d/cs.c b/dlls/wined3d/cs.c
-index d754ef3..f00975a 100644
+index d754ef3..73ed119 100644
 --- a/dlls/wined3d/cs.c
 +++ b/dlls/wined3d/cs.c
-@@ -3338,6 +3338,10 @@ static bool wined3d_cs_map_upload_bo(struct wined3d_device_context *context, str
+@@ -2681,9 +2681,15 @@ static void wined3d_cs_exec_blt_sub_resource(struct wined3d_cs *cs, const void *
+ 
+     if (op->dst_resource->type == WINED3D_RTYPE_BUFFER)
+     {
++        uint32_t map_flags = WINED3D_MAP_WRITE;
++
++        if (op->flags & WINED3D_BLT_BUFFER_DISCARD)
++            map_flags |= WINED3D_MAP_DISCARD;
++        else if (op->flags & WINED3D_BLT_BUFFER_NOOVERWRITE)
++            map_flags |= WINED3D_MAP_NOOVERWRITE;
+         wined3d_buffer_copy(buffer_from_resource(op->dst_resource), op->dst_box.left,
+                 buffer_from_resource(op->src_resource), op->src_box.left,
+-                op->src_box.right - op->src_box.left);
++                op->src_box.right - op->src_box.left, map_flags);
+     }
+     else if (op->dst_resource->type == WINED3D_RTYPE_TEXTURE_3D)
+     {
+@@ -2784,6 +2790,7 @@ void wined3d_device_context_emit_blt_sub_resource(struct wined3d_device_context
+ {
+     struct wined3d_cs_blt_sub_resource *op;
+ 
++    dst_resource->client.copy_writes |= CLIENT_WRITE_SYNC;
+     /* If we are replacing the whole resource, the CS thread might discard and
+      * rename the buffer object, in which case ours is no longer valid. */
+     if (dst_resource->type == WINED3D_RTYPE_BUFFER && dst_box->right - dst_box->left == dst_resource->size)
+@@ -2849,6 +2856,7 @@ void wined3d_device_context_emit_update_sub_resource(struct wined3d_device_conte
+     struct wined3d_box dummy_box;
+     struct upload_bo bo;
+ 
++    resource->client.copy_writes |= CLIENT_WRITE_SYNC;
+     /* If we are replacing the whole resource, the CS thread might discard and
+      * rename the buffer object, in which case ours is no longer valid. */
+     if (resource->type == WINED3D_RTYPE_BUFFER && box->right - box->left == resource->size)
+@@ -3338,6 +3346,10 @@ static bool wined3d_cs_map_upload_bo(struct wined3d_device_context *context, str
      client->mapped_upload.addr.buffer_object = 0;
      client->mapped_upload.addr.addr = map_desc->data;
      client->mapped_upload.flags = UPLOAD_BO_UPLOAD_ON_UNMAP | UPLOAD_BO_FREE_ON_UNMAP;
@@ -437,7 +520,7 @@ index d754ef3..f00975a 100644
      client->mapped_box = *box;
      return true;
  }
-@@ -3705,8 +3709,16 @@ void CDECL wined3d_device_context_flush_mapped_buffer(struct wined3d_device_cont
+@@ -3705,8 +3717,16 @@ void CDECL wined3d_device_context_flush_mapped_buffer(struct wined3d_device_cont
          return;
  
      if (client->mapped_upload.flags & UPLOAD_BO_UPLOAD_ON_UNMAP)
@@ -455,6 +538,63 @@ index d754ef3..f00975a 100644
  
      if (client->mapped_upload.flags & UPLOAD_BO_RENAME_ON_UNMAP)
      {
+diff --git a/dlls/wined3d/device.c b/dlls/wined3d/device.c
+index 63aec97..61cf3a5 100644
+--- a/dlls/wined3d/device.c
++++ b/dlls/wined3d/device.c
+@@ -4321,6 +4321,7 @@ HRESULT CDECL wined3d_device_context_copy_sub_resource_region(struct wined3d_dev
+         unsigned int src_sub_resource_idx, const struct wined3d_box *src_box, unsigned int flags)
+ {
+     struct wined3d_box dst_box, b;
++    uint32_t blt_flags;
+ 
+     TRACE("context %p, dst_resource %p, dst_sub_resource_idx %u, dst_x %u, dst_y %u, dst_z %u, "
+             "src_resource %p, src_sub_resource_idx %u, src_box %s, flags %#x.\n",
+@@ -4463,9 +4464,25 @@ HRESULT CDECL wined3d_device_context_copy_sub_resource_region(struct wined3d_dev
+         }
+     }
+ 
++    blt_flags = WINED3D_BLT_RAW;
++    if (dst_resource->type == WINED3D_RTYPE_BUFFER)
++    {
++        struct wined3d_client_resource *client = &src_resource->client;
++
++        /* d3d9 copies a system memory vertex buffer to its GPU copy before
++         * each draw, at the same offsets: the application's NOOVERWRITE and
++         * DISCARD locks of the source then hold for the destination. */
++        if (!(src_resource->access & WINED3D_RESOURCE_ACCESS_GPU) && (dst_resource->access & WINED3D_RESOURCE_ACCESS_GPU)
++                && client->copy_dst == dst_resource && dst_x == src_box->left && !(client->copy_writes & CLIENT_WRITE_SYNC))
++            blt_flags |= (client->copy_writes & CLIENT_WRITE_DISCARD)
++                    ? WINED3D_BLT_BUFFER_DISCARD : WINED3D_BLT_BUFFER_NOOVERWRITE;
++        client->copy_writes = 0;
++        client->copy_dst = dst_resource;
++    }
++
+     wined3d_device_context_lock(context);
+     wined3d_device_context_emit_blt_sub_resource(context, dst_resource, dst_sub_resource_idx, &dst_box,
+-            src_resource, src_sub_resource_idx, src_box, WINED3D_BLT_RAW, NULL, WINED3D_TEXF_POINT);
++            src_resource, src_sub_resource_idx, src_box, blt_flags, NULL, WINED3D_TEXF_POINT);
+     wined3d_device_context_unlock(context);
+ 
+     return WINED3D_OK;
+@@ -4701,6 +4718,17 @@ HRESULT CDECL wined3d_device_context_map(struct wined3d_device_context *context,
+         return E_INVALIDARG;
+     }
+ 
++    /* Before sanitise_map_flags() drops NOOVERWRITE and DISCARD for buffers
++     * the GPU cannot read: see wined3d_client_resource.copy_writes. */
++    if (resource->type == WINED3D_RTYPE_BUFFER && (flags & WINED3D_MAP_WRITE))
++    {
++        if (!(resource->usage & WINED3DUSAGE_DYNAMIC)
++                || !(flags & (WINED3D_MAP_DISCARD | WINED3D_MAP_NOOVERWRITE)))
++            resource->client.copy_writes |= CLIENT_WRITE_SYNC;
++        else if (flags & WINED3D_MAP_DISCARD)
++            resource->client.copy_writes |= CLIENT_WRITE_DISCARD;
++    }
++
+     flags = sanitise_map_flags(resource, flags);
+ 
+     if (FAILED(wined3d_resource_get_sub_resource_desc(resource, sub_resource_idx, &desc)))
 diff --git a/dlls/wined3d/wined3d_gl.h b/dlls/wined3d/wined3d_gl.h
 index c52dd3f..0ae8394 100644
 --- a/dlls/wined3d/wined3d_gl.h
@@ -470,10 +610,10 @@ index c52dd3f..0ae8394 100644
      struct wined3d_gl_funcs gl_ops;
      struct wined3d_fbo_ops fbo_ops;
 diff --git a/dlls/wined3d/wined3d_private.h b/dlls/wined3d/wined3d_private.h
-index 96427ec..a66193f 100644
+index 96427ec..27c3655 100644
 --- a/dlls/wined3d/wined3d_private.h
 +++ b/dlls/wined3d/wined3d_private.h
-@@ -2497,6 +2497,10 @@ bool wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
+@@ -2497,6 +2497,19 @@ bool wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
  #define UPLOAD_BO_UPLOAD_ON_UNMAP   0x1
  #define UPLOAD_BO_RENAME_ON_UNMAP   0x2
  #define UPLOAD_BO_FREE_ON_UNMAP     0x4
@@ -481,6 +621,40 @@ index 96427ec..a66193f 100644
 + * nothing issued earlier reads the range, or the buffer may be orphaned. */
 +#define UPLOAD_BO_NOOVERWRITE       0x8
 +#define UPLOAD_BO_DISCARD           0x10
++
++/* Buffer copies only (WINED3D_CS_OP_BLT_SUB_RESOURCE): what the application
++ * promised about the source when it wrote it, see wined3d_client_resource. */
++#define WINED3D_BLT_BUFFER_NOOVERWRITE  0x00000001
++#define WINED3D_BLT_BUFFER_DISCARD      0x00000002
++
++/* wined3d_client_resource.copy_writes */
++#define CLIENT_WRITE_DISCARD        0x1
++#define CLIENT_WRITE_SYNC           0x2
  
  struct upload_bo
  {
+@@ -3247,6 +3260,15 @@ struct wined3d_client_resource
+     /* The currently mapped upload BO, if applicable, and box. */
+     struct upload_bo mapped_upload;
+     struct wined3d_box mapped_box;
++
++    /* A buffer in system memory that is copied to a GPU buffer before draws
++     * (d3d9's D3DPOOL_SYSTEMMEM buffers): how the application wrote it since
++     * its last copy to copy_dst. With only NOOVERWRITE locks the copy does
++     * not overwrite anything a draw issued earlier reads, after a DISCARD
++     * lock the destination may be orphaned; any other write keeps the copy
++     * synchronised. */
++    uint32_t copy_writes;
++    struct wined3d_resource *copy_dst;
+ };
+ 
+ static inline BOOL wined3d_resource_access_is_managed(unsigned int access)
+@@ -3950,7 +3972,7 @@ void wined3d_buffer_acquire_bo_for_write(struct wined3d_buffer *buffer,
+         struct wined3d_context *context);
+ void wined3d_buffer_cleanup(struct wined3d_buffer *buffer);
+ void wined3d_buffer_copy(struct wined3d_buffer *dst_buffer, unsigned int dst_offset,
+-        struct wined3d_buffer *src_buffer, unsigned int src_offset, unsigned int size);
++        struct wined3d_buffer *src_buffer, unsigned int src_offset, unsigned int size, uint32_t map_flags);
+ void wined3d_buffer_copy_bo_address(struct wined3d_buffer *dst_buffer, struct wined3d_context *context,
+         unsigned int dst_offset, const struct wined3d_const_bo_address *src_addr, unsigned int size);
+ DWORD wined3d_buffer_get_memory(struct wined3d_buffer *buffer, struct wined3d_context *context,
