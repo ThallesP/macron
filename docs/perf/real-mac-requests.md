@@ -159,6 +159,26 @@ xcrun xctrace version
 
 If it prints a version, the next batch can ask for a 5-second Metal System Trace of the benchmark, which shows each GPU pass's time (DXMT's own passes included). If it fails, that request will not be made.
 
+### Request 8: DXMT against native Metal on the same load (about 15 minutes; added after batch 1 was written, run it with batch 1 if there is time)
+
+```sh
+cd ~/macron-perf
+curl -fsSLO https://github.com/ThallesP/macron/releases/download/perf-probes-2/gpuload.exe
+curl -fsSLO https://github.com/ThallesP/macron/releases/download/perf-probes-2/gpuload
+chmod +x gpuload
+shasum -a 256 gpuload.exe gpuload
+# must print:
+# 047d28f4b4b380d286d9a6aa58243397c00355c6f5e849f4bdb53937dd69f80d  gpuload.exe
+# 4fff6849a06d122113255e48d06bb1e573dbaae05eea63aaddeacb18db99f2d8  gpuload
+cd src && git pull && tools/perf/bench.sh pair m3 1600x900
+```
+
+`pair` runs the same GPU work nine times, 20 seconds each, waiting for the Mac to cool between runs: three loads (`fill`: eight full-screen shader passes; `draws`: 4,000 small draws, each with its own constants; `mix`: both) as Direct3D 11 through Macron's DXMT and as native Metal under Rosetta and on arm64. It prints a table (also in `~/macron-perf/results/m3-table.txt`). If macOS refuses to open `gpuload` (it is signed ad hoc, not by a developer), `xattr -d com.apple.quarantine gpuload` and run `pair` again with another tag. Read:
+
+- For each load, the median `GPU time ms` of `d3d11` against `metal-x86_64`: the difference is what DXMT adds on the GPU for the same work (its presenting pass included). Within a few percent means DXMT's translation is not where Overwatch's 15.7 ms go and candidate 5 is closed. A large difference on `fill` points at DXMT's shaders or passes; on `draws`, at its per-draw work.
+- `metal-x86_64` against `metal-arm64`: what Rosetta costs a native program, for scale.
+- Each run's `bench.txt` also has the program's own figures; for the native runs, `gpu_ms` is measured from Metal's command buffers and should match the HUD's `GPU time ms`. If the HUD's lines are missing for the native runs, read `gpu_ms` instead and say so.
+
 ### What to push
 
-`docs/perf/real-mac-results.md`: the display lines and runtime name from the setup; request 1's eight files' contents; for every run of requests 2 to 6 its `summary.txt` (or what went wrong); request 5's `grep` output and whether the network question appeared; request 6's `ow-top.txt`, the `grep` lines and the settings lines; request 7's output. Into `docs/perf/m3-batch1/<tag>/`: each run's `summary.txt`, `env.txt`, `hud.csv`, `thermal.txt`. Then a message to this thread.
+`docs/perf/real-mac-results.md`: the display lines and runtime name from the setup; request 1's eight files' contents; for every run of requests 2 to 6 its `summary.txt` (or what went wrong); request 5's `grep` output and whether the network question appeared; request 6's `ow-top.txt`, the `grep` lines and the settings lines; request 7's output; request 8's table and each run's `bench.txt`. Into `docs/perf/m3-batch1/<tag>/`: each run's `summary.txt`, `env.txt`, `hud.csv`, `thermal.txt`. Then a message to this thread.

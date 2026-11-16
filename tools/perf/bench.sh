@@ -6,6 +6,7 @@
 #   tools/perf/bench.sh setup <bench>
 #   tools/perf/bench.sh run <bench> <tag> [WIDTHxHEIGHT] [windowed|fullscreen] [NAME=VALUE ...]
 #   tools/perf/bench.sh summary <tag>
+#   tools/perf/bench.sh pair <tag> [WIDTHxHEIGHT]
 #
 # <bench> is superposition (Unigine Superposition 1.1, 64-bit, 2017, the
 # closer load to Overwatch) or heaven (Unigine Heaven 4.0, 32-bit, 2013).
@@ -24,6 +25,11 @@
 # ms, GPU ms), thermal.txt (the thermal pressure level each second),
 # bench.txt (the benchmark's own result), engine-log.txt (the engine's log)
 # and summary.txt. Each run first waits for thermal pressure level 0.
+#
+# `pair` runs tools/perf/gpuload.c through DXMT and its native Metal twin
+# tools/perf/gpuload.m on the same Mac, for three loads (full-screen shader
+# passes, many small draws, both), and prints a table: the GPU time a frame
+# DXMT adds to the same work.
 #
 # Needs macron (Macron 0.4.0 or later) on PATH, curl, shasum, awk.
 set -eu
@@ -190,6 +196,53 @@ run() {
 	summary "$tag"
 }
 
+# The same GPU load as Direct3D 11 through Macron's DXMT (gpuload.exe) and
+# as native Metal under Rosetta and on arm64 (gpuload), each measured by the
+# Metal HUD: the difference in GPU time a frame is DXMT's.
+pair() {
+	tag=$1 size=${2:-1600x900}
+	[ -f "$home/gpuload.exe" ] && [ -x "$home/gpuload" ] || die "put gpuload.exe and gpuload into $home first (docs/perf/real-mac-requests.md)"
+	for load in fill draws mix; do
+		for api in d3d11 metal-x86_64 metal-arm64; do
+			out="$home/results/$tag-$load-$api"
+			[ -e "$out" ] && die "$out exists; pick another tag"
+			mkdir -p "$out"
+			{
+				echo "gpuload $load, $api, $size, $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+				echo "macOS $(sw_vers -productVersion), $(sysctl -n machdep.cpu.brand_string)"
+				pmset -g batt | sed -n 1p
+				echo "waited $(wait_cool) s for thermal pressure 0 before starting"
+			} >"$out/env.txt"
+			thermal_logger >"$out/thermal.txt" &
+			thermal=$!
+			(
+				sleep 300
+				echo "timed out after 300 s: ended gpuload" >>"$out/env.txt"
+				pkill -f gpuload
+			) &
+			watchdog=$!
+			set -- --mode "$load" --size "$size" --seconds 20
+			case $api in
+			d3d11)
+				env MTL_HUD_ENABLED=1 MTL_HUD_LOG_ENABLED=1 SteamAppId=990004 STEAM_COMPAT_DATA_PATH="$home/gpuload-prefix" \
+					macron waitforexitandrun "$home/gpuload.exe" "$@" --out "Z:$out/bench.txt" >"$out/macron.log" 2>&1 || true
+				;;
+			metal-x86_64)
+				env MTL_HUD_ENABLED=1 MTL_HUD_LOG_ENABLED=1 arch -x86_64 "$home/gpuload" "$@" --out "$out/bench.txt" >"$out/macron.log" 2>&1 || true
+				;;
+			metal-arm64)
+				env MTL_HUD_ENABLED=1 MTL_HUD_LOG_ENABLED=1 arch -arm64 "$home/gpuload" "$@" --out "$out/bench.txt" >"$out/macron.log" 2>&1 || true
+				;;
+			esac
+			kill $thermal $watchdog 2>/dev/null || true
+			summary "$tag-$load-$api" >/dev/null
+		done
+	done
+	for out in "$home/results/$tag"-*; do
+		printf '%s: %s; %s\n' "${out##*/}" "$(grep -m1 'frames a second' "$out/summary.txt")" "$(grep -m1 'GPU time ms' "$out/summary.txt")"
+	done | tee "$home/results/$tag-table.txt"
+}
+
 # The HUD's line is "metal-HUD: <frame>,<memory>,<memory>[,<misses>]" and
 # then "<interval ms>,<GPU ms>" for each frame since the previous line.
 summary() {
@@ -247,6 +300,7 @@ summary() {
 case ${1:-} in
 setup) [ $# -eq 2 ] || die "usage: bench.sh setup <bench>" && setup "$2" ;;
 run) [ $# -ge 3 ] || die "usage: bench.sh run <bench> <tag> [WxH] [windowed|fullscreen] [NAME=VALUE ...]" && shift && run "$@" ;;
+pair) [ $# -ge 2 ] || die "usage: bench.sh pair <tag> [WIDTHxHEIGHT]" && shift && pair "$@" ;;
 summary) [ $# -eq 2 ] || die "usage: bench.sh summary <tag>" && summary "$2" ;;
-*) die "usage: bench.sh setup|run|summary ..." ;;
+*) die "usage: bench.sh setup|run|summary|pair ..." ;;
 esac
