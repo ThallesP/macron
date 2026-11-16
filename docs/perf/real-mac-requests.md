@@ -277,3 +277,26 @@ What it means: the overlay's `wined3d.dll` and `opengl32.dll` carry DWARF, and `
 The same start with `WINE_OPENGL_BATCH=0` in the environment: the frame rate over a minute (median of the `trace:fps` readings), and, if easy, the same 8 s `sample` as U1.
 
 What it means: on the M3 a transition into Wine's Unix side costs 0.6 to 0.9 µs, and 0007 copies every queued call and replays it through the WoW64 thunks. If the menu is as fast or faster without batching, the replay costs more than the transitions it saves there, and the next change takes work out of the replay. If it is clearly slower, batching earns its keep on real hardware, and what is left to queue is worth queuing.
+
+### U3: Wine patch 0010, the menu with the command stream on the game's thread and on its own (about 10 minutes)
+
+What changed (`runtime/wine/patches/README.md`, 0010): from U1's sample, the game's three maps per draw of its system memory buffers went through wined3d's command stream (a round trip each, and with `csmt=0x1` a wait for everything queued, hence that run's 23% of yielding and waking); they are now done on the game's thread. And each index upload rebound the vertex array's element buffer, which Apple's OpenGL rebuilt at the next draw (`buildVertexArrayState`); uploads now go through `GL_COPY_WRITE_BUFFER`. On the sandbox the pictures still match, and with `csmt=0x1` the probe in the game's drawing mode went from 1.3 to 6 fps; the single-thread change is below the sandbox's noise, so the M3 decides.
+
+Build `macron` from branch `wine-0010` (it pins the test overlay `runtime-wine-11.21-macron.10`) and install its runtime into a new `MACRON_HOME`, as for macron9.md:
+
+```sh
+git -C ~/macron-perf/src fetch origin wine-0010 && git -C ~/macron-perf/src checkout FETCH_HEAD
+cd ~/macron-perf/src && go build -o ~/macron-perf/macron-0010 ./cmd/macron
+MACRON_HOME=~/macron-perf/home-0010 ~/macron-perf/macron-0010 runtime install
+```
+
+Then the menu, the way macron9.md started it, three times:
+1. default: the frame rate over a minute (with `show-fps` in that `MACRON_HOME`), then a start with `WINEDEBUG=-all,+loaddll` and the same 8 s `sample` as U1;
+2. `WINE_D3D_CONFIG=csmt=0x1`: the frame rate over a minute, and one `sample` of the whole process (both the game's thread and `wined3d_cs`) with its `+loaddll` lines;
+3. a screenshot of the game's window in each, to compare by eye with the 0.4.0 one (an upload landing in the wrong place shows as broken sprites).
+
+Commit to `docs/proof/gate1-m3/macron10/`, scrubbed as before. What the results mean:
+- **60 fps in 1 or 2**: the menu meets the bar. If only in 2, the next step is making the command stream's own thread the default for 32-bit programs again (0004 turned it off for crashes that 0006 has since fixed), after stability runs on the sandboxes.
+- **Still about 31 in 1**: the share of the game's thread waiting in `NtUserMsgWaitForMultipleObjectsEx` against U1's 40.7% says how much work 0010 removed; the sample says where the rest is.
+- **Still about 30 in 2**: the two threads' samples say what they still wait for.
+- **Broken sprites, or a crash**: `WINE_D3D_CONFIG` unset and `WINE_OPENGL_UNSYNCHRONIZED=0` tell 0009 from 0010; say which.
