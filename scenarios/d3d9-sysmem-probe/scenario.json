@@ -1,0 +1,38 @@
+{
+  "name": "d3d9-sysmem-probe",
+  "title": "Direct3D 9 probe drawn the way Clickteam Fusion games draw (software vertex processing, system memory vertex and index buffers)",
+  "game": "d3d9-fps-probe",
+  "build": "build.sh",
+  "exe": "probe32.exe",
+  "cwd": "",
+  "args": ["mix", "--sysmem", "--window", "960x540", "--hold", "60"],
+  "macronEnv": {
+    "MACRON_OPENGL": "apple-software"
+  },
+  "window": {
+    "title": "^Macron D3D9 fps probe$",
+    "width": 960,
+    "height": 540
+  },
+  "reached": {
+    "output": "RESULT fps",
+    "settleSeconds": 1,
+    "timeoutSeconds": 600
+  },
+  "compare": {
+    "text": [],
+    "ignore": []
+  },
+  "reference": {
+    "image": "reference.png",
+    "source": "pending: the Reference workflow on windows-latest"
+  },
+  "uploads": {
+    "exes": ["probe32.exe", "probe64.exe"],
+    "args": ["mix", "--sysmem", "--window", "960x540", "--warmup", "2", "--seconds", "3", "--hold", "30"],
+    "source": "Ultimate Custom Night (Clickteam Fusion) creates its device with D3DCREATE_SOFTWARE_VERTEXPROCESSING and draws from a dynamic D3DPOOL_SYSTEMMEM vertex buffer locked with NOOVERWRITE, with a system memory index buffer (+d3d9 trace, docs/proof/gate1-m3/). On Thalles's M3 it spent 77% of its thread in glBufferSubData, which Apple's OpenGL over Metal makes wait for the GPU whenever issued draws use the buffer. The sandboxes' software renderer does not wait, so their frame rate cannot show it; the trace can. The control runs with WINE_OPENGL_UNSYNCHRONIZED=0."
+  },
+  "otherGame": "d3d11-probe",
+  "windowsExtra": [],
+  "ci": true
+}
