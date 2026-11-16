@@ -30,7 +30,8 @@ def image_info(path):
 def load_modules(bases_path, dll_dir):
     modules = []
     for line in open(bases_path):
-        address, name = line.split()
+        address, name = line.split(maxsplit=1)
+        name = name.strip()
         path = os.path.join(dll_dir, name)
         if os.path.exists(path):
             image_base, size = image_info(path)
@@ -97,7 +98,7 @@ def main(sample_path, thread, bases_path, dll_dir, top=40):
             return f"{names.get((key[1], key[2]), '?')} ({key[3]})"
         return key[1]
 
-    self_time, inclusive = collections.Counter(), collections.Counter()
+    self_time, inclusive, module_time = collections.Counter(), collections.Counter(), collections.Counter()
     stack = []
     total = 0
     for i, (depth, count, text) in enumerate(rows):
@@ -117,7 +118,12 @@ def main(sample_path, thread, bases_path, dll_dir, top=40):
             self_time[stack[-1][1]] += own
             for name in {name for _, name in stack}:
                 inclusive[name] += own
+            for module in {name.rsplit("(", 1)[-1].rstrip(")") for _, name in stack if name.endswith(")")}:
+                module_time[module] += own
     print(f"{sample_path} {thread}: {total} samples")
+    print("\nmodules, inclusive (any frame of the sample in the module):")
+    for name, count in module_time.most_common(int(top)):
+        print(f"  {100 * count / total:5.1f}%  {name}")
     print("\nself:")
     for name, count in self_time.most_common(int(top)):
         print(f"  {100 * count / total:5.1f}%  {name}")
