@@ -182,3 +182,21 @@ cd src && git pull && tools/perf/bench.sh pair m3 1600x900
 ### What to push
 
 `docs/perf/real-mac-results.md`: the display lines and runtime name from the setup; request 1's eight files' contents; for every run of requests 2 to 6 its `summary.txt` (or what went wrong); request 5's `grep` output and whether the network question appeared; request 6's `ow-top.txt`, the `grep` lines and the settings lines; request 7's output; request 8's table and each run's `bench.txt`. Into `docs/perf/m3-batch1/<tag>/`: each run's `summary.txt`, `env.txt`, `hud.csv`, `thermal.txt`. Then a message to this thread.
+
+## Ultimate Custom Night (gate 1 thread, Opus 5.5)
+
+Context: `docs/proof/gate1-m3/macron9.md`. With `macron.9` the menu runs at 31 fps; the game's thread works about 19 ms a frame (13 of them in Wine) and waits for its frame timer for the rest. The menu is the benchmark (no input needed). Same setup as macron9.md: `macron` built from main, its runtime in a separate `MACRON_HOME`, empty workspace, sound off. Results go to `docs/proof/gate1-m3/` with the home folder written `~` (`sed -E 's|/Users/[^/ ]+|~|g'`).
+
+### U1: the raw sample, for function-level attribution (2 minutes, or none if the macron9.md run's files were kept)
+
+Commit, scrubbed as above, to `docs/proof/gate1-m3/macron9-raw/`:
+- the raw `sample` output of the game's thread in the menu, default configuration (`sample <pid> 8 2 -file ...`; the whole file, with the `???` frames and their addresses);
+- from the same start, the `+loaddll` lines (`WINEDEBUG=-all,+loaddll`; only the `Loaded L"..." at <address>` lines).
+
+What it means: the overlay's `wined3d.dll` and `opengl32.dll` carry DWARF. With the load addresses I resolve every x86 frame, the 10.2% "no named frame" included, to a function and a line, and the native frames under `wow64_flush_batch` name Apple's OpenGL calls. That says which of these is the 13 ms: d3d9's copy of the system memory vertex buffer before each draw, the index streaming, the maps that go through wined3d's command stream (four a draw for this game), state application, the batch replay, or the map and unmap in each unsynchronized write.
+
+### U2: the menu without 0007's batching (2 minutes)
+
+The same start with `WINE_OPENGL_BATCH=0` in the environment: the frame rate over a minute (median of the `trace:fps` readings), and, if easy, the same 8 s `sample` as U1.
+
+What it means: on the M3 a transition into Wine's Unix side costs 0.6 to 0.9 µs, and 0007 copies every queued call and replays it through the WoW64 thunks. If the menu is as fast or faster without batching, the replay costs more than the transitions it saves there, and the next change takes work out of the replay. If it is clearly slower, batching earns its keep on real hardware, and what is left to queue is worth queuing.
