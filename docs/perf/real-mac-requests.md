@@ -337,6 +337,22 @@ Request 15 found one thread polling the Wine server about 40,000 times a second 
 
 Push `ow-sample.txt.gz` to `docs/perf/m3-batch3/` and the `ps` line (its CPU share) into the results. If `sample` asks for a permission or a password, stop and say so. Read (I do the analysis): for each thread, its number of samples and how many sit under Wine's server call (`server_call`, `wait_select_reply`, `read` inside `ntdll.so`). If the busiest thread spends a large share there, the polls are on the frame's path and answering them in the game's process (docs/perf/README.md, candidate 6) would raise the menu's frame rate; if the busy threads are elsewhere and the poller mostly waits, it would mostly save the server's half core.
 
+### Request 17: what kind of object the polling thread polls (about 5 minutes; same start as request 15)
+
+A fix that answers zero-timeout polls in the game's own process has to know the polled objects' state, and what it takes depends on the kind of object (an event or semaphore is simple; a thread, process or timer handle is more). Request 15 kept no arguments, so this finds the kind.
+
+1. Start Overwatch exactly as for request 15 (`WINEDEBUG=-all,+server` added in front, no Wine process of that prefix running before).
+2. When the menu has been up for about a minute:
+
+   ```sh
+   cd ~/macron-perf/src && git pull
+   L=$(ls -t ~/Library/Application\ Support/Macron/logs/steam-2357570/*.log | head -1)
+   tools/perf/server-handles.sh "$L" 5 ~/macron-perf/results/ow-handles
+   ```
+3. Quit the game, then `rm "$L"` (several GB).
+
+Push `~/macron-perf/results/ow-handles/handles.txt` (a thread id, handle numbers, counts and request names only) to `docs/perf/m3-batch3/ow-handles/`. Read: the request that made each polled handle names its kind (`create_event`, `create_semaphore`, `create_mutex`, `open_*`, `new_thread`, `create_timer`...). `dup_handle` means it was copied from another handle and the kind is not shown; say so if that is what comes out.
+
 ## Ultimate Custom Night (gate 1 thread, Opus 5.5)
 
 Context: `docs/proof/gate1-m3/macron9.md`. With `macron.9` the menu runs at 31 fps; the game's thread works about 19 ms a frame (13 of them in Wine) and waits for its frame timer for the rest. The menu is the benchmark (no input needed). Same setup as macron9.md: `macron` built from main, its runtime in a separate `MACRON_HOME`, empty workspace, sound off. Results go to `docs/proof/gate1-m3/` with the home folder written `~` (`sed -E 's|/Users/[^/ ]+|~|g'`).
