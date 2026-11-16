@@ -1,0 +1,46 @@
+== the old release: ~/work/Macron-0.5.0-rc3.dmg
+4d512ec045c8bfae3867bc379bc20e2736017aa95afe10402c95780b3b100350  ~/work/Macron-0.5.0-rc3.dmg
+installer: Package name is Macron
+installer: Upgrading at base path /
+installer: The upgrade was successful.
+== Done: Steam Play is on with Macron as its tool
+steam.sh: Steam is at its main window
+build:           1794536281 (known: true)
+steam play:      on
+steam.sh: 871720 is running: its window is open and Steam shows STOP
+steam.sh: 871720 quit; Steam is back at PLAY
+macron: game steam-871720, log ~/Library/Application Support/Macron/logs/steam-871720/20261116T143426Z.log
+macron: preparing the Windows environment at ~/Library/Application Support/Steam/steamapps/compatdata/871720/pfx
+macron: starting Ultimate Custom Night.exe with the dxmt backend
+macron: writing the registry keys games read to find Steam
+macron: starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+macron: Ultimate Custom Night.exe exited with 0
+{"runtime":"wine-11.21-macron.11-dxmt-0.80-macron.1-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1","backend":"dxmt"}
+== the new release over it: ~/work/Macron-0.5.0-rc4.dmg
+455596284c45c1d5fb3f85558cf891bc1714ad9c4fc50834df488402ebf6e43b  ~/work/Macron-0.5.0-rc4.dmg
+installer: Package name is Macron
+installer: Upgrading at base path /
+installer: The upgrade was successful.
+== Done: Steam Play is on with Macron as its tool
+steam.sh: Steam is at its main window
+steam.sh: 871720 is running: its window is open and Steam shows STOP
+steam.sh: 871720 quit; Steam is back at PLAY
+macron: 14:36:56.349Z +0.00s game steam-871720, log ~/Library/Application Support/Macron/logs/steam-871720/20261116T143656Z.log
+macron: 14:36:56.353Z +0.00s the Windows environment at ~/Library/Application Support/Steam/steamapps/compatdata/871720/pfx needs no update for this runtime
+macron: 14:36:56.357Z +0.01s prefix ready
+macron: 14:36:56.358Z +0.01s starting Ultimate Custom Night.exe with the dxmt backend
+macron: 14:36:56.551Z +0.20s starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+macron: 14:36:56.552Z +0.20s Steam bridge ready
+macron: 14:36:56.573Z +0.22s game process started (Wine process 69267)
+macron: 14:37:32.688Z +36.34s Ultimate Custom Night.exe exited with 0
+{"runtime":"wine-11.21-macron.13-dxmt-0.80-macron.1-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1","backend":"dxmt"}
+== checks
+the new release reused the old prefix without wineboot
+old release: samples of an update (wineboot -u, rundll32): 214; of wineboot --init (Wine's boot): 73; of a window titled Wine: 97
+  windows of wine:   37 Ultimate Custom Night;  97 Wine;
+  Dock apps:  243 38) "Steam" ASN:0x0-0xfc0fc: ;  51 41) "wine" ASN:0x0-0x104104: ;  48 41) "wine" ASN:0x0-0x10a10a: ;   1 42) "wine" ASN:0x0-0x104104: ;  37 42) "wine" ASN:0x0-0x112112: ;
+new release: samples of an update (wineboot -u, rundll32): 0; of wineboot --init (Wine's boot): 9; of a window titled Wine: 0
+  windows of wine:   31 Ultimate Custom Night;
+  Dock apps:  104 38) "Steam" ASN:0x0-0x117117: ;  32 42) "wine" ASN:0x0-0x11e11e: ;
+no update and no window titled Wine during the new release's start
+UPGRADE-EXIT 0

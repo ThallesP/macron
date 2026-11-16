@@ -1,0 +1,1567 @@
+1794839800.445 window 27	25	794,0 31x30	Control Center	Item-0
+1794839800.445 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839800.445 window 9	25	867,0 157x30	Control Center	Clock
+1794839800.445 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839800.445 window 6	20	0,0 1024x768	Dock	Dock
+1794839800.445 window 602	1	-15000,15767 1x1	Steam	
+1794839800.445 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839800.445 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839800.445 window 15	-2147483603	0,0 1024x768	Finder	
+1794839800.445 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839800.445 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839800.445 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839800.445 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839800.962 window 27	25	794,0 31x30	Control Center	Item-0
+1794839800.962 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839800.962 window 9	25	867,0 157x30	Control Center	Clock
+1794839800.962 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839800.962 window 6	20	0,0 1024x768	Dock	Dock
+1794839800.962 window 602	1	-15000,15767 1x1	Steam	
+1794839800.962 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839800.962 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839800.962 window 15	-2147483603	0,0 1024x768	Finder	
+1794839800.962 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839800.962 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839800.962 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839800.962 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839801.645 window 27	25	794,0 31x30	Control Center	Item-0
+1794839801.645 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839801.645 window 9	25	867,0 157x30	Control Center	Clock
+1794839801.645 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839801.645 window 6	20	0,0 1024x768	Dock	Dock
+1794839801.645 window 602	1	-15000,15767 1x1	Steam	
+1794839801.645 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839801.645 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839801.645 window 15	-2147483603	0,0 1024x768	Finder	
+1794839801.645 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839801.645 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839801.645 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839801.645 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839802.214 window 27	25	794,0 31x30	Control Center	Item-0
+1794839802.214 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839802.214 window 9	25	867,0 157x30	Control Center	Clock
+1794839802.214 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839802.214 window 6	20	0,0 1024x768	Dock	Dock
+1794839802.214 window 602	1	-15000,15767 1x1	Steam	
+1794839802.214 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839802.214 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839802.214 window 15	-2147483603	0,0 1024x768	Finder	
+1794839802.214 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839802.214 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839802.214 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839802.214 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839802.725 window 27	25	794,0 31x30	Control Center	Item-0
+1794839802.725 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839802.725 window 9	25	867,0 157x30	Control Center	Clock
+1794839802.725 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839802.725 window 6	20	0,0 1024x768	Dock	Dock
+1794839802.725 window 602	1	-15000,15767 1x1	Steam	
+1794839802.725 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839802.725 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839802.725 window 15	-2147483603	0,0 1024x768	Finder	
+1794839802.725 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839802.725 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839802.725 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839802.725 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839803.544 window 27	25	794,0 31x30	Control Center	Item-0
+1794839803.544 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839803.544 window 9	25	867,0 157x30	Control Center	Clock
+1794839803.544 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839803.544 window 6	20	0,0 1024x768	Dock	Dock
+1794839803.544 window 602	1	-15000,15767 1x1	Steam	
+1794839803.544 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839803.544 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839803.544 window 15	-2147483603	0,0 1024x768	Finder	
+1794839803.544 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839803.544 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839803.544 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839803.544 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839804.156 window 613	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839804.156 window 612	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839804.156 window 27	25	794,0 31x30	Control Center	Item-0
+1794839804.156 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839804.156 window 9	25	867,0 157x30	Control Center	Clock
+1794839804.156 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839804.156 window 6	20	0,0 1024x768	Dock	Dock
+1794839804.156 window 602	1	-15000,15767 1x1	Steam	
+1794839804.156 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839804.156 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839804.156 window 15	-2147483603	0,0 1024x768	Finder	
+1794839804.156 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839804.156 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839804.156 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839804.156 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839804.854 window 613	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839804.854 window 612	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839804.854 window 27	25	794,0 31x30	Control Center	Item-0
+1794839804.854 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839804.854 window 9	25	867,0 157x30	Control Center	Clock
+1794839804.854 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839804.854 window 6	20	0,0 1024x768	Dock	Dock
+1794839804.854 window 602	1	-15000,15767 1x1	Steam	
+1794839804.854 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839804.854 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839804.854 window 15	-2147483603	0,0 1024x768	Finder	
+1794839804.854 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839804.854 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839804.854 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839804.854 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839805.376 window 613	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839805.376 window 612	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839805.376 window 27	25	794,0 31x30	Control Center	Item-0
+1794839805.376 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839805.376 window 9	25	867,0 157x30	Control Center	Clock
+1794839805.376 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839805.376 window 6	20	0,0 1024x768	Dock	Dock
+1794839805.376 window 602	1	-15000,15767 1x1	Steam	
+1794839805.376 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839805.376 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839805.376 window 15	-2147483603	0,0 1024x768	Finder	
+1794839805.376 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839805.376 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839805.376 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839805.376 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839805.930 window 613	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839805.930 window 612	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839805.930 window 27	25	794,0 31x30	Control Center	Item-0
+1794839805.930 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839805.930 window 9	25	867,0 157x30	Control Center	Clock
+1794839805.930 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839805.930 window 6	20	0,0 1024x768	Dock	Dock
+1794839805.930 window 602	1	-15000,15767 1x1	Steam	
+1794839805.930 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839805.930 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839805.930 window 15	-2147483603	0,0 1024x768	Finder	
+1794839805.930 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839805.930 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839805.930 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839805.930 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839806.433 window 613	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839806.433 window 612	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839806.433 window 27	25	794,0 31x30	Control Center	Item-0
+1794839806.433 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839806.433 window 9	25	867,0 157x30	Control Center	Clock
+1794839806.433 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839806.433 window 6	20	0,0 1024x768	Dock	Dock
+1794839806.433 window 602	1	-15000,15767 1x1	Steam	
+1794839806.433 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839806.433 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839806.433 window 15	-2147483603	0,0 1024x768	Finder	
+1794839806.433 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839806.433 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839806.433 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839806.433 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839806.936 window 613	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839806.936 window 612	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839806.936 window 27	25	794,0 31x30	Control Center	Item-0
+1794839806.936 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839806.936 window 9	25	867,0 157x30	Control Center	Clock
+1794839806.936 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839806.936 window 6	20	0,0 1024x768	Dock	Dock
+1794839806.936 window 602	1	-15000,15767 1x1	Steam	
+1794839806.936 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839806.936 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839806.936 window 15	-2147483603	0,0 1024x768	Finder	
+1794839806.936 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839806.936 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839806.936 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839806.936 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839807.449 window 613	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839807.449 window 612	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839807.449 window 27	25	794,0 31x30	Control Center	Item-0
+1794839807.449 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839807.449 window 9	25	867,0 157x30	Control Center	Clock
+1794839807.449 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839807.449 window 6	20	0,0 1024x768	Dock	Dock
+1794839807.449 window 602	1	-15000,15767 1x1	Steam	
+1794839807.449 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839807.449 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839807.449 window 15	-2147483603	0,0 1024x768	Finder	
+1794839807.449 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839807.449 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839807.449 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839807.449 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839807.903 window 27	25	794,0 31x30	Control Center	Item-0
+1794839807.903 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839807.903 window 9	25	867,0 157x30	Control Center	Clock
+1794839807.903 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839807.903 window 6	20	0,0 1024x768	Dock	Dock
+1794839807.903 window 602	1	-15000,15767 1x1	Steam	
+1794839807.903 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839807.903 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839807.903 window 15	-2147483603	0,0 1024x768	Finder	
+1794839807.903 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839807.903 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839807.903 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839807.903 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839808.396 window 27	25	794,0 31x30	Control Center	Item-0
+1794839808.396 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839808.396 window 9	25	867,0 157x30	Control Center	Clock
+1794839808.396 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839808.396 window 6	20	0,0 1024x768	Dock	Dock
+1794839808.396 window 602	1	-15000,15767 1x1	Steam	
+1794839808.396 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839808.396 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839808.396 window 15	-2147483603	0,0 1024x768	Finder	
+1794839808.396 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839808.396 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839808.396 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839808.396 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839808.876 window 27	25	794,0 31x30	Control Center	Item-0
+1794839808.876 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839808.876 window 9	25	867,0 157x30	Control Center	Clock
+1794839808.876 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839808.876 window 6	20	0,0 1024x768	Dock	Dock
+1794839808.876 window 602	1	-15000,15767 1x1	Steam	
+1794839808.876 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839808.876 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839808.876 window 15	-2147483603	0,0 1024x768	Finder	
+1794839808.876 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839808.876 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839808.876 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839808.876 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839809.329 window 615	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839809.329 window 614	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839809.329 window 27	25	794,0 31x30	Control Center	Item-0
+1794839809.329 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839809.329 window 9	25	867,0 157x30	Control Center	Clock
+1794839809.329 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839809.329 window 6	20	0,0 1024x768	Dock	Dock
+1794839809.329 window 602	1	-15000,15767 1x1	Steam	
+1794839809.329 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839809.329 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839809.329 window 15	-2147483603	0,0 1024x768	Finder	
+1794839809.329 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839809.329 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839809.329 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839809.329 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839809.887 window 615	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839809.887 window 614	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839809.887 window 27	25	794,0 31x30	Control Center	Item-0
+1794839809.887 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839809.887 window 9	25	867,0 157x30	Control Center	Clock
+1794839809.887 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839809.887 window 6	20	0,0 1024x768	Dock	Dock
+1794839809.887 window 602	1	-15000,15767 1x1	Steam	
+1794839809.887 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839809.887 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839809.887 window 15	-2147483603	0,0 1024x768	Finder	
+1794839809.887 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839809.887 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839809.887 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839809.887 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839810.373 window 615	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839810.373 window 614	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839810.373 window 27	25	794,0 31x30	Control Center	Item-0
+1794839810.373 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839810.373 window 9	25	867,0 157x30	Control Center	Clock
+1794839810.373 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839810.373 window 6	20	0,0 1024x768	Dock	Dock
+1794839810.373 window 602	1	-15000,15767 1x1	Steam	
+1794839810.373 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839810.373 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839810.373 window 15	-2147483603	0,0 1024x768	Finder	
+1794839810.373 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839810.373 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839810.373 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839810.373 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839810.918 window 615	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839810.918 window 614	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839810.918 window 27	25	794,0 31x30	Control Center	Item-0
+1794839810.918 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839810.918 window 9	25	867,0 157x30	Control Center	Clock
+1794839810.918 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839810.918 window 6	20	0,0 1024x768	Dock	Dock
+1794839810.918 window 602	1	-15000,15767 1x1	Steam	
+1794839810.918 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839810.918 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839810.918 window 15	-2147483603	0,0 1024x768	Finder	
+1794839810.918 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839810.918 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839810.918 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839810.918 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839811.509 window 615	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839811.509 window 614	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839811.509 window 27	25	794,0 31x30	Control Center	Item-0
+1794839811.509 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839811.509 window 9	25	867,0 157x30	Control Center	Clock
+1794839811.509 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839811.509 window 6	20	0,0 1024x768	Dock	Dock
+1794839811.509 window 602	1	-15000,15767 1x1	Steam	
+1794839811.509 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839811.509 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839811.509 window 15	-2147483603	0,0 1024x768	Finder	
+1794839811.509 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839811.509 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839811.509 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839811.509 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839811.976 window 615	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839811.976 window 614	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839811.976 window 27	25	794,0 31x30	Control Center	Item-0
+1794839811.976 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839811.976 window 9	25	867,0 157x30	Control Center	Clock
+1794839811.976 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839811.976 window 6	20	0,0 1024x768	Dock	Dock
+1794839811.976 window 602	1	-15000,15767 1x1	Steam	
+1794839811.976 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839811.976 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839811.976 window 15	-2147483603	0,0 1024x768	Finder	
+1794839811.976 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839811.976 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839811.976 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839811.976 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839812.478 window 615	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839812.478 window 614	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839812.478 window 27	25	794,0 31x30	Control Center	Item-0
+1794839812.478 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839812.478 window 9	25	867,0 157x30	Control Center	Clock
+1794839812.478 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839812.478 window 6	20	0,0 1024x768	Dock	Dock
+1794839812.478 window 602	1	-15000,15767 1x1	Steam	
+1794839812.478 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839812.478 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839812.478 window 15	-2147483603	0,0 1024x768	Finder	
+1794839812.478 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839812.478 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839812.478 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839812.478 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839813.026 window 617	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839813.026 window 616	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839813.026 window 27	25	794,0 31x30	Control Center	Item-0
+1794839813.026 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839813.026 window 9	25	867,0 157x30	Control Center	Clock
+1794839813.026 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839813.026 window 6	20	0,0 1024x768	Dock	Dock
+1794839813.026 window 602	1	-15000,15767 1x1	Steam	
+1794839813.026 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839813.026 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839813.026 window 15	-2147483603	0,0 1024x768	Finder	
+1794839813.026 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839813.026 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839813.026 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839813.026 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839813.586 window 617	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839813.586 window 616	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839813.586 window 27	25	794,0 31x30	Control Center	Item-0
+1794839813.586 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839813.586 window 9	25	867,0 157x30	Control Center	Clock
+1794839813.586 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839813.586 window 6	20	0,0 1024x768	Dock	Dock
+1794839813.586 window 602	1	-15000,15767 1x1	Steam	
+1794839813.586 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839813.586 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839813.586 window 15	-2147483603	0,0 1024x768	Finder	
+1794839813.586 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839813.586 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839813.586 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839813.586 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839814.018 window 617	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839814.018 window 616	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839814.018 window 27	25	794,0 31x30	Control Center	Item-0
+1794839814.018 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839814.018 window 9	25	867,0 157x30	Control Center	Clock
+1794839814.018 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839814.018 window 6	20	0,0 1024x768	Dock	Dock
+1794839814.018 window 602	1	-15000,15767 1x1	Steam	
+1794839814.018 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839814.018 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839814.018 window 15	-2147483603	0,0 1024x768	Finder	
+1794839814.018 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839814.018 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839814.018 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839814.018 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839814.532 window 617	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839814.532 window 616	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839814.532 window 27	25	794,0 31x30	Control Center	Item-0
+1794839814.532 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839814.532 window 9	25	867,0 157x30	Control Center	Clock
+1794839814.532 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839814.532 window 6	20	0,0 1024x768	Dock	Dock
+1794839814.532 window 602	1	-15000,15767 1x1	Steam	
+1794839814.532 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839814.532 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839814.532 window 15	-2147483603	0,0 1024x768	Finder	
+1794839814.532 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839814.532 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839814.532 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839814.532 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839815.071 window 617	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839815.071 window 616	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839815.071 window 27	25	794,0 31x30	Control Center	Item-0
+1794839815.071 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839815.071 window 9	25	867,0 157x30	Control Center	Clock
+1794839815.071 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839815.071 window 6	20	0,0 1024x768	Dock	Dock
+1794839815.071 window 602	1	-15000,15767 1x1	Steam	
+1794839815.071 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839815.071 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839815.071 window 15	-2147483603	0,0 1024x768	Finder	
+1794839815.071 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839815.071 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839815.071 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839815.071 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839815.818 window 617	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839815.818 window 616	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839815.818 window 27	25	794,0 31x30	Control Center	Item-0
+1794839815.818 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839815.818 window 9	25	867,0 157x30	Control Center	Clock
+1794839815.818 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839815.818 window 6	20	0,0 1024x768	Dock	Dock
+1794839815.818 window 602	1	-15000,15767 1x1	Steam	
+1794839815.818 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839815.818 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839815.818 window 15	-2147483603	0,0 1024x768	Finder	
+1794839815.818 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839815.818 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839815.818 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839815.818 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839816.351 window 617	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839816.351 window 616	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839816.351 window 27	25	794,0 31x30	Control Center	Item-0
+1794839816.351 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839816.351 window 9	25	867,0 157x30	Control Center	Clock
+1794839816.351 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839816.351 window 6	20	0,0 1024x768	Dock	Dock
+1794839816.351 window 602	1	-15000,15767 1x1	Steam	
+1794839816.351 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839816.351 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839816.351 window 15	-2147483603	0,0 1024x768	Finder	
+1794839816.351 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839816.351 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839816.351 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839816.351 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839817.001 window 27	25	794,0 31x30	Control Center	Item-0
+1794839817.001 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839817.001 window 9	25	867,0 157x30	Control Center	Clock
+1794839817.001 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839817.001 window 6	20	0,0 1024x768	Dock	Dock
+1794839817.001 window 602	1	-15000,15767 1x1	Steam	
+1794839817.001 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839817.001 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839817.001 window 15	-2147483603	0,0 1024x768	Finder	
+1794839817.001 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839817.001 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839817.001 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839817.001 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839817.569 window 27	25	794,0 31x30	Control Center	Item-0
+1794839817.569 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839817.569 window 9	25	867,0 157x30	Control Center	Clock
+1794839817.569 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839817.569 window 6	20	0,0 1024x768	Dock	Dock
+1794839817.569 window 602	1	-15000,15767 1x1	Steam	
+1794839817.569 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839817.569 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839817.569 window 15	-2147483603	0,0 1024x768	Finder	
+1794839817.569 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839817.569 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839817.569 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839817.569 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839817.569 process 69301 C:\windows\system32\wineboot.exe --init WINEDEBUG=-all
+1794839818.217 window 27	25	794,0 31x30	Control Center	Item-0
+1794839818.217 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839818.217 window 9	25	867,0 157x30	Control Center	Clock
+1794839818.217 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839818.217 window 6	20	0,0 1024x768	Dock	Dock
+1794839818.217 window 602	1	-15000,15767 1x1	Steam	
+1794839818.217 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839818.217 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839818.217 window 15	-2147483603	0,0 1024x768	Finder	
+1794839818.217 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839818.217 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839818.217 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839818.217 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839818.217 process 69301 C:\windows\system32\wineboot.exe --init WINEDEBUG=-all
+1794839818.879 window 27	25	794,0 31x30	Control Center	Item-0
+1794839818.879 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839818.879 window 9	25	867,0 157x30	Control Center	Clock
+1794839818.879 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839818.879 window 6	20	0,0 1024x768	Dock	Dock
+1794839818.879 window 602	1	-15000,15767 1x1	Steam	
+1794839818.879 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839818.879 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839818.879 window 15	-2147483603	0,0 1024x768	Finder	
+1794839818.879 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839818.879 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839818.879 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839818.879 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839818.879 process 69301 C:\windows\system32\wineboot.exe --init WINEDEBUG=-all
+1794839819.608 window 27	25	794,0 31x30	Control Center	Item-0
+1794839819.608 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839819.608 window 9	25	867,0 157x30	Control Center	Clock
+1794839819.608 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839819.608 window 6	20	0,0 1024x768	Dock	Dock
+1794839819.608 window 602	1	-15000,15767 1x1	Steam	
+1794839819.608 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839819.608 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839819.608 window 15	-2147483603	0,0 1024x768	Finder	
+1794839819.608 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839819.608 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839819.608 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839819.608 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839819.608 process 69301 C:\windows\system32\wineboot.exe --init WINEDEBUG=-all
+1794839820.250 window 27	25	794,0 31x30	Control Center	Item-0
+1794839820.250 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839820.250 window 9	25	867,0 157x30	Control Center	Clock
+1794839820.250 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839820.250 window 6	20	0,0 1024x768	Dock	Dock
+1794839820.250 window 602	1	-15000,15767 1x1	Steam	
+1794839820.250 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839820.250 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839820.250 window 15	-2147483603	0,0 1024x768	Finder	
+1794839820.250 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839820.250 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839820.250 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839820.250 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839820.250 process 69301 C:\windows\system32\wineboot.exe --init WINEDEBUG=-all
+1794839820.835 window 27	25	794,0 31x30	Control Center	Item-0
+1794839820.835 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839820.835 window 9	25	867,0 157x30	Control Center	Clock
+1794839820.835 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839820.835 window 6	20	0,0 1024x768	Dock	Dock
+1794839820.835 window 602	1	-15000,15767 1x1	Steam	
+1794839820.835 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839820.835 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839820.835 window 15	-2147483603	0,0 1024x768	Finder	
+1794839820.835 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839820.835 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839820.835 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839820.835 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839820.835 process 69301 C:\windows\system32\wineboot.exe --init WINEDEBUG=-all
+1794839821.509 window 27	25	794,0 31x30	Control Center	Item-0
+1794839821.509 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839821.509 window 9	25	867,0 157x30	Control Center	Clock
+1794839821.509 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839821.509 window 6	20	0,0 1024x768	Dock	Dock
+1794839821.509 window 602	1	-15000,15767 1x1	Steam	
+1794839821.509 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839821.509 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839821.509 window 15	-2147483603	0,0 1024x768	Finder	
+1794839821.509 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839821.509 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839821.509 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839821.509 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839821.509 process 69301 C:\windows\system32\wineboot.exe --init WINEDEBUG=-all
+1794839822.038 window 27	25	794,0 31x30	Control Center	Item-0
+1794839822.038 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839822.038 window 9	25	867,0 157x30	Control Center	Clock
+1794839822.038 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839822.038 window 6	20	0,0 1024x768	Dock	Dock
+1794839822.038 window 602	1	-15000,15767 1x1	Steam	
+1794839822.038 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839822.038 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839822.038 window 15	-2147483603	0,0 1024x768	Finder	
+1794839822.038 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839822.038 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839822.038 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839822.038 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839822.038 process 69301 C:\windows\system32\wineboot.exe --init WINEDEBUG=-all
+1794839822.783 window 27	25	794,0 31x30	Control Center	Item-0
+1794839822.783 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839822.783 window 9	25	867,0 157x30	Control Center	Clock
+1794839822.783 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839822.783 window 6	20	0,0 1024x768	Dock	Dock
+1794839822.783 window 602	1	-15000,15767 1x1	Steam	
+1794839822.783 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839822.783 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839822.783 window 15	-2147483603	0,0 1024x768	Finder	
+1794839822.783 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839822.783 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839822.783 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839822.783 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839822.783 process 69301 C:\windows\system32\wineboot.exe --init WINEDEBUG=-all
+1794839823.590 window 27	25	794,0 31x30	Control Center	Item-0
+1794839823.590 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839823.590 window 9	25	867,0 157x30	Control Center	Clock
+1794839823.590 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839823.590 window 6	20	0,0 1024x768	Dock	Dock
+1794839823.590 window 602	1	-15000,15767 1x1	Steam	
+1794839823.590 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839823.590 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839823.590 window 15	-2147483603	0,0 1024x768	Finder	
+1794839823.590 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839823.590 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839823.590 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839823.590 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839824.258 window 27	25	794,0 31x30	Control Center	Item-0
+1794839824.258 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839824.258 window 9	25	867,0 157x30	Control Center	Clock
+1794839824.258 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839824.258 window 6	20	0,0 1024x768	Dock	Dock
+1794839824.258 window 602	1	-15000,15767 1x1	Steam	
+1794839824.258 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839824.258 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839824.258 window 15	-2147483603	0,0 1024x768	Finder	
+1794839824.258 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839824.258 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839824.258 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839824.258 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839824.784 window 27	25	794,0 31x30	Control Center	Item-0
+1794839824.784 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839824.784 window 9	25	867,0 157x30	Control Center	Clock
+1794839824.784 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839824.784 window 6	20	0,0 1024x768	Dock	Dock
+1794839824.784 window 602	1	-15000,15767 1x1	Steam	
+1794839824.784 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839824.784 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839824.784 window 15	-2147483603	0,0 1024x768	Finder	
+1794839824.784 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839824.784 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839824.784 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839824.784 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839825.266 window 27	25	794,0 31x30	Control Center	Item-0
+1794839825.266 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839825.266 window 9	25	867,0 157x30	Control Center	Clock
+1794839825.266 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839825.266 window 6	20	0,0 1024x768	Dock	Dock
+1794839825.266 window 602	1	-15000,15767 1x1	Steam	
+1794839825.266 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839825.266 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839825.266 window 15	-2147483603	0,0 1024x768	Finder	
+1794839825.266 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839825.266 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839825.266 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839825.266 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839825.940 window 27	25	794,0 31x30	Control Center	Item-0
+1794839825.940 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839825.940 window 9	25	867,0 157x30	Control Center	Clock
+1794839825.940 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839825.940 window 6	20	0,0 1024x768	Dock	Dock
+1794839825.940 window 602	1	-15000,15767 1x1	Steam	
+1794839825.940 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839825.940 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839825.940 window 15	-2147483603	0,0 1024x768	Finder	
+1794839825.940 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839825.940 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839825.940 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839825.940 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839826.441 window 27	25	794,0 31x30	Control Center	Item-0
+1794839826.441 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839826.441 window 9	25	867,0 157x30	Control Center	Clock
+1794839826.441 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839826.441 window 6	20	0,0 1024x768	Dock	Dock
+1794839826.441 window 602	1	-15000,15767 1x1	Steam	
+1794839826.441 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839826.441 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839826.441 window 15	-2147483603	0,0 1024x768	Finder	
+1794839826.441 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839826.441 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839826.441 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839826.441 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839827.155 window 619	25	764,1 28x28	Control Center	Item-0
+1794839827.155 window 27	25	794,0 31x30	Control Center	Item-0
+1794839827.155 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839827.155 window 9	25	867,0 157x30	Control Center	Clock
+1794839827.155 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839827.155 window 6	20	0,0 1024x768	Dock	Dock
+1794839827.155 window 602	1	-15000,15767 1x1	Steam	
+1794839827.155 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839827.155 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839827.155 window 15	-2147483603	0,0 1024x768	Finder	
+1794839827.155 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839827.155 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839827.155 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839827.155 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839827.807 window 619	25	762,0 32x30	Control Center	Item-0
+1794839827.807 window 27	25	794,0 31x30	Control Center	Item-0
+1794839827.807 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839827.807 window 9	25	867,0 157x30	Control Center	Clock
+1794839827.807 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839827.807 window 6	20	0,0 1024x768	Dock	Dock
+1794839827.807 window 602	1	-15000,15767 1x1	Steam	
+1794839827.807 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839827.807 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839827.807 window 15	-2147483603	0,0 1024x768	Finder	
+1794839827.807 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839827.807 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839827.807 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839827.807 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839828.453 window 619	25	762,0 32x30	Control Center	Item-0
+1794839828.453 window 27	25	794,0 31x30	Control Center	Item-0
+1794839828.453 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839828.453 window 9	25	867,0 157x30	Control Center	Clock
+1794839828.453 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839828.453 window 6	20	0,0 1024x768	Dock	Dock
+1794839828.453 window 602	1	-15000,15767 1x1	Steam	
+1794839828.453 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839828.453 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839828.453 window 15	-2147483603	0,0 1024x768	Finder	
+1794839828.453 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839828.453 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839828.453 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839828.453 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839829.043 window 619	25	762,0 32x30	Control Center	Item-0
+1794839829.043 window 27	25	794,0 31x30	Control Center	Item-0
+1794839829.043 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839829.043 window 9	25	867,0 157x30	Control Center	Clock
+1794839829.043 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839829.043 window 6	20	0,0 1024x768	Dock	Dock
+1794839829.043 window 602	1	-15000,15767 1x1	Steam	
+1794839829.043 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839829.043 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839829.043 window 15	-2147483603	0,0 1024x768	Finder	
+1794839829.043 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839829.043 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839829.043 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839829.043 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839829.624 window 619	25	762,0 32x30	Control Center	Item-0
+1794839829.624 window 27	25	794,0 31x30	Control Center	Item-0
+1794839829.624 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839829.624 window 9	25	867,0 157x30	Control Center	Clock
+1794839829.624 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839829.624 window 6	20	0,0 1024x768	Dock	Dock
+1794839829.624 window 602	1	-15000,15767 1x1	Steam	
+1794839829.624 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839829.624 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839829.624 window 15	-2147483603	0,0 1024x768	Finder	
+1794839829.624 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839829.624 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839829.624 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839829.624 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839830.165 window 619	25	762,0 32x30	Control Center	Item-0
+1794839830.165 window 27	25	794,0 31x30	Control Center	Item-0
+1794839830.165 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839830.165 window 9	25	867,0 157x30	Control Center	Clock
+1794839830.165 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839830.165 window 6	20	0,0 1024x768	Dock	Dock
+1794839830.165 window 602	1	-15000,15767 1x1	Steam	
+1794839830.165 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839830.165 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839830.165 window 15	-2147483603	0,0 1024x768	Finder	
+1794839830.165 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839830.165 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839830.165 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839830.165 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839830.799 window 619	25	762,0 32x30	Control Center	Item-0
+1794839830.799 window 27	25	794,0 31x30	Control Center	Item-0
+1794839830.799 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839830.799 window 9	25	867,0 157x30	Control Center	Clock
+1794839830.799 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839830.799 window 6	20	0,0 1024x768	Dock	Dock
+1794839830.799 window 602	1	-15000,15767 1x1	Steam	
+1794839830.799 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839830.799 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839830.799 window 15	-2147483603	0,0 1024x768	Finder	
+1794839830.799 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839830.799 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839830.799 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839830.799 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839831.274 window 619	25	762,0 32x30	Control Center	Item-0
+1794839831.274 window 27	25	794,0 31x30	Control Center	Item-0
+1794839831.274 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839831.274 window 9	25	867,0 157x30	Control Center	Clock
+1794839831.274 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839831.274 window 6	20	0,0 1024x768	Dock	Dock
+1794839831.274 window 602	1	-15000,15767 1x1	Steam	
+1794839831.274 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839831.274 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839831.274 window 15	-2147483603	0,0 1024x768	Finder	
+1794839831.274 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839831.274 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839831.274 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839831.274 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839831.274 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839832.070 window 619	25	762,0 32x30	Control Center	Item-0
+1794839832.070 window 27	25	794,0 31x30	Control Center	Item-0
+1794839832.070 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839832.070 window 9	25	867,0 157x30	Control Center	Clock
+1794839832.070 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839832.070 window 6	20	0,0 1024x768	Dock	Dock
+1794839832.070 window 602	1	-15000,15767 1x1	Steam	
+1794839832.070 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839832.070 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839832.070 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839832.070 window 15	-2147483603	0,0 1024x768	Finder	
+1794839832.070 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839832.070 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839832.070 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839832.070 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839832.070 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839832.814 window 619	25	762,0 32x30	Control Center	Item-0
+1794839832.814 window 27	25	794,0 31x30	Control Center	Item-0
+1794839832.814 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839832.814 window 9	25	867,0 157x30	Control Center	Clock
+1794839832.814 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839832.814 window 6	20	0,0 1024x768	Dock	Dock
+1794839832.814 window 602	1	-15000,15767 1x1	Steam	
+1794839832.814 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839832.814 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839832.814 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839832.814 window 15	-2147483603	0,0 1024x768	Finder	
+1794839832.814 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839832.814 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839832.814 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839832.814 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839832.814 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839833.464 window 619	25	762,0 32x30	Control Center	Item-0
+1794839833.464 window 27	25	794,0 31x30	Control Center	Item-0
+1794839833.464 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839833.464 window 9	25	867,0 157x30	Control Center	Clock
+1794839833.464 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839833.464 window 6	20	0,0 1024x768	Dock	Dock
+1794839833.464 window 602	1	-15000,15767 1x1	Steam	
+1794839833.464 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839833.464 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839833.464 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839833.464 window 15	-2147483603	0,0 1024x768	Finder	
+1794839833.464 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839833.464 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839833.464 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839833.464 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839833.464 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839833.999 window 619	25	762,0 32x30	Control Center	Item-0
+1794839833.999 window 27	25	794,0 31x30	Control Center	Item-0
+1794839833.999 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839833.999 window 9	25	867,0 157x30	Control Center	Clock
+1794839833.999 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839833.999 window 6	20	0,0 1024x768	Dock	Dock
+1794839833.999 window 602	1	-15000,15767 1x1	Steam	
+1794839833.999 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839833.999 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839833.999 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839833.999 window 15	-2147483603	0,0 1024x768	Finder	
+1794839833.999 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839833.999 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839833.999 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839833.999 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839833.999 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839834.621 window 619	25	762,0 32x30	Control Center	Item-0
+1794839834.621 window 27	25	794,0 31x30	Control Center	Item-0
+1794839834.621 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839834.621 window 9	25	867,0 157x30	Control Center	Clock
+1794839834.621 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839834.621 window 6	20	0,0 1024x768	Dock	Dock
+1794839834.621 window 602	1	-15000,15767 1x1	Steam	
+1794839834.621 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839834.621 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839834.621 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839834.621 window 15	-2147483603	0,0 1024x768	Finder	
+1794839834.621 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839834.621 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839834.621 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839834.621 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839834.621 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839835.288 window 619	25	762,0 32x30	Control Center	Item-0
+1794839835.288 window 27	25	794,0 31x30	Control Center	Item-0
+1794839835.288 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839835.288 window 9	25	867,0 157x30	Control Center	Clock
+1794839835.288 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839835.288 window 6	20	0,0 1024x768	Dock	Dock
+1794839835.288 window 602	1	-15000,15767 1x1	Steam	
+1794839835.288 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839835.288 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839835.288 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839835.288 window 15	-2147483603	0,0 1024x768	Finder	
+1794839835.288 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839835.288 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839835.288 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839835.288 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839835.288 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839835.740 window 619	25	762,0 32x30	Control Center	Item-0
+1794839835.740 window 27	25	794,0 31x30	Control Center	Item-0
+1794839835.740 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839835.740 window 9	25	867,0 157x30	Control Center	Clock
+1794839835.740 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839835.740 window 6	20	0,0 1024x768	Dock	Dock
+1794839835.740 window 602	1	-15000,15767 1x1	Steam	
+1794839835.740 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839835.740 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839835.740 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839835.740 window 15	-2147483603	0,0 1024x768	Finder	
+1794839835.740 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839835.740 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839835.740 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839835.740 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839835.740 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839836.197 window 619	25	762,0 32x30	Control Center	Item-0
+1794839836.197 window 27	25	794,0 31x30	Control Center	Item-0
+1794839836.197 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839836.197 window 9	25	867,0 157x30	Control Center	Clock
+1794839836.197 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839836.197 window 6	20	0,0 1024x768	Dock	Dock
+1794839836.197 window 602	1	-15000,15767 1x1	Steam	
+1794839836.197 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839836.197 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839836.197 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839836.197 window 15	-2147483603	0,0 1024x768	Finder	
+1794839836.197 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839836.197 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839836.197 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839836.197 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839836.197 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839836.663 window 619	25	762,0 32x30	Control Center	Item-0
+1794839836.663 window 27	25	794,0 31x30	Control Center	Item-0
+1794839836.663 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839836.663 window 9	25	867,0 157x30	Control Center	Clock
+1794839836.663 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839836.663 window 6	20	0,0 1024x768	Dock	Dock
+1794839836.663 window 602	1	-15000,15767 1x1	Steam	
+1794839836.663 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839836.663 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839836.663 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839836.663 window 15	-2147483603	0,0 1024x768	Finder	
+1794839836.663 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839836.663 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839836.663 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839836.663 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839836.663 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839837.119 window 619	25	762,0 32x30	Control Center	Item-0
+1794839837.119 window 27	25	794,0 31x30	Control Center	Item-0
+1794839837.119 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839837.119 window 9	25	867,0 157x30	Control Center	Clock
+1794839837.119 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839837.119 window 6	20	0,0 1024x768	Dock	Dock
+1794839837.119 window 602	1	-15000,15767 1x1	Steam	
+1794839837.119 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839837.119 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839837.119 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839837.119 window 15	-2147483603	0,0 1024x768	Finder	
+1794839837.119 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839837.119 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839837.119 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839837.119 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839837.119 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839837.582 window 619	25	762,0 32x30	Control Center	Item-0
+1794839837.582 window 27	25	794,0 31x30	Control Center	Item-0
+1794839837.582 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839837.582 window 9	25	867,0 157x30	Control Center	Clock
+1794839837.582 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839837.582 window 6	20	0,0 1024x768	Dock	Dock
+1794839837.582 window 602	1	-15000,15767 1x1	Steam	
+1794839837.582 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839837.582 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839837.582 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839837.582 window 15	-2147483603	0,0 1024x768	Finder	
+1794839837.582 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839837.582 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839837.582 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839837.582 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839837.582 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839838.013 window 619	25	762,0 32x30	Control Center	Item-0
+1794839838.013 window 27	25	794,0 31x30	Control Center	Item-0
+1794839838.013 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839838.013 window 9	25	867,0 157x30	Control Center	Clock
+1794839838.013 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839838.013 window 6	20	0,0 1024x768	Dock	Dock
+1794839838.013 window 602	1	-15000,15767 1x1	Steam	
+1794839838.013 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839838.013 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839838.013 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839838.013 window 15	-2147483603	0,0 1024x768	Finder	
+1794839838.013 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839838.013 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839838.013 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839838.013 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839838.013 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839838.547 window 627	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839838.547 window 626	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839838.547 window 619	25	762,0 32x30	Control Center	Item-0
+1794839838.547 window 27	25	794,0 31x30	Control Center	Item-0
+1794839838.547 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839838.547 window 9	25	867,0 157x30	Control Center	Clock
+1794839838.547 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839838.547 window 6	20	0,0 1024x768	Dock	Dock
+1794839838.547 window 602	1	-15000,15767 1x1	Steam	
+1794839838.547 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839838.547 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839838.547 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839838.547 window 15	-2147483603	0,0 1024x768	Finder	
+1794839838.547 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839838.547 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839838.547 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839838.547 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839838.547 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839839.063 window 627	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839839.063 window 626	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839839.063 window 619	25	762,0 32x30	Control Center	Item-0
+1794839839.063 window 27	25	794,0 31x30	Control Center	Item-0
+1794839839.063 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839839.063 window 9	25	867,0 157x30	Control Center	Clock
+1794839839.063 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839839.063 window 6	20	0,0 1024x768	Dock	Dock
+1794839839.063 window 602	1	-15000,15767 1x1	Steam	
+1794839839.063 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839839.063 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839839.063 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839839.063 window 15	-2147483603	0,0 1024x768	Finder	
+1794839839.063 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839839.063 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839839.063 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839839.063 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839839.063 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839839.546 window 627	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839839.546 window 626	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839839.546 window 619	25	762,0 32x30	Control Center	Item-0
+1794839839.546 window 27	25	794,0 31x30	Control Center	Item-0
+1794839839.546 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839839.546 window 9	25	867,0 157x30	Control Center	Clock
+1794839839.546 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839839.546 window 6	20	0,0 1024x768	Dock	Dock
+1794839839.546 window 602	1	-15000,15767 1x1	Steam	
+1794839839.546 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839839.546 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839839.546 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839839.546 window 15	-2147483603	0,0 1024x768	Finder	
+1794839839.546 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839839.546 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839839.546 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839839.546 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839839.546 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839839.997 window 627	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839839.997 window 626	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839839.997 window 619	25	762,0 32x30	Control Center	Item-0
+1794839839.997 window 27	25	794,0 31x30	Control Center	Item-0
+1794839839.997 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839839.997 window 9	25	867,0 157x30	Control Center	Clock
+1794839839.997 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839839.997 window 6	20	0,0 1024x768	Dock	Dock
+1794839839.997 window 602	1	-15000,15767 1x1	Steam	
+1794839839.997 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839839.997 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839839.997 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839839.997 window 15	-2147483603	0,0 1024x768	Finder	
+1794839839.997 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839839.997 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839839.997 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839839.997 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839839.997 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839840.452 window 627	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839840.452 window 626	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839840.452 window 619	25	762,0 32x30	Control Center	Item-0
+1794839840.452 window 27	25	794,0 31x30	Control Center	Item-0
+1794839840.452 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839840.452 window 9	25	867,0 157x30	Control Center	Clock
+1794839840.452 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839840.452 window 6	20	0,0 1024x768	Dock	Dock
+1794839840.452 window 602	1	-15000,15767 1x1	Steam	
+1794839840.452 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839840.452 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839840.452 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839840.452 window 15	-2147483603	0,0 1024x768	Finder	
+1794839840.452 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839840.452 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839840.452 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839840.452 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839840.452 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839840.949 window 627	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839840.949 window 626	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839840.949 window 619	25	762,0 32x30	Control Center	Item-0
+1794839840.949 window 27	25	794,0 31x30	Control Center	Item-0
+1794839840.949 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839840.949 window 9	25	867,0 157x30	Control Center	Clock
+1794839840.949 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839840.949 window 6	20	0,0 1024x768	Dock	Dock
+1794839840.949 window 602	1	-15000,15767 1x1	Steam	
+1794839840.949 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839840.949 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839840.949 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839840.949 window 15	-2147483603	0,0 1024x768	Finder	
+1794839840.949 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839840.949 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839840.949 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839840.949 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839840.949 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839841.530 window 627	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839841.530 window 626	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839841.530 window 619	25	762,0 32x30	Control Center	Item-0
+1794839841.530 window 27	25	794,0 31x30	Control Center	Item-0
+1794839841.530 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839841.530 window 9	25	867,0 157x30	Control Center	Clock
+1794839841.530 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839841.530 window 6	20	0,0 1024x768	Dock	Dock
+1794839841.530 window 602	1	-15000,15767 1x1	Steam	
+1794839841.530 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839841.530 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839841.530 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839841.530 window 15	-2147483603	0,0 1024x768	Finder	
+1794839841.530 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839841.530 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839841.530 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839841.530 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839841.530 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839842.084 window 627	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839842.084 window 626	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839842.084 window 619	25	762,0 32x30	Control Center	Item-0
+1794839842.084 window 27	25	794,0 31x30	Control Center	Item-0
+1794839842.084 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839842.084 window 9	25	867,0 157x30	Control Center	Clock
+1794839842.084 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839842.084 window 6	20	0,0 1024x768	Dock	Dock
+1794839842.084 window 602	1	-15000,15767 1x1	Steam	
+1794839842.084 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839842.084 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839842.084 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839842.084 window 15	-2147483603	0,0 1024x768	Finder	
+1794839842.084 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839842.084 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839842.084 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839842.084 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839842.084 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839842.588 window 619	25	762,0 32x30	Control Center	Item-0
+1794839842.588 window 27	25	794,0 31x30	Control Center	Item-0
+1794839842.588 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839842.588 window 9	25	867,0 157x30	Control Center	Clock
+1794839842.588 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839842.588 window 6	20	0,0 1024x768	Dock	Dock
+1794839842.588 window 602	1	-15000,15767 1x1	Steam	
+1794839842.588 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839842.588 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839842.588 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839842.588 window 15	-2147483603	0,0 1024x768	Finder	
+1794839842.588 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839842.588 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839842.588 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839842.588 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839842.588 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839843.039 window 629	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839843.039 window 628	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839843.039 window 619	25	762,0 32x30	Control Center	Item-0
+1794839843.039 window 27	25	794,0 31x30	Control Center	Item-0
+1794839843.039 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839843.039 window 9	25	867,0 157x30	Control Center	Clock
+1794839843.039 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839843.039 window 6	20	0,0 1024x768	Dock	Dock
+1794839843.039 window 602	1	-15000,15767 1x1	Steam	
+1794839843.039 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839843.039 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839843.039 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839843.039 window 15	-2147483603	0,0 1024x768	Finder	
+1794839843.039 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839843.039 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839843.039 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839843.039 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839843.039 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839843.604 window 629	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839843.604 window 628	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839843.604 window 619	25	762,0 32x30	Control Center	Item-0
+1794839843.604 window 27	25	794,0 31x30	Control Center	Item-0
+1794839843.604 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839843.604 window 9	25	867,0 157x30	Control Center	Clock
+1794839843.604 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839843.604 window 6	20	0,0 1024x768	Dock	Dock
+1794839843.604 window 602	1	-15000,15767 1x1	Steam	
+1794839843.604 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839843.604 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839843.604 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839843.604 window 15	-2147483603	0,0 1024x768	Finder	
+1794839843.604 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839843.604 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839843.604 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839843.604 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839843.604 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839844.135 window 629	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839844.135 window 628	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839844.135 window 619	25	762,0 32x30	Control Center	Item-0
+1794839844.135 window 27	25	794,0 31x30	Control Center	Item-0
+1794839844.135 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839844.135 window 9	25	867,0 157x30	Control Center	Clock
+1794839844.135 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839844.135 window 6	20	0,0 1024x768	Dock	Dock
+1794839844.135 window 602	1	-15000,15767 1x1	Steam	
+1794839844.135 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839844.135 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839844.135 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839844.135 window 15	-2147483603	0,0 1024x768	Finder	
+1794839844.135 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839844.135 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839844.135 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839844.135 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839844.135 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839844.702 window 629	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839844.702 window 628	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839844.702 window 619	25	762,0 32x30	Control Center	Item-0
+1794839844.702 window 27	25	794,0 31x30	Control Center	Item-0
+1794839844.702 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839844.702 window 9	25	867,0 157x30	Control Center	Clock
+1794839844.702 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839844.702 window 6	20	0,0 1024x768	Dock	Dock
+1794839844.702 window 602	1	-15000,15767 1x1	Steam	
+1794839844.702 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839844.702 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839844.702 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839844.702 window 15	-2147483603	0,0 1024x768	Finder	
+1794839844.702 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839844.702 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839844.702 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839844.702 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839844.702 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839845.216 window 629	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839845.216 window 628	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839845.216 window 619	25	762,0 32x30	Control Center	Item-0
+1794839845.216 window 27	25	794,0 31x30	Control Center	Item-0
+1794839845.216 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839845.216 window 9	25	867,0 157x30	Control Center	Clock
+1794839845.216 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839845.216 window 6	20	0,0 1024x768	Dock	Dock
+1794839845.216 window 602	1	-15000,15767 1x1	Steam	
+1794839845.216 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839845.216 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839845.216 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839845.216 window 15	-2147483603	0,0 1024x768	Finder	
+1794839845.216 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839845.216 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839845.216 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839845.216 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839845.216 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839845.787 window 629	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839845.787 window 628	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839845.787 window 619	25	762,0 32x30	Control Center	Item-0
+1794839845.787 window 27	25	794,0 31x30	Control Center	Item-0
+1794839845.787 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839845.787 window 9	25	867,0 157x30	Control Center	Clock
+1794839845.787 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839845.787 window 6	20	0,0 1024x768	Dock	Dock
+1794839845.787 window 602	1	-15000,15767 1x1	Steam	
+1794839845.787 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839845.787 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839845.787 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839845.787 window 15	-2147483603	0,0 1024x768	Finder	
+1794839845.787 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839845.787 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839845.787 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839845.787 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839845.787 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839846.346 window 629	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839846.346 window 628	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839846.346 window 619	25	762,0 32x30	Control Center	Item-0
+1794839846.346 window 27	25	794,0 31x30	Control Center	Item-0
+1794839846.346 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839846.346 window 9	25	867,0 157x30	Control Center	Clock
+1794839846.346 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839846.346 window 6	20	0,0 1024x768	Dock	Dock
+1794839846.346 window 602	1	-15000,15767 1x1	Steam	
+1794839846.346 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839846.346 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839846.346 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839846.346 window 15	-2147483603	0,0 1024x768	Finder	
+1794839846.346 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839846.346 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839846.346 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839846.346 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839846.346 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839846.907 window 619	25	762,0 32x30	Control Center	Item-0
+1794839846.907 window 27	25	794,0 31x30	Control Center	Item-0
+1794839846.907 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839846.907 window 9	25	867,0 157x30	Control Center	Clock
+1794839846.907 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839846.907 window 6	20	0,0 1024x768	Dock	Dock
+1794839846.907 window 602	1	-15000,15767 1x1	Steam	
+1794839846.907 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839846.907 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839846.907 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839846.907 window 15	-2147483603	0,0 1024x768	Finder	
+1794839846.907 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839846.907 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839846.907 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839846.907 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839846.907 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839847.463 window 619	25	762,0 32x30	Control Center	Item-0
+1794839847.463 window 27	25	794,0 31x30	Control Center	Item-0
+1794839847.463 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839847.463 window 9	25	867,0 157x30	Control Center	Clock
+1794839847.463 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839847.463 window 6	20	0,0 1024x768	Dock	Dock
+1794839847.463 window 602	1	-15000,15767 1x1	Steam	
+1794839847.463 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839847.463 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839847.463 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839847.463 window 15	-2147483603	0,0 1024x768	Finder	
+1794839847.463 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839847.463 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839847.463 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839847.463 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839847.463 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839848.036 window 619	25	762,0 32x30	Control Center	Item-0
+1794839848.036 window 27	25	794,0 31x30	Control Center	Item-0
+1794839848.036 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839848.036 window 9	25	867,0 157x30	Control Center	Clock
+1794839848.036 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839848.036 window 6	20	0,0 1024x768	Dock	Dock
+1794839848.036 window 602	1	-15000,15767 1x1	Steam	
+1794839848.036 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839848.036 window 621	0	0,0 1024x768	wine	Ultimate Custom Night
+1794839848.036 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839848.036 window 15	-2147483603	0,0 1024x768	Finder	
+1794839848.036 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839848.036 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839848.036 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839848.036 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839848.036 dock 42) "wine" ASN:0x0-0x11e11e: 
+1794839848.642 window 631	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839848.642 window 630	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839848.642 window 619	25	762,0 32x30	Control Center	Item-0
+1794839848.642 window 27	25	794,0 31x30	Control Center	Item-0
+1794839848.642 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839848.642 window 9	25	867,0 157x30	Control Center	Clock
+1794839848.642 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839848.642 window 6	20	0,0 1024x768	Dock	Dock
+1794839848.642 window 602	1	-15000,15767 1x1	Steam	
+1794839848.642 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839848.642 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839848.642 window 15	-2147483603	0,0 1024x768	Finder	
+1794839848.642 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839848.642 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839848.642 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839848.642 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839849.325 window 631	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839849.325 window 630	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839849.325 window 619	25	762,0 32x30	Control Center	Item-0
+1794839849.325 window 27	25	794,0 31x30	Control Center	Item-0
+1794839849.325 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839849.325 window 9	25	867,0 157x30	Control Center	Clock
+1794839849.325 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839849.325 window 6	20	0,0 1024x768	Dock	Dock
+1794839849.325 window 602	1	-15000,15767 1x1	Steam	
+1794839849.325 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839849.325 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839849.325 window 15	-2147483603	0,0 1024x768	Finder	
+1794839849.325 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839849.325 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839849.325 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839849.325 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839849.936 window 631	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839849.936 window 630	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839849.936 window 619	25	762,0 32x30	Control Center	Item-0
+1794839849.936 window 27	25	794,0 31x30	Control Center	Item-0
+1794839849.936 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839849.936 window 9	25	867,0 157x30	Control Center	Clock
+1794839849.936 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839849.936 window 6	20	0,0 1024x768	Dock	Dock
+1794839849.936 window 602	1	-15000,15767 1x1	Steam	
+1794839849.936 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839849.936 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839849.936 window 15	-2147483603	0,0 1024x768	Finder	
+1794839849.936 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839849.936 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839849.936 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839849.936 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839850.463 window 631	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839850.463 window 630	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839850.463 window 619	25	762,0 32x30	Control Center	Item-0
+1794839850.463 window 27	25	794,0 31x30	Control Center	Item-0
+1794839850.463 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839850.463 window 9	25	867,0 157x30	Control Center	Clock
+1794839850.463 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839850.463 window 6	20	0,0 1024x768	Dock	Dock
+1794839850.463 window 602	1	-15000,15767 1x1	Steam	
+1794839850.463 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839850.463 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839850.463 window 15	-2147483603	0,0 1024x768	Finder	
+1794839850.463 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839850.463 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839850.463 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839850.463 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839850.961 window 631	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839850.961 window 630	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839850.961 window 619	25	762,0 32x30	Control Center	Item-0
+1794839850.961 window 27	25	794,0 31x30	Control Center	Item-0
+1794839850.961 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839850.961 window 9	25	867,0 157x30	Control Center	Clock
+1794839850.961 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839850.961 window 6	20	0,0 1024x768	Dock	Dock
+1794839850.961 window 602	1	-15000,15767 1x1	Steam	
+1794839850.961 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839850.961 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839850.961 window 15	-2147483603	0,0 1024x768	Finder	
+1794839850.961 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839850.961 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839850.961 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839850.961 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839851.503 window 631	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839851.503 window 630	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839851.503 window 619	25	762,0 32x30	Control Center	Item-0
+1794839851.503 window 27	25	794,0 31x30	Control Center	Item-0
+1794839851.503 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839851.503 window 9	25	867,0 157x30	Control Center	Clock
+1794839851.503 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839851.503 window 6	20	0,0 1024x768	Dock	Dock
+1794839851.503 window 602	1	-15000,15767 1x1	Steam	
+1794839851.503 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839851.503 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839851.503 window 15	-2147483603	0,0 1024x768	Finder	
+1794839851.503 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839851.503 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839851.503 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839851.503 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839852.071 window 631	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839852.071 window 630	2147483630	844,1 29x28	Window Server	StatusIndicator
+1794839852.071 window 619	25	762,0 32x30	Control Center	Item-0
+1794839852.071 window 27	25	794,0 31x30	Control Center	Item-0
+1794839852.071 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839852.071 window 9	25	867,0 157x30	Control Center	Clock
+1794839852.071 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839852.071 window 6	20	0,0 1024x768	Dock	Dock
+1794839852.071 window 602	1	-15000,15767 1x1	Steam	
+1794839852.071 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839852.071 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839852.071 window 15	-2147483603	0,0 1024x768	Finder	
+1794839852.071 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839852.071 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839852.071 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839852.071 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839852.671 window 632	25	762,0 32x30	Window Server	System Status Item Clone
+1794839852.671 window 27	25	794,0 31x30	Control Center	Item-0
+1794839852.671 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839852.671 window 9	25	867,0 157x30	Control Center	Clock
+1794839852.671 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839852.671 window 6	20	0,0 1024x768	Dock	Dock
+1794839852.671 window 602	1	-15000,15767 1x1	Steam	
+1794839852.671 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839852.671 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839852.671 window 15	-2147483603	0,0 1024x768	Finder	
+1794839852.671 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839852.671 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839852.671 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839852.671 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839853.352 window 27	25	794,0 31x30	Control Center	Item-0
+1794839853.352 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839853.352 window 9	25	867,0 157x30	Control Center	Clock
+1794839853.352 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839853.352 window 6	20	0,0 1024x768	Dock	Dock
+1794839853.352 window 602	1	-15000,15767 1x1	Steam	
+1794839853.352 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839853.352 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839853.352 window 15	-2147483603	0,0 1024x768	Finder	
+1794839853.352 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839853.352 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839853.352 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839853.352 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839853.863 window 27	25	794,0 31x30	Control Center	Item-0
+1794839853.863 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839853.863 window 9	25	867,0 157x30	Control Center	Clock
+1794839853.863 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839853.863 window 6	20	0,0 1024x768	Dock	Dock
+1794839853.863 window 602	1	-15000,15767 1x1	Steam	
+1794839853.863 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839853.863 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839853.863 window 15	-2147483603	0,0 1024x768	Finder	
+1794839853.863 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839853.863 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839853.863 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839853.863 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839854.413 window 27	25	794,0 31x30	Control Center	Item-0
+1794839854.413 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839854.413 window 9	25	867,0 157x30	Control Center	Clock
+1794839854.413 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839854.413 window 6	20	0,0 1024x768	Dock	Dock
+1794839854.413 window 602	1	-15000,15767 1x1	Steam	
+1794839854.413 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839854.413 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839854.413 window 15	-2147483603	0,0 1024x768	Finder	
+1794839854.413 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839854.413 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839854.413 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839854.413 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839855.215 window 27	25	794,0 31x30	Control Center	Item-0
+1794839855.215 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839855.215 window 9	25	867,0 157x30	Control Center	Clock
+1794839855.215 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839855.215 window 6	20	0,0 1024x768	Dock	Dock
+1794839855.215 window 602	1	-15000,15767 1x1	Steam	
+1794839855.215 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839855.215 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839855.215 window 15	-2147483603	0,0 1024x768	Finder	
+1794839855.215 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839855.215 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839855.215 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839855.215 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839855.863 window 27	25	794,0 31x30	Control Center	Item-0
+1794839855.863 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839855.863 window 9	25	867,0 157x30	Control Center	Clock
+1794839855.863 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839855.863 window 6	20	0,0 1024x768	Dock	Dock
+1794839855.863 window 602	1	-15000,15767 1x1	Steam	
+1794839855.863 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839855.863 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839855.863 window 15	-2147483603	0,0 1024x768	Finder	
+1794839855.863 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839855.863 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839855.863 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839855.863 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839856.354 window 27	25	794,0 31x30	Control Center	Item-0
+1794839856.354 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839856.354 window 9	25	867,0 157x30	Control Center	Clock
+1794839856.354 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839856.354 window 6	20	0,0 1024x768	Dock	Dock
+1794839856.354 window 602	1	-15000,15767 1x1	Steam	
+1794839856.354 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839856.354 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839856.354 window 15	-2147483603	0,0 1024x768	Finder	
+1794839856.354 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839856.354 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839856.354 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839856.354 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839856.886 window 634	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839856.886 window 633	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839856.886 window 27	25	794,0 31x30	Control Center	Item-0
+1794839856.886 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839856.886 window 9	25	867,0 157x30	Control Center	Clock
+1794839856.886 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839856.886 window 6	20	0,0 1024x768	Dock	Dock
+1794839856.886 window 602	1	-15000,15767 1x1	Steam	
+1794839856.886 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839856.886 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839856.886 window 15	-2147483603	0,0 1024x768	Finder	
+1794839856.886 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839856.886 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839856.886 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839856.886 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839857.563 window 634	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839857.563 window 633	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839857.563 window 27	25	794,0 31x30	Control Center	Item-0
+1794839857.563 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839857.563 window 9	25	867,0 157x30	Control Center	Clock
+1794839857.563 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839857.563 window 6	20	0,0 1024x768	Dock	Dock
+1794839857.563 window 602	1	-15000,15767 1x1	Steam	
+1794839857.563 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839857.563 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839857.563 window 15	-2147483603	0,0 1024x768	Finder	
+1794839857.563 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839857.563 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839857.563 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839857.563 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839858.168 window 634	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839858.168 window 633	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839858.168 window 27	25	794,0 31x30	Control Center	Item-0
+1794839858.168 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839858.168 window 9	25	867,0 157x30	Control Center	Clock
+1794839858.168 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839858.168 window 6	20	0,0 1024x768	Dock	Dock
+1794839858.168 window 602	1	-15000,15767 1x1	Steam	
+1794839858.168 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839858.168 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839858.168 window 15	-2147483603	0,0 1024x768	Finder	
+1794839858.168 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839858.168 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839858.168 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839858.168 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839858.771 window 634	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839858.771 window 633	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839858.771 window 27	25	794,0 31x30	Control Center	Item-0
+1794839858.771 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839858.771 window 9	25	867,0 157x30	Control Center	Clock
+1794839858.771 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839858.771 window 6	20	0,0 1024x768	Dock	Dock
+1794839858.771 window 602	1	-15000,15767 1x1	Steam	
+1794839858.771 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839858.771 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839858.771 window 15	-2147483603	0,0 1024x768	Finder	
+1794839858.771 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839858.771 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839858.771 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839858.771 dock 38) "Steam" ASN:0x0-0x117117: 
+1794839859.431 window 634	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839859.431 window 633	2147483630	844,1 28x28	Window Server	StatusIndicator
+1794839859.431 window 27	25	794,0 31x30	Control Center	Item-0
+1794839859.431 window 10	25	825,0 42x30	Control Center	BentoBox-0
+1794839859.431 window 9	25	867,0 157x30	Control Center	Clock
+1794839859.431 window 16	24	0,0 1024x30	Window Server	Menubar
+1794839859.431 window 6	20	0,0 1024x768	Dock	Dock
+1794839859.431 window 602	1	-15000,15767 1x1	Steam	
+1794839859.431 window 604	0	0,31 1010x657	Steam Helper	Steam
+1794839859.431 window 605	0	372,54 300x650	Steam Helper	Friends List
+1794839859.431 window 15	-2147483603	0,0 1024x768	Finder	
+1794839859.431 window 7	-2147483624	0,0 1024x768	Dock	Wallpaper-
+1794839859.431 window 2	-2147483626	0,0 1024x768	Window Server	Display 1 Backstop
+1794839859.431 dock  9) "Finder" ASN:0x0-0xd00d: 
+1794839859.431 dock 38) "Steam" ASN:0x0-0x117117: 

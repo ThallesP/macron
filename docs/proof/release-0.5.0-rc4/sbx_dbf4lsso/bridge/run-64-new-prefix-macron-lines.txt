@@ -1,0 +1,9 @@
+macron: 14:24:14.008Z +0.00s game steam-480, log ~/Library/Application Support/Macron/logs/steam-480/20261116T142414Z.log
+macron: 14:24:14.278Z +0.27s made the Windows environment at ~/probe/pfx2/pfx from the runtime's template
+macron: 14:24:14.279Z +0.27s prefix ready
+macron: 14:24:14.279Z +0.27s starting probe64.exe with the dxmt backend
+macron: 14:24:14.351Z +0.34s writing the registry keys games read to find Steam
+macron: 14:24:16.394Z +2.39s starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+macron: 14:24:16.394Z +2.39s Steam bridge ready
+macron: 14:24:16.396Z +2.39s game process started (Wine process 38916)
+macron: 14:24:46.719Z +32.71s probe64.exe exited with 0

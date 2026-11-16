@@ -1,0 +1,9 @@
+Steam is open; asking it to quit.
+Steam: removed macron's compatibility tool and put config.vdf's old mapping back (~/Library/Application Support/Steam)
+Steam.app:       Valve's files are back, byte for byte
+removing ~/Library/Application Support/Macron/runtimes
+removing ~/Library/Application Support/Macron/logs
+removing ~/Library/Application Support/Macron/downloads
+removed ~/Library/Application Support/Macron
+The program itself is still at /usr/local/bin/macron: sudo /usr/local/bin/macron-uninstall removes it.
+removed /usr/local/bin/macron, /usr/local/bin/macron-uninstall, /usr/local/lib/macron and /Library/Logs/Macron-install.log

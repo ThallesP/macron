@@ -1,0 +1,7 @@
+macron: 14:23:43.146Z +0.00s game steam-480, log ~/Library/Application Support/Macron/logs/steam-480/20261116T142343Z.log
+macron: 14:23:43.147Z +0.00s prefix ready
+macron: 14:23:43.147Z +0.00s starting probe64.exe with the dxmt backend
+macron: 14:23:43.322Z +0.18s starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+macron: 14:23:43.323Z +0.18s Steam bridge ready
+macron: 14:23:43.325Z +0.18s game process started (Wine process 37998)
+macron: 14:24:13.878Z +30.73s probe64.exe exited with 0

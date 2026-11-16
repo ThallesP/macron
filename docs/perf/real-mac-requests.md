@@ -481,3 +481,15 @@ Then the menu, no extra environment: the frame rate over two minutes (with `show
 - **Fewer readings below 56 than U4's 20 of 86** (counting the same way, first 20 s included and also without them), and the game's thread's share in `NtDelayExecution` well under U4's 5%: the drains were the dips. Then `wine-0012` goes to main and into the next release candidate.
 - **The same dips**: the drains were not what made them; the sample says what the game's thread waits for instead.
 - **Broken sprites or a crash**: 0012 copies data at a different moment; say which start.
+
+### U6: how long a start takes with v0.5.0-rc4 (about 10 minutes, Overwatch or any Windows game already installed)
+
+What changed (`docs/startup/README.md`): rc4 no longer runs wineboot on a game's prefix after a Macron update when Wine's `wine.inf` is unchanged (it is), new games clone a template prefix, wineboot never shows its "Wine configuration is being updated" window (Wine patch 0013), and every `macron:` line of a game's log now carries the UTC time and the seconds since macron started. On a sandbox the first start after an update went from 7.7 times an ordinary start to 1.0, and a new game from 10.8 to 1.2 to 1.5. The M3's numbers are not known.
+
+After installing rc4 over rc3:
+1. **The first Play of a game you played with rc3** (Overwatch): did any window about Wine appear? Then the game's log, `~/Library/Application Support/Macron/logs/steam-<app id>/<newest>.log`, the `macron:` lines only (`grep '^macron:'`). It should say "needs no update for this runtime"; it first downloads the new runtime (about 250 MB), which is in the log too.
+2. **A second Play of the same game**, the `macron:` lines again, and how long from pressing Play until the game's first window, by a stopwatch or by eye.
+3. **A Windows game you have not started before** (any free one; Ultimate Custom Night is in the library): the `macron:` lines of its first start. The first new game makes the runtime's template (about as long as a new prefix took with rc3, once); a second new game, if there is one, should show "made the Windows environment … from the runtime's template" within a second of the first line.
+4. While a game runs: what the Dock's tooltip and the menu bar's first menu say (the sandbox shows `wine`).
+
+Commit to `docs/proof/startup-m3/`, with `/Users/<name>` written as `~`. What the results mean: if the first start after the update still runs wineboot, the log line says why (another backend, or `wine.inf` differs); if a start is slow with all of the above in place, the time stamps show which step.

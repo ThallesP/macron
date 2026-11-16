@@ -1,0 +1,6 @@
+macron: game steam-871720, log ~/Library/Application Support/Macron/logs/steam-871720/20261116T143426Z.log
+macron: preparing the Windows environment at ~/Library/Application Support/Steam/steamapps/compatdata/871720/pfx
+macron: starting Ultimate Custom Night.exe with the dxmt backend
+macron: writing the registry keys games read to find Steam
+macron: starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+macron: Ultimate Custom Night.exe exited with 0

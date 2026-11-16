@@ -1,0 +1,8 @@
+macron: 14:36:56.349Z +0.00s game steam-871720, log ~/Library/Application Support/Macron/logs/steam-871720/20261116T143656Z.log
+macron: 14:36:56.353Z +0.00s the Windows environment at ~/Library/Application Support/Steam/steamapps/compatdata/871720/pfx needs no update for this runtime
+macron: 14:36:56.357Z +0.01s prefix ready
+macron: 14:36:56.358Z +0.01s starting Ultimate Custom Night.exe with the dxmt backend
+macron: 14:36:56.551Z +0.20s starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+macron: 14:36:56.552Z +0.20s Steam bridge ready
+macron: 14:36:56.573Z +0.22s game process started (Wine process 69267)
+macron: 14:37:32.688Z +36.34s Ultimate Custom Night.exe exited with 0

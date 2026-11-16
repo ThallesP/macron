@@ -1,0 +1,8 @@
+macron: 14:16:24.013Z +0.00s game steam-871720, log ~/Library/Application Support/Macron/logs/steam-871720/20261116T141624Z.log
+macron: 14:16:24.725Z +0.71s made the Windows environment at ~/Library/Application Support/Steam/steamapps/compatdata/871720/pfx from the runtime's template
+macron: 14:16:24.727Z +0.71s prefix ready
+macron: 14:16:24.727Z +0.71s starting Ultimate Custom Night.exe with the dxmt backend
+macron: 14:16:24.815Z +0.80s writing the registry keys games read to find Steam
+macron: 14:16:27.948Z +3.94s starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+macron: 14:16:27.949Z +3.94s Steam bridge ready
+macron: 14:16:27.961Z +3.95s game process started (Wine process 23349)

@@ -4,7 +4,7 @@ Macron makes Steam's own Install and Play buttons work for Windows-only games in
 
 ## After installing, in short
 
-1. Open Steam. A Windows-only game now has a working Install button: install one and press Play. The first Windows game you start after installing takes about a minute longer while Macron prepares its Windows environment; later new games take a few seconds more than usual, and games you already played start as usual even after a Macron update.
+1. Open Steam. A Windows-only game now has a working Install button: install one and press Play. The installer also prepares the Windows environment new games start from (about two more minutes on the test machines); a new game then takes a few seconds more than usual on its first start, and games you already played start as usual even after a Macron update.
 2. To log its frame rate, turn the frame counter on before pressing Play, and off again afterwards:
    ```sh
    touch ~/Library/Application\ Support/Macron/show-fps   # on
@@ -60,7 +60,7 @@ If Steam is a build Macron does not know yet (Steam updates itself), or any step
 
 ## Using it
 
-Open Steam. A Windows-only game in your library now has a working Install button; Steam downloads it into its normal library, and Play starts it through Macron. The first Windows game you start after installing or updating Macron takes about a minute longer, once, while Macron prepares the Windows environment new games start from; every later new game gets a copy of it in under a second. Steam's Stop button stops it. Games that have a Mac version install and start exactly as before.
+Open Steam. A Windows-only game in your library now has a working Install button; Steam downloads it into its normal library, and Play starts it through Macron. A new game's first start takes a few seconds more than later ones: it gets a copy of the Windows environment the installer prepared, in under a second, and Macron writes the registry keys the Steam bridge needs. Steam's Stop button stops it. Games that have a Mac version install and start exactly as before.
 
 - **A log of every start** is in `~/Library/Application Support/Macron/logs/steam-<app id>/`.
 - **Frame rate:** create the file `~/Library/Application Support/Macron/show-fps` (`touch` it) and start the game. Direct3D 8 and 9 games then log their frame rate into that log (`trace:fps:… @ approx 59.9fps`), which `macron diagnose` sums up; Direct3D 10 and 11 games show Apple's Metal HUD over the game and write every frame's interval into that log, which `macron diagnose` turns into the average and the hitches. Delete the file to turn it off.

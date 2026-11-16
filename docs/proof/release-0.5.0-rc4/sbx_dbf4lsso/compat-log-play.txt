@@ -1,0 +1,2 @@
+[2026-11-16 14:16:22] StartSession: appID 871720 session ad1b5a92331c9221
+[2026-11-16 14:16:22] Command prefix for tool 0 "Macron" set to: "'~/Library/Application Support/Steam/compatibilitytools.d/macron/.'/macron waitforexitandrun ".
