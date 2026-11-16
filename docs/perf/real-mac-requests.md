@@ -196,9 +196,9 @@ clang -O2 -fobjc-arc -arch x86_64 -arch arm64 -o gpuload src/tools/perf/gpuload.
 ./gpuload --mode fill --size 640x360 --seconds 2 --sync 1 --out check.txt >/dev/null && cat check.txt   # must print config ... sync 1 and an fps line
 ```
 
-### Request 9: does something hold DXMT's presents at 60 a second? (3 minutes)
+### Request 9: what holds DXMT's presents to a fixed rate? (3 minutes)
 
-In batch 1's first `pair` pass the Direct3D 11 program returned from `Present` exactly 60.0 times a second with sync interval 0, while the same program through DXMT on the sandbox (HUD off) ran at 97 to 210, and native Metal on the M3 ran at 133 to 253. The M3 runs had the Metal HUD on; the sandbox's had it off. This separates the two:
+(Batch 1 as committed: the program's own count was 120.0 a second, the HUD's 60.0. The test below stands; read "60" as "the fixed rate".) In batch 1's first `pair` pass the Direct3D 11 program returned from `Present` at a fixed rate with sync interval 0, while the same program through DXMT on the sandbox (HUD off) ran at 97 to 210, and native Metal on the M3 ran at 133 to 253. The M3 runs had the Metal HUD on; the sandbox's had it off. This separates the two:
 
 ```sh
 cd ~/macron-perf
@@ -226,7 +226,7 @@ The same as request 8, but both sides now present with sync interval 1 (`SYNC=1`
 
 ### Request 11: Metal System Traces (about 10 minutes)
 
-`xctrace` is on the Mac (`xctrace version 16.0`), so the GPU's own record of each pass can be had. Three 5-second traces: `gpuload.exe` through DXMT, native `gpuload`, and Superposition in the middle of its run (window active and floating).
+`xctrace` is on the Mac (`xctrace version 16.0`), so the GPU's own record of each pass can be had. If attaching asks for a password or a Developer Tools permission, stop this request and say so. Three 5-second traces: `gpuload.exe` through DXMT, native `gpuload`, and Superposition in the middle of its run (window active and floating).
 
 ```sh
 cd ~/macron-perf
@@ -256,9 +256,51 @@ done
 
 Push the `.xml.gz` files and the three `-toc.xml` files (home folder replaced the same way) to `docs/perf/m3-batch2/`; the `.trace` bundles stay on the Mac. They show every GPU pass with its duration and label: what DXMT's frame is made of next to the native one's, and in Superposition whether DXMT's own passes (the present copy, clears, its stream-output emulation) take a share worth chasing.
 
+### Request 12: what heat costs, with a load that never changes (6 minutes plus cooling)
+
+Batch 1's runs reached thermal level 2 within about a minute, and settings were compared across runs with different thermal histories. This measures the effect itself: the same GPU work every frame through DXMT for five minutes, presented at the display's rate, from a cool start.
+
+```sh
+until [ "$(notifyutil -g com.apple.system.thermalpressurelevel | awk '{print $2}')" = 0 ]; do sleep 10; done
+mkdir -p ~/macron-perf/results/soak && cd ~/macron-perf/results/soak
+(while :; do printf '%s %s\n' "$(date +%H:%M:%S)" "$(notifyutil -g com.apple.system.thermalpressurelevel | awk '{print $2}')"; sleep 1; done) > thermal.txt & logger=$!
+echo "gpuload fill 12 passes, d3d11, 1600x900, sync 1, 300 s" > env.txt
+env MTL_HUD_ENABLED=1 MTL_HUD_LOG_ENABLED=1 SteamAppId=990004 STEAM_COMPAT_DATA_PATH=$HOME/macron-perf/gpuload-prefix \
+  macron waitforexitandrun "$HOME/macron-perf/gpuload.exe" --mode fill --passes 12 --size 1600x900 --seconds 300 --sync 1 \
+  --out "Z:$HOME/macron-perf/results/soak/bench.txt" > macron.log 2>&1
+kill $logger
+cd ~/macron-perf/src && tools/perf/bench.sh summary soak
+```
+
+Push `summary.txt`, `hud.csv`, `thermal.txt`, `bench.txt` and `env.txt` of `soak`. What it shows: the work is fixed and at 60 frames a second each frame should finish before the next starts, so the HUD's GPU time a frame tracks how fast the GPU is running; reading it against the thermal level second by second gives how much slower the GPU gets at levels 1 and 2. If it climbs past 16.7 ms the frame rate drops below 60 at level 2 with the same work, which is what a player sees after a minute or two. (I do the analysis from the files.)
+
+### Request 13: three raw HUD lines (no run needed)
+
+From any batch 2 `macron.log` (the soak's is fine):
+
+```sh
+grep -m3 'metal-HUD' ~/macron-perf/results/soak/macron.log | cut -c1-600
+```
+
+Paste them into the results. Every frame record appears twice in a row in what `bench.sh` parsed from batch 1 (50 to 56% of rows); the raw lines say whether the HUD writes it twice or the parser reads it twice.
+
+### Request 14: MetalFX spatial upscaling, in alternating order (about 30 minutes)
+
+Batch 1's `mfx-off` and `mfx-on-2` (both 800x450 rendered) ran at different temperatures. Same pair, ABBA, window active and floating as before:
+
+```sh
+cd ~/macron-perf/src
+tools/perf/bench.sh run superposition abba-off-1 800x450 windowed
+tools/perf/bench.sh run superposition abba-on-1 800x450 windowed DXMT_METALFX_SPATIAL_SWAPCHAIN=1
+tools/perf/bench.sh run superposition abba-on-2 800x450 windowed DXMT_METALFX_SPATIAL_SWAPCHAIN=1
+tools/perf/bench.sh run superposition abba-off-2 800x450 windowed
+```
+
+Read the benchmark's own FPS and the HUD's GPU time median of the two `on` runs against the two `off` runs. If the `on` runs are not slower, the upscale is close to free on the M3, and a game rendered at half the width and height and upscaled by DXMT is a cheap way to a sharp full-size picture. Also take one screenshot of the window in an `on` run and one in an `off` run (`screencapture -l <window id>`, the benchmark's window only), so the picture can be judged. If `screencapture` asks for a permission, skip the screenshots and say so.
+
 ### What to push for batch 2
 
-`docs/perf/real-mac-results.md`: request 9's four `RESULT fps` lines; request 10's table and each run's `bench.txt`; request 11's list of exported files and anything that failed. Files into `docs/perf/m3-batch2/` as above.
+`docs/perf/real-mac-results.md`: request 9's four `RESULT fps` lines; request 10's table and each run's `bench.txt`; request 11's list of exported files and anything that failed; request 12's summary; request 13's three lines; request 14's four summaries. Files into `docs/perf/m3-batch2/` as above (each run's `summary.txt`, `env.txt`, `hud.csv`, `thermal.txt`, `bench.txt`, the trace exports, the two screenshots). Suggested order: 13 needs a log, so 12 first; then 9, 10, 11, 14.
 
 ## Ultimate Custom Night (gate 1 thread, Opus 5.5)
 
