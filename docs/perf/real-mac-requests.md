@@ -358,3 +358,26 @@ Commit to `docs/proof/gate1-m3/macron10/`, scrubbed as before. What the results 
 - **Still about 31 in 1**: the share of the game's thread waiting in `NtUserMsgWaitForMultipleObjectsEx` against U1's 40.7% says how much work 0010 removed; the sample says where the rest is.
 - **Still about 30 in 2**: the two threads' samples say what they still wait for.
 - **Broken sprites, or a crash**: `WINE_D3D_CONFIG` unset and `WINE_OPENGL_UNSYNCHRONIZED=0` tell 0009 from 0010; say which.
+
+### U4: Wine patch 0011, the command stream on its own thread by default (about 10 minutes)
+
+What changed (`runtime/wine/patches/README.md`, 0011): 0004 had put a 32-bit program's command stream on the game's thread; 0011 reverts that, so `macron.11` does by default what U3's `WINE_D3D_CONFIG=csmt=0x1` did. Stability on a sandbox with `macron.10` and `csmt=0x1`: 10 of 10 starts of Ultimate Custom Night itself (through the Steam bridge, as Steam starts it) alive 40 s after their window with no fault, 20 of 20 of the probe, and `d3d9-sysmem-probe` passing with it.
+
+Build `macron` from branch `wine-0011` (it pins the test overlay `runtime-wine-11.21-macron.11`) into a new `MACRON_HOME`, as for U3:
+
+```sh
+git -C ~/macron-perf/src fetch origin wine-0011 && git -C ~/macron-perf/src checkout FETCH_HEAD
+cd ~/macron-perf/src && go build -o ~/macron-perf/macron-0011 ./cmd/macron
+MACRON_HOME=~/macron-perf/home-0011 ~/macron-perf/macron-0011 runtime install
+```
+
+Then the menu, three starts:
+1. no extra environment at all: the frame rate over two minutes (with `show-fps`), the game's CPU, a screenshot;
+2. the same with `WINE_D3D_CONFIG=csmt=0`, a minute: the switch back to one thread, for anyone a game misbehaves for;
+3. one more start with no extra environment, `WINEDEBUG=-all,+loaddll` and an 8 s `sample` of the whole process, taken while the frame counter of start 1 showed a dip if you can catch one (otherwise any 8 s).
+
+Commit to `docs/proof/gate1-m3/macron11/`, scrubbed as before. What the results mean:
+- **About 60 in 1 and about 31 in 2**: 0011 does what U3 showed, and the switch back works. Then `wine-0011` goes to main and into v0.5.0-rc2 for Thalles (tested on a fresh sandbox first), and the top of PROGRESS.md says to install that.
+- **Below U3's 60 in 1**: something differs between `csmt=0x1` set by hand and the default; the sample says what.
+- **Broken sprites, a crash, or a hang on quit**: say which start; `WINE_D3D_CONFIG=csmt=0` is the way back.
+- The sample of start 3: the game's thread spent about 10% in `cthread_yield` and `NtDelayExecution` in U3's csmt sample; whether the dips line up with that, or with the command stream thread being busy (it waited for work 49% of the time on average), says what to cut next. A night (1.7 times the draws) is still unmeasured; U3's numbers put each thread at about 14 ms of a 16.7 ms frame there, so expect it to be close.
