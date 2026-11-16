@@ -72,5 +72,5 @@ jobs:
             cat out/abi-check.txt
             echo '```'
           } > notes.md
-          gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --title "Wine $WINE_VERSION for Macron (${RELEASE_TAG#runtime-wine-})" \
+          gh release create "$RELEASE_TAG" --latest=false --target "$GITHUB_SHA" --title "Wine $WINE_VERSION for Macron (${RELEASE_TAG#runtime-wine-})" \
             --notes-file notes.md "out/$ASSET_NAME" "out/$ASSET_NAME.sha256" $(for patch in $patches; do echo "out/$patch"; done)
