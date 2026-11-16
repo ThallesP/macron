@@ -1,0 +1,13 @@
+m9  st RESULT fps 29.02 p50_ms 32.940 p95_ms 41.970 p99_ms 50.649 frames 436
+m9  mt RESULT fps 1.37 p50_ms 710.995 p95_ms 843.992 p99_ms 876.723 frames 21
+m10 st RESULT fps 26.41 p50_ms 36.443 p95_ms 48.981 p99_ms 59.694 frames 397
+m10 mt RESULT fps 5.38 p50_ms 172.706 p95_ms 249.512 p99_ms 498.088 frames 81
+m9  st RESULT fps 20.75 p50_ms 46.845 p95_ms 60.068 p99_ms 74.172 frames 312
+m9  mt RESULT fps 1.15 p50_ms 869.847 p95_ms 964.767 p99_ms 964.767 frames 18
+m10 st RESULT fps 24.81 p50_ms 39.697 p95_ms 46.677 p99_ms 54.911 frames 373
+m10 mt RESULT fps 5.97 p50_ms 171.663 p95_ms 200.470 p99_ms 212.832 frames 90
+m9  st RESULT fps 20.43 p50_ms 45.677 p95_ms 72.586 p99_ms 84.300 frames 307
+m9  mt RESULT fps 1.46 p50_ms 665.847 p95_ms 813.144 p99_ms 830.101 frames 22
+m10 st RESULT fps 18.25 p50_ms 52.138 p95_ms 75.679 p99_ms 87.515 frames 274
+m10 mt RESULT fps 6.75 p50_ms 148.244 p95_ms 187.124 p99_ms 195.946 frames 102
+M10-DONE
