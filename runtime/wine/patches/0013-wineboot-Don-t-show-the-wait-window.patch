@@ -1,0 +1,40 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Mon, 16 Nov 2026 12:00:00 +0000
+Subject: [PATCH] wineboot: Don't show the wait window while the prefix is
+ updated.
+
+wineboot shows "The Wine configuration in ... is being updated, please
+wait..." while wine.inf is installed into a prefix: when the prefix is
+made, when wine.inf is newer than the prefix's .update-timestamp, and on
+wineboot -u. On a Mac the window turns the process into a Dock app with
+Wine's name and icon, in front of the game that is starting, for the 15
+to 40 seconds the update takes. Macron starts games through Steam and
+does not want the player to see Wine. The update runs the same way,
+without the window. MACRON_WINEBOOT_WAIT_WINDOW=1 shows it again, for a
+check's control run.
+---
+diff --git a/programs/wineboot/wineboot.c b/programs/wineboot/wineboot.c
+index 7dda9ec..19a1888 100644
+--- a/programs/wineboot/wineboot.c
++++ b/programs/wineboot/wineboot.c
+@@ -1701,7 +1701,10 @@ static void update_wineprefix( BOOL force )
+ 
+         if ((process = start_rundll32( inf_path, L"PreInstall", IMAGE_FILE_MACHINE_TARGET_HOST )))
+         {
+-            HWND hwnd = show_wait_window();
++            /* Macron: no wait window. On a Mac it makes the process a Dock app named
++             * after Wine, in front of the game that is starting.
++             * MACRON_WINEBOOT_WAIT_WINDOW=1 brings it back (a check's control run). */
++            HWND hwnd = _wgetenv( L"MACRON_WINEBOOT_WAIT_WINDOW" ) ? show_wait_window() : 0;
+             for (;;)
+             {
+                 if (process)
+@@ -1722,7 +1725,7 @@ static void update_wineprefix( BOOL force )
+                     process = start_rundll32( inf_path, L"Wow64Install", machines[count].Machine );
+                 count++;
+             }
+-            DestroyWindow( hwnd );
++            if (hwnd) DestroyWindow( hwnd );
+         }
+         install_root_pnp_devices();
+         update_user_profile();
