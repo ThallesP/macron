@@ -1,0 +1,26 @@
+== nobatch: label=nobatch run=1 wined3d=m5 wow64cpu=m5 base=apple WINEDEBUG=-all,+fps MACRON_OPENGL=apple-software WINE_D3D_CONFIG=
+   start 1: ok, window after 14.0 s
+     title, fps median 12.06 mean 11.91 (9.57..14.19, 13 samples), CPU game 88.3% wineserver 1.8% wine-other 2.4% others [[18.8, 'mds'], [13.4, 'mds_stores'], [8.5, 'WindowServer'], [4.2, 'mdworker_shared']]
+     menu , fps median 1.42 mean 1.35 (0.9..1.5, 10 samples), CPU game 100.5% wineserver 0.7% wine-other 1.6% others [[10.0, 'mds'], [6.2, 'mds_stores'], [3.2, 'mdworker_shared']]
+     night, fps median 0.86 mean 0.85 (0.78..0.9, 8 samples), CPU game 102.3% wineserver 0.6% wine-other 1.4% others [[3.2, 'provjobd892530987']]
+   start 1: ok, window after 12.6 s
+     title, fps median 12.05 mean 11.57 (8.84..13.12, 13 samples), CPU game 93.4% wineserver 1.9% wine-other 2.9% others [[9.5, 'WindowServer'], [4.4, 'provjobd892530987']]
+     menu , fps median 1.27 mean 1.27 (1.09..1.41, 12 samples), CPU game 101.8% wineserver 0.8% wine-other 2.3% others [[3.8, 'provjobd892530987']]
+     night, fps median 0.81 mean 0.81 (0.74..0.86, 8 samples), CPU game 102.5% wineserver 0.6% wine-other 1.6% others [[3.5, 'provjobd892530987']]
+   start 1: ok, window after 14.1 s
+     title, fps median 12.49 mean 12.4 (9.39..14.18, 13 samples), CPU game 93.6% wineserver 1.8% wine-other 2.6% others [[8.1, 'WindowServer'], [4.5, 'provjobd892530987']]
+     menu , fps median 1.23 mean 1.22 (1.1..1.32, 12 samples), CPU game 101.4% wineserver 0.8% wine-other 2.1% others [[53.7, 'mds'], [49.5, 'mds_stores'], [6.5, 'contextstored'], [4.0, 'provjobd892530987']]
+     night, fps median 0.64 mean 0.65 (0.61..0.72, 10 samples), CPU game 102.3% wineserver 1.0% wine-other 2.6% others [[44.2, 'mds'], [35.3, 'mds_stores'], [4.5, 'contextstored'], [4.4, 'provjobd892530987']]
+== batch: label=batch run=1 wined3d=m5 wow64cpu=m5 base=apple WINEDEBUG=-all,+fps MACRON_OPENGL=apple-software WINE_D3D_CONFIG=
+   start 1: ok, window after 12.8 s
+     title, fps median 11.3 mean 11.45 (6.19..15.16, 13 samples), CPU game 92.8% wineserver 2.1% wine-other 3.0% others [[10.3, 'WindowServer'], [5.8, 'provjobd892530987'], [3.0, 'Application']]
+     menu , fps median 2.02 mean 2.03 (1.5..2.49, 11 samples), CPU game 99.4% wineserver 0.8% wine-other 2.4% others [[4.7, 'provjobd892530987'], [3.6, 'WindowServer']]
+     night, fps median 1.23 mean 1.17 (0.71..1.38, 12 samples), CPU game 103.7% wineserver 0.9% wine-other 2.5% others []
+   start 1: ok, window after 14.6 s
+     title, fps median 10.8 mean 10.81 (6.3..13.44, 13 samples), CPU game 91.6% wineserver 2.0% wine-other 3.2% others [[10.5, 'WindowServer'], [7.6, 'provjobd892530987'], [3.3, 'Application']]
+     menu , fps median 1.7 mean 1.66 (1.31..1.99, 12 samples), CPU game 101.8% wineserver 1.0% wine-other 3.2% others [[6.6, 'provjobd892530987'], [3.3, 'WindowServer']]
+     night, fps median 1.31 mean 1.31 (1.04..1.46, 10 samples), CPU game 103.1% wineserver 0.9% wine-other 2.5% others [[4.5, 'provjobd892530987']]
+   start 1: ok, window after 12.6 s
+     title, fps median 8.84 mean 8.84 (7.65..9.99, 13 samples), CPU game 94.4% wineserver 2.1% wine-other 3.4% others [[54.8, 'mds'], [44.7, 'mds_stores'], [12.4, 'WindowServer'], [8.3, 'provjobd892530987']]
+     menu , fps median 1.58 mean 1.62 (1.4..1.86, 11 samples), CPU game 101.8% wineserver 0.8% wine-other 2.8% others [[82.6, 'mds_stores'], [53.1, 'mds'], [11.0, 'contextstored']]
+     night, fps median 1.08 mean 1.1 (0.96..1.33, 11 samples), CPU game 103.8% wineserver 0.8% wine-other 2.8% others [[45.7, 'mds_stores'], [37.9, 'mds'], [6.4, 'contextstored'], [5.1, 'provjobd892530987']]

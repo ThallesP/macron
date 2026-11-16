@@ -1,0 +1,18 @@
+sample-batch/1-menu.sample Thread_194449 samples 2362
+   87.0%  Apple software renderer (raster, shaders)
+    5.7%  Rosetta JIT code (outside GL)
+    3.0%  Rosetta runtime routines (outside GL)
+    1.7%  Apple OpenGL front end
+    1.0%  win32u
+    0.8%  Wine opengl32 unix side
+    0.4%  winemac
+    0.3%  other: <unknown binary>
+    0.1%  ntdll unix side
+sample-batch/1-night.sample Thread_194449 samples 2408
+   88.8%  Apple software renderer (raster, shaders)
+    7.6%  other: <unknown binary>
+    1.7%  Apple OpenGL front end
+    0.7%  win32u
+    0.5%  Wine opengl32 unix side
+    0.4%  ntdll unix side
+    0.4%  winemac

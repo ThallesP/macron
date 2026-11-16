@@ -86,7 +86,8 @@ measure() { # <place> [settle seconds]
   psnap "$1-0"; mark "$1-start"
   if [ -n "${UCN_SAMPLE:-}" ]; then
     # macOS's sampler on the game's process: where its threads spend the window.
-    gpid=$(ps -A -o pid=,args= | awk '/^ *[0-9]+ [A-Za-z]:\\.*Custom Night\.exe/ { print $1; exit }')
+    # The Steam bridge's steam.exe names the game in its arguments; skip it.
+    gpid=$(ps -A -o pid=,args= | awk '/steam\.exe/ { next } /^ *[0-9]+ [A-Za-z]:\\.*Custom Night\.exe/ { print $1; exit }')
     [ -n "$gpid" ] && sample "$gpid" $((meas - 2)) 5 -mayDie -file "$out/$run-$1.sample" >/dev/null 2>&1 &
   fi
   sleep "$meas"

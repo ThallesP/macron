@@ -1,0 +1,4 @@
+state ok
+title: median 12.45 fps, min 10.42, max 13.39, 26 samples
+menu: median 1.93 fps, min 1.73, max 2.29, 24 samples
+night: median 1.17 fps, min 0.80, max 1.43, 24 samples
