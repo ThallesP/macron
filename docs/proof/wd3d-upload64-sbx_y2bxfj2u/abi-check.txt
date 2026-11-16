@@ -1,0 +1,37 @@
+== Gcenx's winemac.so against an unpatched build of the same source
+ok: symbols imported from ntdll.so and win32u.so (105 lines)
+ok: system symbols are a subset of Gcenx's (416 of 419; Gcenx's also imports: _ceil _floor _round )
+ok: exported symbols (2 lines)
+ok: install name and linked libraries (16 lines)
+ok: rpaths (2 lines)
+ok: win32u.so exported symbols (506 lines)
+note: __TEXT,__text differs (15008 vs 14860 lines of 16 bytes); compilers differ
+note: Gcenx's targets minos 10.15, sdk 27.2; ours minos 10.15, sdk 26.5
+== The patched winemac.so against the unpatched build
+ok: imported symbols (521 lines)
+ok: exported symbols (plus _macdrv_functions) (3 lines)
+ok: install name and linked libraries (16 lines)
+ok: rpaths (2 lines)
+PASS: the patched winemac.so is a drop-in for Gcenx's
+== wined3d.dll (coff-i386)
+PASS: wined3d.dll exports the same 377 symbols as Gcenx's, patched and unpatched
+== wined3d.dll (coff-x86-64)
+PASS: wined3d.dll exports the same 377 symbols as Gcenx's, patched and unpatched
+== wow64cpu.dll (coff-x86-64)
+PASS: wow64cpu.dll exports the same 9 symbols as Gcenx's, patched and unpatched
+== Gcenx's opengl32.so against an unpatched build of the same source
+ok: symbols imported from ntdll.so and win32u.so (13 lines)
+ok: system symbols are a subset of Gcenx's
+ok: exported symbols (2 lines)
+ok: install name and linked libraries (4 lines)
+ok: rpaths (2 lines)
+== The patched opengl32.so against the unpatched build
+ok: imported symbols are a subset of the unpatched build's
+ok: exported symbols (2 lines)
+ok: install name and linked libraries (4 lines)
+ok: rpaths (2 lines)
+PASS: the patched opengl32.so is a drop-in for Gcenx's
+== opengl32.dll (coff-i386)
+PASS: opengl32.dll exports the same 361 symbols as Gcenx's, patched and unpatched
+== opengl32.dll (coff-x86-64)
+PASS: opengl32.dll exports the same 361 symbols as Gcenx's, patched and unpatched

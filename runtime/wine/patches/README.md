@@ -23,7 +23,7 @@ Patch 0001 changes only `winemac.so`. The Windows side of the driver, its unix c
 
 A 32-bit program on 64-bit Wine (WoW64) cannot use a pointer above 4 GB. When the host OpenGL can neither map buffers at a client-chosen address (`GL_MESA_map_buffer_client_pointer`) nor persistently, Wine's `opengl32` emulates `glMapBufferRange` for such programs: `wow64_map_buffer` copies the mapped range into low memory on map, and `wow64_unmap_buffer` copies it back on unmap. Apple's OpenGL has neither, so every 32-bit Direct3D game on a Mac goes through this. Without persistent maps, wined3d serves a `DISCARD` or `NOOVERWRITE` map of a buffer (each `DrawPrimitiveUP`, each dynamic vertex buffer lock) by mapping the whole buffer object, without an invalidate flag, so each one copies the whole streaming buffer (512 KB or more) twice. Ultimate Custom Night (32-bit, Direct3D 9) presented about 5 frames a second at about 185% CPU on an M3 this way.
 
-When the process is WoW64 and buffers cannot be mapped persistently, the patch maps buffers that the application cannot read, and whose system memory is not pinned, through heap memory the size of the mapped range, the way `UpdateSubresource` already works: the command stream thread uploads it on unmap with `glBufferSubData`, which takes the 32-bit pointer as it is, and the application's thread does not wait for the command stream. An upload of a whole buffer (`DISCARD`) also uses `glBufferSubData` instead of mapping the buffer object. A 64-bit program, or a host with persistent mapping, takes the same path as before.
+When the process is WoW64 and buffers cannot be mapped persistently, the patch maps buffers that the application cannot read, and whose system memory is not pinned, through heap memory the size of the mapped range, the way `UpdateSubresource` already works: the command stream thread uploads it on unmap with `glBufferSubData`, which takes the 32-bit pointer as it is, and the application's thread does not wait for the command stream. An upload of a whole buffer (`DISCARD`) also uses `glBufferSubData` instead of mapping the buffer object. A 64-bit program, or a host with persistent mapping, takes the same path as before (0008 gives 64-bit programs this path too).
 
 A first version pinned dynamic buffers in system memory instead. It made every map wait for the command stream thread and hung the probe on the runner, so it was dropped.
 
@@ -100,6 +100,22 @@ Measured on sandbox sbx_hzfsgybj (Apple M1 virtual machine, macOS 26.7.2, `MACRO
 The `d3d9-fps-probe`, `d3d11-probe` and `openttd` scenario checks passed with it.
 
 The patch changes the numbering of `opengl32`'s Unix calls, so `opengl32.dll` (i386, x86_64) and `opengl32.so` must come from the same build. The overlay carries all three, and the runtime puts them in both Wine trees. `../check-unix-lib.sh` checks that `opengl32.so` imports, exports, links and searches what Gcenx's does. `../check-pe-exports.sh` checks that the DLLs export what Gcenx's do.
+
+## 0008: upload buffer maps through heap memory whenever buffers cannot be mapped persistently
+
+Apple's OpenGL has no `ARB_buffer_storage`, so wined3d cannot map buffers persistently. Then it cannot create a mapped buffer object from the application's thread either, and a 64-bit program's `DISCARD` or `NOOVERWRITE` buffer map (each `DrawPrimitiveUP`, each dynamic vertex buffer lock) goes through the command stream: the application's thread waits for the command stream thread to map the whole buffer object, and waits again for it to flush and unmap it. `glMapBufferRange`, `glFlushMappedBufferRange` and `glUnmapBuffer` each cross to the Unix side on their own, because 0007 cannot queue them. An `+opengl,+d3d_perf` trace of the 64-bit Direct3D 9 probe shows exactly that for every draw: three such calls and six binds on the command stream thread, and two `Waiting for queue 1 to be empty` on the application's thread. About 242 µs a draw: about 150 µs for the two waits, about 80 µs for the map's OpenGL calls.
+
+0003 already sent such maps through heap memory in a WoW64 process. 0008 renames 0003's `copied_maps` to `heap_buffer_maps` and sets it whenever buffers cannot be mapped persistently, in any process. The map returns heap memory the size of the mapped range at once, and the command stream thread uploads it on unmap with `glBufferSubData`, which 0007 queues. In a WoW64 process the flag has the value it had with 0003, so 32-bit programs take the same path as before; a host with persistent maps, the same path as before too.
+
+Measured on sandbox sbx_y2bxfj2u (Apple M1 virtual machine, macOS 26.7.2, `MACRON_OPENGL=apple-software`, through `macron launch`), three alternating rounds; `docs/wd3d-upload64.md` has every number:
+- **Direct3D 9 probe, 64-bit:** with 3,900 one-pixel sprites (`up --sprite-size 1 --window 1024x768`), 1.06 fps before and 34.2 fps after.
+- **Same probe, 32-bit:** 28.9 and 29.8 fps, unchanged within noise.
+- **Per draw:** stock 64-bit wined3d's upload and draw (`glprobe --cost`, `up-draw-map-11-calls`) 80 µs; with 0008 (`up-draw-subdata-3-calls`) 0.55 µs.
+- **Without Wine:** the same OpenGL work in a native x86_64 program (`loadprobe`) ran at 70 fps.
+
+The `d3d9-fps-probe`, `d3d11-probe` and `openttd` scenario checks passed with it, and so did a copy of `d3d9-fps-probe` that compares the 64-bit probe's picture (SSIM 0.995). The 64-bit probe in the scenario's `mix` mode went from 5.4 to 14.4 fps, about level with the 32-bit one (14.5), so the scenario's frame-rate check (32-bit at least 0.80 of 64-bit) now has less room than before.
+
+`wined3d.dll` is a Windows module; `../check-pe-exports.sh` checks that it exports what Gcenx's does.
 
 ## Building
 

@@ -1,0 +1,12 @@
+round 1 stock probe32 mix RESULT fps 14.81 p50_ms 66.319 p95_ms 84.958 p99_ms 101.587 frames 149
+round 1 stock probe64 mix RESULT fps 5.62 p50_ms 161.673 p95_ms 239.335 p99_ms 259.908 frames 57
+round 1 patched probe32 mix RESULT fps 15.34 p50_ms 62.295 p95_ms 82.327 p99_ms 97.215 frames 154
+round 1 patched probe64 mix RESULT fps 16.13 p50_ms 59.345 p95_ms 70.766 p99_ms 76.129 frames 162
+round 2 patched probe32 mix RESULT fps 14.21 p50_ms 68.585 p95_ms 94.148 p99_ms 105.185 frames 143
+round 2 patched probe64 mix RESULT fps 12.62 p50_ms 76.914 p95_ms 102.141 p99_ms 114.306 frames 127
+round 2 stock probe32 mix RESULT fps 14.72 p50_ms 66.311 p95_ms 78.180 p99_ms 83.885 frames 148
+round 2 stock probe64 mix RESULT fps 4.91 p50_ms 202.814 p95_ms 253.919 p99_ms 269.879 frames 50
+round 3 stock probe32 mix RESULT fps 11.66 p50_ms 79.430 p95_ms 122.750 p99_ms 138.710 frames 117
+round 3 stock probe64 mix RESULT fps 5.70 p50_ms 164.068 p95_ms 220.088 p99_ms 225.292 frames 58
+round 3 patched probe32 mix RESULT fps 13.93 p50_ms 70.358 p95_ms 91.857 p99_ms 103.234 frames 140
+round 3 patched probe64 mix RESULT fps 14.58 p50_ms 65.263 p95_ms 86.330 p99_ms 98.383 frames 146
