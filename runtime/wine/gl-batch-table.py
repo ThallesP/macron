@@ -73,7 +73,7 @@ def copy_rule(name, pointers, fields):
     if not ctype.startswith("const ") or ctype.count("*") != 1:
         return None
     names = {f for _, f in fields}
-    m = re.match(r"^gl(Named)?BufferSubData(ARB|EXT)?$", name)
+    m = re.match(r"^gl(Named)?BufferSubData(ARB|EXT)?$|^buffer_write_unsynchronized$", name)
     if m and field == "data" and "size" in names:
         return f"BATCH_COPY_N( {name}, data, size, 1 )"
     m = re.match(r"^gl(Program)?Uniform([1-4])(f|i|ui|d|i64|ui64)v(ARB|EXT|NV)?$", name)
