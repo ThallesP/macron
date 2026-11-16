@@ -91,6 +91,13 @@ Not established:
 - **Games other than Overwatch.** The change is in DXMT's `d3d11.dll` for every Direct3D 10 and 11 game on the default backend. The scenario checks (the Direct3D 11 probe) cover that it still draws; a game that creates few shaders gains nothing and keeps a bytecode copy per shader.
 - **The Windows side.** The 877 MB growth of `WINE_RESERVE` is attributed to the bytecode copies by size, not measured.
 
+## Shipping
+
+- The overlay is published as [runtime-dxmt-0.80-macron.1](https://github.com/ThallesP/macron/releases/tag/runtime-dxmt-0.80-macron.1) (`dxmt-0.80-macron.1-overlay.tar.xz`, SHA-256 `d3982b6ad010d45d9330ba73ec2b1af7a95b5423956ffabe2ab86ceea79264e2`, 1,353,168 bytes), built by the `DXMT build` workflow on main. It holds `lib/wine/x86_64-windows/d3d11.dll` (SHA-256 `68b71e3c...`) and `lib/wine/i386-windows/d3d11.dll` (`3a601ced...`), both marked as Wine builtins, and under `share/macron/dxmt/` the patch, the patched source file, DXMT's licence and the build's compiler.
+- The runtime pins it in `Manifest.DXMTOverlay`; the runtime's version names it (`...-dxmt-0.80-macron.1-...`), so an installed Macron that updates gets a fresh runtime with it.
+- It goes to Thalles in v0.5.0-rc3, the release candidate after rc2 (rc2 was already built and under test when the pin was ready).
+- On his M3: request M1 in `docs/perf/real-mac-requests.md` (branch `dxmt-m1`).
+
 ## Upstream
 
 The change belongs in DXMT. The patch applies to v0.80; DXMT's main branch has the same `CachedSM50Shader` keeping the parse, so it should carry over with small changes. Offering it is Thalles's decision (it would go to 3Shain/dxmt from his account): see "Needs Thalles" in PROGRESS.md.
