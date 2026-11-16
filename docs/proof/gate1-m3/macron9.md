@@ -40,3 +40,10 @@ Per frame, roughly: Clickteam's own code about 4 ms (`mmf2d3d9.dll` and the exe)
 ## Not measured
 
 A night (it needs input to get there), and the picture: no screenshot was compared against a reference in these starts; the one taken with `macron.9` shows the same menu as before.
+
+## Requests U1 and U2 (2026-11-16, 07:05 UTC)
+
+- **U1.** `macron9-raw/sample-default.txt` is the whole `sample` output (8 s at 2 ms) of the game in its menu with `macron.9` in the default configuration, and `macron9-raw/loaddll-default.txt` the `Loaded L"..." at <address>` lines of the same start (`WINEDEBUG=-all,+loaddll`; the frame counter was off for it, because `show-fps` replaces `WINEDEBUG`). The module table above was made from these two files.
+- **U2.** `WINE_OPENGL_BATCH=0`, one minute in the menu with the frame counter: **30.0 fps**, locked (45 readings: minimum 29.3, p10 30.0, median 30.0, p90 30.0, maximum 30.1), against 31.0 (p10 30.0, p90 31.7) with batching. `macron9-raw/sample-no-batching.txt` and `loaddll-no-batching.txt` are the same pair of files for a second start without batching. So on the M3 batching neither costs nor earns a visible amount in this menu: both sit at half of 60.
+
+Both runs sit so close to 30 that the frame rate alone cannot say how far the work is from fitting one 16.7 ms tick; the samples can (the share of the thread spent waiting in `NtUserMsgWaitForMultipleObjectsEx`).
