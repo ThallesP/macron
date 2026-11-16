@@ -1,0 +1,165 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Mon, 16 Nov 2026 12:00:00 +0000
+Subject: [PATCH] wined3d: Map CPU-only buffers on the client thread, and write
+ streaming uploads through GL_COPY_WRITE_BUFFER.
+
+Measured on an M3 with 0009 (docs/proof/gate1-m3/macron9.md): Ultimate
+Custom Night's menu runs at 31 fps, its thread working about 19 ms of a
+33 ms frame. Two of the costs in that work:
+
+- The game locks its D3DPOOL_SYSTEMMEM vertex buffer before each draw,
+  and d3d9 maps its system memory index buffer before each draw to
+  stream the indices: three maps per draw, each a round trip through
+  the command stream (and with the command stream on its own thread a
+  wait for everything queued, which is why csmt=0x1 gained nothing: the
+  game's thread spent 23% yielding to and waking the command stream).
+  A buffer only the CPU uses lives in its system memory and nowhere else,
+  so such maps are now done on the client thread. Reads and NOOVERWRITE
+  writes do not wait; other writes, and any map after the command stream
+  was given writes into the buffer, wait until it is done with it.
+- Each upload of index data bound the index buffer to
+  GL_ELEMENT_ARRAY_BUFFER, which changes the vertex array object (Apple's
+  OpenGL rebuilds its vertex array state at the next draw:
+  buildVertexArrayState, buildVertexArrayDescriptor in the M3's sample)
+  and made wined3d bind the draw's index buffer again. Unsynchronized
+  uploads are now written through GL_COPY_WRITE_BUFFER.
+---
+diff --git a/dlls/wined3d/context_gl.c b/dlls/wined3d/context_gl.c
+index 0151c6e..0428819 100644
+--- a/dlls/wined3d/context_gl.c
++++ b/dlls/wined3d/context_gl.c
+@@ -3043,12 +3043,27 @@ void wined3d_context_gl_copy_bo_address(struct wined3d_context_gl *context_gl,
+              * issued draw reads is overwritten, once a DISCARD has given the
+              * buffer object new storage. glBufferSubData would wait for the
+              * GPU on Apple's OpenGL over Metal whenever earlier draws use the
+-             * buffer, which for a streaming buffer is every upload. */
+-            wined3d_context_gl_bind_bo(context_gl, dst_bo->binding, dst_bo->id);
++             * buffer, which for a streaming buffer is every upload.
++             *
++             * Written through GL_COPY_WRITE_BUFFER, which no draw reads:
++             * binding an index buffer to GL_ELEMENT_ARRAY_BUFFER changes the
++             * vertex array object, which Apple's OpenGL then rebuilds at the
++             * next draw, and makes wined3d bind the draw's index buffer again. */
++            GLenum target = dst_bo->binding;
++
++            if (gl_info->supported[ARB_COPY_BUFFER])
++            {
++                target = GL_COPY_WRITE_BUFFER;
++                GL_EXTCALL(glBindBuffer(target, dst_bo->id));
++            }
++            else
++            {
++                wined3d_context_gl_bind_bo(context_gl, target, dst_bo->id);
++            }
+             if ((map_flags & WINED3D_MAP_DISCARD) && !dst_bo->memory && !dst_bo->b.buffer_offset)
+             {
+                 TRACE_(d3d_perf)("Orphaning BO %u for a DISCARD upload.\n", dst_bo->id);
+-                GL_EXTCALL(glBufferData(dst_bo->binding, dst_bo->size, NULL, dst_bo->usage));
++                GL_EXTCALL(glBufferData(target, dst_bo->size, NULL, dst_bo->usage));
+             }
+             else if (map_flags & WINED3D_MAP_DISCARD)
+             {
+@@ -3060,10 +3075,10 @@ void wined3d_context_gl_copy_bo_address(struct wined3d_context_gl *context_gl,
+                 GLintptr offset = dst_bo->b.buffer_offset + (GLintptr)dst->addr + ranges[i].offset;
+ 
+                 if (map_flags & (WINED3D_MAP_DISCARD | WINED3D_MAP_NOOVERWRITE))
+-                    gl_info->p_glBufferWriteUnsynchronizedWINE(dst_bo->binding, offset,
++                    gl_info->p_glBufferWriteUnsynchronizedWINE(target, offset,
+                             ranges[i].size, src->addr + ranges[i].offset);
+                 else
+-                    GL_EXTCALL(glBufferSubData(dst_bo->binding, offset, ranges[i].size, src->addr + ranges[i].offset));
++                    GL_EXTCALL(glBufferSubData(target, offset, ranges[i].size, src->addr + ranges[i].offset));
+             }
+             checkGLcall("unsynchronized buffer upload");
+ 
+diff --git a/dlls/wined3d/cs.c b/dlls/wined3d/cs.c
+index 73ed119..c0ac8b3 100644
+--- a/dlls/wined3d/cs.c
++++ b/dlls/wined3d/cs.c
+@@ -2562,6 +2562,45 @@ static void wined3d_cs_exec_map(struct wined3d_cs *cs, const void *data)
+             op->sub_resource_idx, op->map_ptr, op->box, op->flags);
+ }
+ 
++static bool wined3d_bo_address_is_null(struct wined3d_const_bo_address *addr);
++
++/* A buffer only the CPU uses (d3d9's D3DPOOL_SYSTEMMEM buffers) lives in its
++ * system memory and nowhere else, so it can be mapped on the client thread
++ * instead of through the command stream, which costs a round trip per map and,
++ * with the command stream on its own thread, a wait for everything queued.
++ * Ultimate Custom Night maps such buffers three times per draw. Reads and
++ * NOOVERWRITE writes do not wait: what the command stream still does with
++ * the buffer is read it, and NOOVERWRITE promises not to touch what queued
++ * draws use. Other writes wait until the command stream is done with it. */
++static bool wined3d_cs_map_cpu_buffer(struct wined3d_device_context *context, struct wined3d_resource *resource,
++        struct wined3d_map_desc *map_desc, const struct wined3d_box *box, unsigned int flags)
++{
++    struct wined3d_client_resource *client = &resource->client;
++    struct wined3d_buffer *buffer;
++
++    if (context != &context->device->cs->c || resource->type != WINED3D_RTYPE_BUFFER
++            || (resource->access & WINED3D_RESOURCE_ACCESS_GPU) || !wined3d_bo_address_is_null(&client->mapped_upload.addr))
++        return false;
++    buffer = buffer_from_resource(resource);
++
++    if (client->cs_writes || ((flags & WINED3D_MAP_WRITE) && !(flags & WINED3D_MAP_NOOVERWRITE)))
++    {
++        wined3d_resource_wait_idle(resource);
++        client->cs_writes = false;
++    }
++    if (buffer->locations != WINED3D_LOCATION_SYSMEM || !resource->heap_memory || (buffer->flags & WINED3D_BUFFER_USE_BO))
++        return false;
++
++    TRACE_(d3d_perf)("Mapping CPU buffer %p on the client thread, flags %#x.\n", resource, flags);
++    wined3d_resource_get_sub_resource_map_pitch(resource, 0, &map_desc->row_pitch, &map_desc->slice_pitch);
++    map_desc->data = (uint8_t *)resource->heap_memory + box->left;
++    client->mapped_upload.addr.buffer_object = 0;
++    client->mapped_upload.addr.addr = map_desc->data;
++    client->mapped_upload.flags = 0;
++    client->mapped_box = *box;
++    return true;
++}
++
+ HRESULT wined3d_device_context_emit_map(struct wined3d_device_context *context,
+         struct wined3d_resource *resource, unsigned int sub_resource_idx,
+         struct wined3d_map_desc *map_desc, const struct wined3d_box *box, unsigned int flags)
+@@ -2573,6 +2612,9 @@ HRESULT wined3d_device_context_emit_map(struct wined3d_device_context *context,
+      * increasing the map count would be visible to applications. */
+     wined3d_not_from_cs(context->device->cs);
+ 
++    if (wined3d_cs_map_cpu_buffer(context, resource, map_desc, box, flags))
++        return WINED3D_OK;
++
+     if ((flags & (WINED3D_MAP_DISCARD | WINED3D_MAP_NOOVERWRITE))
+             && context->ops->map_upload_bo(context, resource, sub_resource_idx, map_desc, box, flags))
+     {
+@@ -2791,6 +2833,7 @@ void wined3d_device_context_emit_blt_sub_resource(struct wined3d_device_context
+     struct wined3d_cs_blt_sub_resource *op;
+ 
+     dst_resource->client.copy_writes |= CLIENT_WRITE_SYNC;
++    dst_resource->client.cs_writes = true;
+     /* If we are replacing the whole resource, the CS thread might discard and
+      * rename the buffer object, in which case ours is no longer valid. */
+     if (dst_resource->type == WINED3D_RTYPE_BUFFER && dst_box->right - dst_box->left == dst_resource->size)
+@@ -2857,6 +2900,7 @@ void wined3d_device_context_emit_update_sub_resource(struct wined3d_device_conte
+     struct upload_bo bo;
+ 
+     resource->client.copy_writes |= CLIENT_WRITE_SYNC;
++    resource->client.cs_writes = true;
+     /* If we are replacing the whole resource, the CS thread might discard and
+      * rename the buffer object, in which case ours is no longer valid. */
+     if (resource->type == WINED3D_RTYPE_BUFFER && box->right - box->left == resource->size)
+diff --git a/dlls/wined3d/wined3d_private.h b/dlls/wined3d/wined3d_private.h
+index 27c3655..ae916f3 100644
+--- a/dlls/wined3d/wined3d_private.h
++++ b/dlls/wined3d/wined3d_private.h
+@@ -3269,6 +3269,10 @@ struct wined3d_client_resource
+      * synchronised. */
+     uint32_t copy_writes;
+     struct wined3d_resource *copy_dst;
++
++    /* The command stream has writes into this resource that may not have
++     * run yet; a map from the client thread waits for them first. */
++    bool cs_writes;
+ };
+ 
+ static inline BOOL wined3d_resource_access_is_managed(unsigned int access)
