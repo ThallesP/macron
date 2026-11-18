@@ -3,7 +3,8 @@
  * what DXMT's translation costs on the GPU.
  *
  *   gpuload.exe [--mode fill|draws|mix] [--size WxH] [--seconds S]
- *               [--passes P] [--draws D] [--sync N] [--out FILE]
+ *               [--passes P] [--draws D] [--sync N] [--work MS]
+ *               [--latency N] [--out FILE]
  *
  * fill:  P full-screen passes a frame into a WxH RGBA16F texture, each
  *        sampling the previous one and doing 16 rounds of multiply-add and
@@ -21,6 +22,17 @@
  * program started through Macron's steam.exe has no stdout in macron's log.
  * The GPU time a frame comes from Apple's Metal HUD (MTL_HUD_ENABLED=1,
  * MTL_HUD_LOG_ENABLED=1), as for gpuload.m.
+ *
+ * It also measures how far the program runs ahead of the GPU, which is what
+ * a player feels as input lag when the GPU is the limit. Every frame ends
+ * with an event query, and at the start of every frame (where a game reads
+ * its input) the program counts the earlier frames whose query has not
+ * finished: the frames queued between this input and the screen. RESULT
+ * queue has their average and maximum, and the time from a frame's start
+ * until its query is seen finished (checked once a frame, so up to one
+ * frame late). --work MS spends MS milliseconds of CPU at the start of each
+ * frame, as a game's own work does; --latency N calls
+ * IDXGIDevice1::SetMaximumFrameLatency(N).
  *
  * Build: x86_64-w64-mingw32-gcc -O2 -o gpuload.exe gpuload.c -ld3d11 -ld3dcompiler_47 -ldxgi -ldxguid -luuid */
 #define COBJMACROS
@@ -87,6 +99,13 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     return DefWindowProcA(hwnd, msg, wp, lp);
 }
 
+#define QUEUE_SLOTS 32
+
+static double seconds_between(LARGE_INTEGER from, LARGE_INTEGER to, LARGE_INTEGER freq)
+{
+    return (double)(to.QuadPart - from.QuadPart) / freq.QuadPart;
+}
+
 static int compare_double(const void *a, const void *b)
 {
     double x = *(const double *)a, y = *(const double *)b;
@@ -96,8 +115,8 @@ static int compare_double(const void *a, const void *b)
 int main(int argc, char **argv)
 {
     const char *mode = "mix", *out = "gpuload.txt";
-    unsigned width = 1600, height = 900, passes = 8, draws = 4000, sync = 0;
-    double seconds = 20;
+    unsigned width = 1600, height = 900, passes = 8, draws = 4000, sync = 0, latency = 0;
+    double seconds = 20, work_ms = 0;
     for (int i = 1; i + 1 < argc; i += 2) {
         if (!strcmp(argv[i], "--mode")) mode = argv[i + 1];
         else if (!strcmp(argv[i], "--size")) sscanf(argv[i + 1], "%ux%u", &width, &height);
@@ -105,11 +124,14 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--passes")) passes = atoi(argv[i + 1]);
         else if (!strcmp(argv[i], "--draws")) draws = atoi(argv[i + 1]);
         else if (!strcmp(argv[i], "--sync")) sync = atoi(argv[i + 1]);
+        else if (!strcmp(argv[i], "--work")) work_ms = atof(argv[i + 1]);
+        else if (!strcmp(argv[i], "--latency")) latency = atoi(argv[i + 1]);
         else if (!strcmp(argv[i], "--out")) out = argv[i + 1];
     }
     int fill = strcmp(mode, "draws") != 0, quads = strcmp(mode, "fill") != 0;
     result_file = fopen(out, "w");
-    result("RESULT config api d3d11 mode %s size %ux%u passes %u draws %u sync %u\n", mode, width, height, fill ? passes : 0, quads ? draws : 0, sync);
+    result("RESULT config api d3d11 mode %s size %ux%u passes %u draws %u sync %u work_ms %.1f latency %u\n", mode, width, height,
+           fill ? passes : 0, quads ? draws : 0, sync, work_ms, latency);
 
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = window_proc;
@@ -140,6 +162,12 @@ int main(int argc, char **argv)
     if (FAILED(hr)) {
         result("RESULT device: FAILED hr=0x%08lx\n", (unsigned long)hr);
         return 1;
+    }
+    if (latency) {
+        IDXGIDevice1 *dxgi_dev;
+        hr = ID3D11Device_QueryInterface(dev, &IID_IDXGIDevice1, (void **)&dxgi_dev);
+        if (SUCCEEDED(hr)) hr = IDXGIDevice1_SetMaximumFrameLatency(dxgi_dev, latency);
+        result("RESULT SetMaximumFrameLatency(%u): hr=0x%08lx\n", latency, (unsigned long)hr);
     }
 
     ID3DBlob *b;
@@ -196,8 +224,16 @@ int main(int argc, char **argv)
     QueryPerformanceFrequency(&freq);
     QueryPerformanceCounter(&start);
     prev = start;
-    size_t cap = 1 << 20, n = 0;
+    size_t cap = 1 << 20, n = 0, done_n = 0;
     double *intervals = malloc(cap * sizeof(double));
+    double *done_ms = malloc(cap * sizeof(double));
+    ID3D11Query *queries[QUEUE_SLOTS] = {0};
+    LARGE_INTEGER query_start[QUEUE_SLOTS];
+    int query_pending[QUEUE_SLOTS] = {0};
+    D3D11_QUERY_DESC query_desc = {D3D11_QUERY_EVENT, 0};
+    for (int i = 0; i < QUEUE_SLOTS; i++) ID3D11Device_CreateQuery(dev, &query_desc, &queries[i]);
+    unsigned long long behind_sum = 0, behind_frames = 0, lost_queries = 0;
+    unsigned behind_max = 0;
     int measuring = 0;
     LARGE_INTEGER measure_start = start;
     unsigned long long frame = 0;
@@ -207,6 +243,28 @@ int main(int argc, char **argv)
         while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
             if (msg.message == WM_QUIT) goto done;
             DispatchMessageA(&msg);
+        }
+        LARGE_INTEGER frame_start;
+        QueryPerformanceCounter(&frame_start);
+        unsigned behind = 0;
+        for (int i = 0; i < QUEUE_SLOTS; i++) {
+            BOOL finished = FALSE;
+            if (!query_pending[i]) continue;
+            if (ID3D11DeviceContext_GetData(ctx, (ID3D11Asynchronous *)queries[i], &finished, sizeof(finished), D3D11_ASYNC_GETDATA_DONOTFLUSH) != S_OK) {
+                behind++;
+                continue;
+            }
+            query_pending[i] = 0;
+            if (measuring && done_n < cap) done_ms[done_n++] = 1000.0 * seconds_between(query_start[i], frame_start, freq);
+        }
+        if (measuring) {
+            behind_sum += behind;
+            behind_frames++;
+            if (behind > behind_max) behind_max = behind;
+        }
+        if (work_ms > 0) {
+            LARGE_INTEGER t;
+            do QueryPerformanceCounter(&t); while (1000.0 * seconds_between(frame_start, t, freq) < work_ms);
         }
         int cur = 0;
         if (fill) {
@@ -246,6 +304,11 @@ int main(int argc, char **argv)
                 ID3D11DeviceContext_Draw(ctx, 4, 0);
             }
         }
+        int slot = (int)(frame % QUEUE_SLOTS);
+        if (query_pending[slot]) lost_queries++;
+        ID3D11DeviceContext_End(ctx, (ID3D11Asynchronous *)queries[slot]);
+        query_pending[slot] = 1;
+        query_start[slot] = frame_start;
         hr = IDXGISwapChain_Present(swap, sync, 0);
         if (FAILED(hr)) {
             result("RESULT present: FAILED hr=0x%08lx at frame %llu\n", (unsigned long)hr, frame);
@@ -269,5 +332,10 @@ done:;
     if (n)
         result("RESULT fps %.2f frames %zu interval_ms p50 %.3f p95 %.3f p99 %.3f\n", n / total, n, intervals[n / 2],
                intervals[n * 95 / 100], intervals[n * 99 / 100]);
+    qsort(done_ms, done_n, sizeof(double), compare_double);
+    if (behind_frames && done_n)
+        result("RESULT queue frames_behind avg %.2f max %u start_to_gpu_done_ms p50 %.2f p95 %.2f p99 %.2f lost %llu\n",
+               (double)behind_sum / behind_frames, behind_max, done_ms[done_n / 2], done_ms[done_n * 95 / 100],
+               done_ms[done_n * 99 / 100], lost_queries);
     return 0;
 }
