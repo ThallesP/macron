@@ -56,7 +56,7 @@ Test build 1, in which the sleep still paced the GPU by the `finish` reading. `P
 
 ### Deadlock on the M3
 
-On its "Early Development Build" dialog, with its scene drawing behind it, from a cool start, test build 1:
+On its "Early Development Build" dialog, from a cool start, test build 1. (Every screenshot of that screen, with any runtime, is the dialog over plain black: what the game draws there is not a scene anyone has seen, so these are the numbers of that screen and not of a match.)
 
 - **Deadlock asks for a frame latency limit of 1** (`Maximum frame latency: the application asks for 1`, the line 0004 adds). So it never had the three-frame queue; PROGRESS.md's entry of 04:30 UTC, which read the game's silent console as "never asks", was wrong.
 - With the sleep off: 74 to 77 frames a second, 22 to 26 ms from a frame's start to the end of its GPU work, one frame in flight. With the sleep (`finish`): 76 to 80 and 20 to 24 ms.
@@ -70,7 +70,8 @@ Test build 2 (the patches as published, with its own certificate), `DXMT_ENABLE_
 
 - NGX loads DXMT's `nvngx.dll` (`Loaded NGXCore from path (C:\Windows\System32\nvngx.dll)`), the game no longer backs down from DLSS, and the Metal HUD shows MetalFX's temporal scaler from 1112x720 to 1920x1243.
 - First 60 s of each start: DLSS from a cool Mac 65.1 frames a second, 14.31 ms of GPU time a frame; FSR2 started at thermal level 1, 51.6 and 18.50 ms; a DLSS start at level 1, 31.5. The starts differ in temperature and in the render scale the game chose (0.667 against 0.579), so this says DLSS runs, not what it gains.
-- The scene behind the dialog was black in the screenshots of both starts, so the picture under DLSS is not judged.
+- The screen behind the dialog is black in every screenshot, with FSR2 and DLSS and with the runtime of rc4 alike, so the picture under DLSS is not judged.
+- With the pinned overlays and nothing but the `dlss` switch file (`runtime-wine-11.21-macron.14`, `runtime-dxmt-0.80-macron.2`): the same NGX lines and HUD, 54.5 frames a second and 15.16 ms of GPU time over the first 60 s; two starts without DLSS in the same hour ran at a median 57.7 and 58.75 with 27.3 and 27.75 ms from a frame's start to the end of its GPU work. At the same input size DLSS on MetalFX is no faster here than the game's FSR2.
 
 ## What ships, and what is open
 
