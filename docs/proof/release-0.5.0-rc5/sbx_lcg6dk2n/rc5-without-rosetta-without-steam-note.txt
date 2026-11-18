@@ -1,0 +1,43 @@
+Macron is installed, but Steam Play is not on yet: Steam is not installed, or has not been started yet (install Steam, start it once and sign in, then follow the steps below).
+
+To finish:
+1. Quit Steam.
+2. Open Terminal and run: macron steam enable
+3. If that says "Operation not permitted", macOS blocked the change to Steam.app. Open System Settings > Privacy & Security > App Management, turn on Terminal (add it with + if it is not listed), and run the command again.
+
+Send this file to whoever gave you Macron if you need help. The full log is /Library/Logs/Macron-install.log.
+
+---- what the installer did ----
+== Macron install, 2026-11-18T02:35:29Z
+Macron:  0.5.0-rc5
+macOS:   26.7.2 (25G332), arm64
+SIP:     System Integrity Protection status: disabled.
+user: <user> (~)
+Rosetta 2 is not installed, and Wine needs it on an Apple silicon Mac; installing it from Apple.
+2026-11-18 02:35:30.156 softwareupdate[54371:142832] Package Authoring Error: 142-50022: Package reference com.apple.pkg.RosettaUpdateAuto is missing installKBytes attribute
+By using the agreetolicense option, you are agreeing that you have run this tool with the license only option and have read and agreed to the terms.
+If you do not agree, press CTRL-C and cancel this process immediately.
+Installing: 0.0%Installing: 0.0%Installing: 100.0%Installing: 100.0%Installing: -1.0%Installing: 88.9%Installing: 88.9%Installing: 100.0%Install of Rosetta 2 finished successfully
+Rosetta 2 is installed.
+macron: downloading wine-devel-11.21-osx64.tar.xz
+macron: downloading wine-11.21-macron.13-overlay-osx64.tar.xz
+macron: downloading dxmt-v0.80-builtin.tar.gz
+macron: downloading dxmt-0.80-macron.1-overlay.tar.xz
+macron: downloading dxvk-macOS-async-v1.10.3-20230507.tar.gz
+macron: unpacking Wine
+macron: adding DXMT
+macron: adding Macron's DXMT patches
+macron: adding Macron's Wine patches
+macron: adding DXVK
+macron: downloading macron-steam-bridge-proton-11.0-2e-macron.1-osx64.tar.xz
+macron: adding the Steam bridge
+macron: preparing the Windows environment new games start from (once per runtime)
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+macron: preparing the Windows environment new games start from (once per runtime)
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+runtime wine-11.21-macron.13-dxmt-0.80-macron.1-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1 is at ~/Library/Application Support/Macron/runtimes/wine-11.21-macron.13-dxmt-0.80-macron.1-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1
+NOTE: Steam is not installed, or has not been started yet (install Steam, start it once and sign in, then follow the steps below)
+NOTE: Macron is installed; Steam Play is not on yet.
+== Done (without Steam)

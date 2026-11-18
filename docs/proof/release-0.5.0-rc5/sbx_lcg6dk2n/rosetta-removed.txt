@@ -1,0 +1,7 @@
+sbx_lcg6dk2n, macOS 26.7.2 (25G332), arm64, SIP disabled. Rosetta 2 removed to make the sandbox look like a new Mac:
+
+$ sudo rm -rf /Library/Apple/usr/libexec/oah /Library/Apple/usr/share/rosetta; sudo pkgutil --forget com.apple.pkg.RosettaUpdateAuto; sudo killall oahd
+Forgot package 'com.apple.pkg.RosettaUpdateAuto' on '/'.
+$ arch -x86_64 /usr/bin/true; echo "arch exit=$?"
+arch: posix_spawnp: /usr/bin/true: Bad CPU type in executable
+arch exit=1

@@ -1,0 +1,32 @@
+rc5's first build (Release run 44220986821, main at 4477fc6, SHA-256 a9b96529339ea77395104e5a849a57982ae1e4470ef3bfa0854523d6c1b809a7) on the same sandbox, still without Rosetta 2, no Steam installed. The published rc5 is the second build, which differs only in the note (see the other files). MoltenVK's extension lists are left out here.
+
+rosetta before: 1
+installer: Package name is Macron
+installer: Installing at base path /
+installer: The install was successful.
+installer exit=0
+real	3m35.087s
+---- this run in /Library/Logs/Macron-install.log
+== Macron install, 2026-11-18T02:10:15Z
+Macron:  0.5.0-rc5
+macOS:   26.7.2 (25G332), arm64
+SIP:     System Integrity Protection status: disabled.
+user: runner (~)
+Rosetta 2 is not installed, and Wine needs it on an Apple silicon Mac; installing it from Apple.
+2026-11-18 02:10:15.675 softwareupdate[4555:17353] Package Authoring Error: 142-50022: Package reference com.apple.pkg.RosettaUpdateAuto is missing installKBytes attribute
+By using the agreetolicense option, you are agreeing that you have run this tool with the license only option and have read and agreed to the terms.
+If you do not agree, press CTRL-C and cancel this process immediately.
+Installing: 0.0%Installing: 0.0%Installing: 100.0%Installing: 100.0%Installing: -1.0%Installing: 8.1%Installing: 89.0%Installing: 89.0%Installing: 100.0%Install of Rosetta 2 finished successfully
+Rosetta 2 is installed.
+macron: preparing the Windows environment new games start from (once per runtime)
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+macron: preparing the Windows environment new games start from (once per runtime)
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+runtime wine-11.21-macron.13-dxmt-0.80-macron.1-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1 is at ~/Library/Application Support/Macron/runtimes/wine-11.21-macron.13-dxmt-0.80-macron.1-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1
+Steam is not installed, or has not been started yet, so Macron is not registered with it.
+Install Steam, start it once, quit it, then run in Terminal: macron steam enable
+== Done (without Steam)
+----
+rosetta after: 0
+/usr/local/bin/macron
+prefix-templates: wine  wine-dxmt

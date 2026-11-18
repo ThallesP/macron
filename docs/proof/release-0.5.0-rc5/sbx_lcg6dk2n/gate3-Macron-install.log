@@ -1,0 +1,36 @@
+== Macron install, 2026-11-18T02:25:40Z
+Macron:  0.5.0-rc5
+macOS:   26.7.2 (25G332), arm64
+SIP:     System Integrity Protection status: disabled.
+user: <user> (~)
+macron: downloading wine-devel-11.21-osx64.tar.xz
+macron: downloading wine-11.21-macron.13-overlay-osx64.tar.xz
+macron: downloading dxmt-v0.80-builtin.tar.gz
+macron: downloading dxmt-0.80-macron.1-overlay.tar.xz
+macron: downloading dxvk-macOS-async-v1.10.3-20230507.tar.gz
+macron: unpacking Wine
+macron: adding DXMT
+macron: adding Macron's DXMT patches
+macron: adding Macron's Wine patches
+macron: adding DXVK
+macron: downloading macron-steam-bridge-proton-11.0-2e-macron.1-osx64.tar.xz
+macron: adding the Steam bridge
+macron: preparing the Windows environment new games start from (once per runtime)
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+macron: preparing the Windows environment new games start from (once per runtime)
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+runtime wine-11.21-macron.13-dxmt-0.80-macron.1-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1 is at ~/Library/Application Support/Macron/runtimes/wine-11.21-macron.13-dxmt-0.80-macron.1-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1
+Steam is open; asking it to quit (it rewrites its settings when it quits).
+steam dir:       ~/Library/Application Support/Steam
+build:           1794536281 (known: true)
+steamclient:     sha256 55a9341f7e411f52bae049193a98071ae666b0fddb90ab3cae6aa527d9d84335
+steam_osx:       sha256 99cc08899ce366b9518c0a3782d1ae5954762894d2bf54cc2069c41df86162af
+tool registered: true
+default tool:    true
+backup:          true
+steam app:       /Applications/Steam.app
+steam play:      on
+== Done: Steam Play is on with Macron as its tool
+Opened Steam again.

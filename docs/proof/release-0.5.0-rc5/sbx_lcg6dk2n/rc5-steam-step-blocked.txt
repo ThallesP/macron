@@ -1,0 +1,54 @@
+The published rc5 build (Release run 44221885639, SHA-256 32e2be997fbdde4aa653119917f2bb6f47392a3996565d22dbe1f0afd82672e9) with Steam from Valve's DMG open at its login window and Steam.app locked with `sudo chflags -R uchg /Applications/Steam.app`, which makes the change to Steam.app fail with the error macOS's App Management block gives ("operation not permitted"). The sandbox has SIP off, so the real block cannot be shown on it.
+
+steam open before
+installer: The install was successful.
+installer exit=0
+---- /Users/Shared/Macron install log.txt
+Macron is installed, but Steam Play is not on yet: macron steam enable failed.
+
+To finish:
+1. Quit Steam.
+2. Open Terminal and run: macron steam enable
+3. If that says "Operation not permitted", macOS blocked the change to Steam.app. Open System Settings > Privacy & Security > App Management, turn on Terminal (add it with + if it is not listed), and run the command again.
+
+Send this file to whoever gave you Macron if you need help. The full log is /Library/Logs/Macron-install.log.
+
+---- what the installer did ----
+== Macron install, 2026-11-18T02:18:53Z
+Macron:  0.5.0-rc5
+macOS:   26.7.2 (25G332), arm64
+SIP:     System Integrity Protection status: disabled.
+user: runner (~)
+macron: downloading wine-devel-11.21-osx64.tar.xz
+macron: downloading wine-11.21-macron.13-overlay-osx64.tar.xz
+macron: downloading dxmt-v0.80-builtin.tar.gz
+macron: downloading dxmt-0.80-macron.1-overlay.tar.xz
+macron: downloading dxvk-macOS-async-v1.10.3-20230507.tar.gz
+macron: unpacking Wine
+macron: adding DXMT
+macron: adding Macron's DXMT patches
+macron: adding Macron's Wine patches
+macron: adding DXVK
+macron: downloading macron-steam-bridge-proton-11.0-2e-macron.1-osx64.tar.xz
+macron: adding the Steam bridge
+macron: preparing the Windows environment new games start from (once per runtime)
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+macron: preparing the Windows environment new games start from (once per runtime)
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+wine: could not open working directory L"C:\\windows\\system32\\", starting in the Windows directory.
+runtime wine-11.21-macron.13-dxmt-0.80-macron.1-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1 is at ~/Library/Application Support/Macron/runtimes/wine-11.21-macron.13-dxmt-0.80-macron.1-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1
+Steam is open; asking it to quit (it rewrites its settings when it quits).
+macron: STEAM_PLAY_SWITCH_FAILED: could not copy the switch library into /Applications/Steam.app: open /Applications/Steam.app/Contents/MacOS/macron-steamplay.dylib: operation not permitted. If macOS blocked the change ("Operation not permitted"), allow the program you ran this from (Terminal, or Installer) under System Settings > Privacy & Security > App Management, then try again. Steam.app was left as it was
+NOTE: macron steam enable failed
+NOTE: Macron is installed; Steam Play is not on yet.
+== Done (Steam still to enable)
+Opened Steam again.
+---- after
+TextEdit is running with the note
+steam reopened
+Steam.app unchanged (every file's SHA-256 as before the install)
+tool registered: false
+default tool:    false
+backup:          false
+steam play:      off

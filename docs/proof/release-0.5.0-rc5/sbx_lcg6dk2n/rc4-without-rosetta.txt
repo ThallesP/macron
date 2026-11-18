@@ -1,0 +1,24 @@
+The published v0.5.0-rc4 DMG (downloaded from the release) on the sandbox without Rosetta 2, no Steam installed.
+
+455596284c45c1d5fb3f85558cf891bc1714ad9c4fc50834df488402ebf6e43b  rc4.dmg
+installer: Package name is Macron
+installer: Installing at base path /
+installer: The install failed. (The Installer encountered an error that caused the installation to fail. Contact the software manufacturer for assistance. An error occurred while running scripts from the package “Macron.pkg”.)
+installer exit=1
+---- tail -15 /Library/Logs/Macron-install.log
+macron: downloading wine-11.21-macron.13-overlay-osx64.tar.xz
+macron: downloading dxmt-v0.80-builtin.tar.gz
+macron: downloading dxmt-0.80-macron.1-overlay.tar.xz
+macron: downloading dxvk-macOS-async-v1.10.3-20230507.tar.gz
+macron: unpacking Wine
+macron: adding DXMT
+macron: adding Macron's DXMT patches
+macron: adding Macron's Wine patches
+macron: adding DXVK
+macron: downloading macron-steam-bridge-proton-11.0-2e-macron.1-osx64.tar.xz
+macron: adding the Steam bridge
+macron: preparing the Windows environment new games start from (once per runtime)
+macron: PREFIX_FAILED: wineboot failed: fork/exec ~/Library/Application Support/Macron/runtimes/wine-11.21-macron.13-dxmt-0.80-macron.1-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1/wine-dxmt/bin/wine: bad CPU type in executable
+Install failed: the runtime did not install (the lines above say why)
+Removed everything this install added; Steam is as it was.
+ls: /usr/local/bin/macron: No such file or directory
