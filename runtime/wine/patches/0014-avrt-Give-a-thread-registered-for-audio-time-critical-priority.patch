@@ -1,0 +1,212 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Wed, 18 Nov 2026 14:30:00 +0000
+Subject: [PATCH] avrt: Give a thread registered for audio time-critical
+ priority.
+
+A game registers the thread that fills its sound buffer with the
+Multimedia Class Scheduler (AvSetMmThreadCharacteristics, task "Audio" or
+"Pro Audio"), and Windows then runs it ahead of every ordinary thread.
+Wine's avrt is a stub, so the thread stays at the priority of the game's
+other threads and, when those keep every core busy, fills the buffer
+late: the sound crackles. Deadlock on an M3 refilled a 35 ms buffer later
+than 35 ms 41 times in a minute.
+
+Such a thread now gets THREAD_PRIORITY_TIME_CRITICAL, which Wine's server
+carries to macOS as a fixed priority above the timeshare range, and gets
+its earlier priority back when it reverts. Threads of the other tasks
+("Games", "Playback", ...) are registered and left as they are: they may
+compute for a whole frame, and would keep the sound threads waiting.
+
+AvSetMmMaxThreadCharacteristics refused every call that named two tasks
+(a "!" was missing); it takes them now.
+---
+diff --git a/dlls/avrt/main.c b/dlls/avrt/main.c
+index 68af35c..e41db40 100644
+--- a/dlls/avrt/main.c
++++ b/dlls/avrt/main.c
+@@ -27,6 +27,104 @@
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(avrt);
+ 
++/* A thread registered with a task. On Windows the Multimedia Class Scheduler
++ * raises such a thread above every ordinary one, so that a busy game cannot
++ * keep its own sound thread from filling the device's buffer in time. Here a
++ * thread of an audio task gets the highest priority Wine gives a thread of a
++ * normal process. A thread of any other task (Games, Playback, Capture, ...)
++ * is registered and left as it is: such a thread may compute for a whole
++ * frame, and at a fixed priority it would keep the sound threads waiting.
++ *
++ * A handle is a slot's number plus one. When every slot is taken a thread is
++ * registered without a slot and without a priority, as every thread was
++ * before. A thread that ends without reverting frees its slots. */
++struct mm_thread
++{
++    DWORD thread_id;
++    BOOL  raised;
++    int   previous_priority;
++};
++
++#define UNTRACKED_HANDLE ((HANDLE)0x12345678)
++
++static struct mm_thread mm_threads[256];
++static CRITICAL_SECTION mm_threads_cs;
++static CRITICAL_SECTION_DEBUG mm_threads_cs_debug =
++{
++    0, 0, &mm_threads_cs,
++    { &mm_threads_cs_debug.ProcessLocksList, &mm_threads_cs_debug.ProcessLocksList },
++      0, 0, { (DWORD_PTR)(__FILE__ ": mm_threads_cs") }
++};
++static CRITICAL_SECTION mm_threads_cs = { &mm_threads_cs_debug, -1, 0, 0, 0, 0 };
++
++static BOOL is_audio_task(const WCHAR *task)
++{
++    return !wcsicmp(task, L"Audio") || !wcsicmp(task, L"Pro Audio");
++}
++
++static HANDLE register_thread(BOOL audio, DWORD *index)
++{
++    HANDLE handle = UNTRACKED_HANDLE;
++    int previous = GetThreadPriority(GetCurrentThread());
++    BOOL raised = FALSE;
++    unsigned int i;
++
++    if (!*index) *index = 1;
++    if (previous == THREAD_PRIORITY_ERROR_RETURN) previous = THREAD_PRIORITY_NORMAL;
++
++    EnterCriticalSection(&mm_threads_cs);
++    for (i = 0; i < ARRAY_SIZE(mm_threads); i++)
++    {
++        struct mm_thread *thread = &mm_threads[i];
++
++        if (thread->thread_id) continue;
++        thread->thread_id = GetCurrentThreadId();
++        thread->previous_priority = previous;
++        raised = audio && previous < THREAD_PRIORITY_TIME_CRITICAL &&
++                 SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
++        thread->raised = raised;
++        handle = (HANDLE)(UINT_PTR)(i + 1);
++        break;
++    }
++    LeaveCriticalSection(&mm_threads_cs);
++
++    TRACE("thread %04lx, priority %d: handle %p, %s\n", GetCurrentThreadId(), previous, handle,
++          raised ? "now time critical" : "priority unchanged");
++    return handle;
++}
++
++static void restore_priority(const struct mm_thread *thread)
++{
++    HANDLE handle;
++
++    if (!thread->raised) return;
++    if (thread->thread_id == GetCurrentThreadId())
++    {
++        SetThreadPriority(GetCurrentThread(), thread->previous_priority);
++        return;
++    }
++    if (!(handle = OpenThread(THREAD_SET_INFORMATION, FALSE, thread->thread_id))) return;
++    SetThreadPriority(handle, thread->previous_priority);
++    CloseHandle(handle);
++}
++
++static void forget_current_thread(void)
++{
++    DWORD thread_id = GetCurrentThreadId();
++    unsigned int i;
++
++    EnterCriticalSection(&mm_threads_cs);
++    for (i = 0; i < ARRAY_SIZE(mm_threads); i++)
++        if (mm_threads[i].thread_id == thread_id) mm_threads[i].thread_id = 0;
++    LeaveCriticalSection(&mm_threads_cs);
++}
++
++BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, void *reserved)
++{
++    if (reason == DLL_THREAD_DETACH) forget_current_thread();
++    return TRUE;
++}
++
+ static inline WCHAR *strdupAW(const char *src)
+ {
+     int len;
+@@ -56,7 +154,7 @@ HANDLE WINAPI AvSetMmThreadCharacteristicsA(const char *name, DWORD *index)
+ 
+ HANDLE WINAPI AvSetMmThreadCharacteristicsW(const WCHAR *name, DWORD *index)
+ {
+-    FIXME("(%s,%p): stub\n", debugstr_w(name), index);
++    TRACE("(%s,%p)\n", debugstr_w(name), index);
+ 
+     if (!name)
+     {
+@@ -70,7 +168,7 @@ HANDLE WINAPI AvSetMmThreadCharacteristicsW(const WCHAR *name, DWORD *index)
+         return NULL;
+     }
+ 
+-    return (HANDLE)0x12345678;
++    return register_thread(is_audio_task(name), index);
+ }
+ 
+ BOOL WINAPI AvQuerySystemResponsiveness(HANDLE AvrtHandle, ULONG *value)
+@@ -81,14 +179,39 @@ BOOL WINAPI AvQuerySystemResponsiveness(HANDLE AvrtHandle, ULONG *value)
+ 
+ BOOL WINAPI AvRevertMmThreadCharacteristics(HANDLE AvrtHandle)
+ {
+-    FIXME("(%p): stub\n", AvrtHandle);
+-    return TRUE;
++    UINT_PTR slot = (UINT_PTR)AvrtHandle - 1;
++    BOOL found = FALSE;
++
++    TRACE("(%p)\n", AvrtHandle);
++
++    if (AvrtHandle == UNTRACKED_HANDLE) return TRUE;
++
++    EnterCriticalSection(&mm_threads_cs);
++    if (slot < ARRAY_SIZE(mm_threads) && mm_threads[slot].thread_id)
++    {
++        restore_priority(&mm_threads[slot]);
++        mm_threads[slot].thread_id = 0;
++        found = TRUE;
++    }
++    LeaveCriticalSection(&mm_threads_cs);
++
++    if (!found) SetLastError(ERROR_INVALID_HANDLE);
++    return found;
+ }
+ 
+ BOOL WINAPI AvSetMmThreadPriority(HANDLE AvrtHandle, AVRT_PRIORITY prio)
+ {
+-    FIXME("(%p)->(%u) stub\n", AvrtHandle, prio);
+-    return TRUE;
++    UINT_PTR slot = (UINT_PTR)AvrtHandle - 1;
++
++    /* A priority within the task. An audio task's thread is already as high
++     * as it goes, and the other tasks get no priority to move within. */
++    TRACE("(%p)->(%d)\n", AvrtHandle, prio);
++
++    if (AvrtHandle == UNTRACKED_HANDLE) return TRUE;
++    if (slot < ARRAY_SIZE(mm_threads) && mm_threads[slot].thread_id) return TRUE;
++
++    SetLastError(ERROR_INVALID_HANDLE);
++    return FALSE;
+ }
+ 
+ HANDLE WINAPI AvSetMmMaxThreadCharacteristicsA(const char *task1, const char *task2, DWORD *index)
+@@ -117,9 +240,9 @@ HANDLE WINAPI AvSetMmMaxThreadCharacteristicsA(const char *task1, const char *ta
+ 
+ HANDLE WINAPI AvSetMmMaxThreadCharacteristicsW(const WCHAR *task1, const WCHAR *task2, DWORD *index)
+ {
+-    FIXME("(%s,%s,%p): stub\n", debugstr_w(task1), debugstr_w(task2), index);
++    TRACE("(%s,%s,%p)\n", debugstr_w(task1), debugstr_w(task2), index);
+ 
+-    if (!task1 || task2)
++    if (!task1 || !task2)
+     {
+         SetLastError(ERROR_INVALID_TASK_NAME);
+         return NULL;
+@@ -131,5 +254,5 @@ HANDLE WINAPI AvSetMmMaxThreadCharacteristicsW(const WCHAR *task1, const WCHAR *
+         return NULL;
+     }
+ 
+-    return (HANDLE)0x12345678;
++    return register_thread(is_audio_task(task1) || is_audio_task(task2), index);
+ }
