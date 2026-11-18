@@ -1,17 +1,22 @@
 #!/bin/bash
-# Checks that a patched Wine Unix library other than winemac.so (opengl32.so)
+# Checks that a patched Wine Unix library other than winemac.so (opengl32.so),
+# or a Unix program (wineserver),
 # can replace the one in Gcenx's wine-devel 11.21 tree: an unpatched build of
 # the same source must import from Wine's own libraries, export, link and
 # search exactly what Gcenx's does and import nothing from the system that
 # Gcenx's does not; the patched build must export, link and search what the
 # unpatched one does and import nothing it does not. Its Windows side is
-# shipped with it (check-pe-exports.sh), so the two always match.
-# Usage: check-unix-lib.sh <gcenx lib.so> <built lib.so> <patched lib.so>
+# shipped with it (check-pe-exports.sh), so the two always match. A program
+# imports nothing from Wine's libraries and nothing links against it, so for
+# one (a fourth argument `program`) the import list may be empty and the
+# exported symbols, which only say whether it was stripped, are not compared.
+# Usage: check-unix-lib.sh <gcenx lib.so> <built lib.so> <patched lib.so> [program]
 set -euo pipefail
 
 gcenx=$1
 upstream=$2
 patched=$3
+kind=${4:-library}
 name=$(basename "$gcenx")
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
@@ -50,14 +55,18 @@ subset() {
 echo "== Gcenx's $name against an unpatched build of the same source"
 wine_imports "$gcenx" >"$tmp/gi"; wine_imports "$upstream" >"$tmp/ui"
 same "symbols imported from ntdll.so and win32u.so" "$tmp/gi" "$tmp/ui"
-if [ ! -s "$tmp/gi" ]; then
+if [ ! -s "$tmp/gi" ] && [ "$kind" != program ]; then
   echo "DIFFERENT: found no symbols imported from ntdll.so or win32u.so, the check is broken"
   failed=1
 fi
 system_imports "$gcenx" >"$tmp/gs"; system_imports "$upstream" >"$tmp/us"
 subset "system symbols are a subset of Gcenx's" "$tmp/gs" "$tmp/us"
 exports "$gcenx" >"$tmp/ge"; exports "$upstream" >"$tmp/ue"
-same "exported symbols" "$tmp/ge" "$tmp/ue"
+[ "$kind" = program ] || same "exported symbols" "$tmp/ge" "$tmp/ue"
+if [ ! -s "$tmp/gs" ]; then
+  echo "DIFFERENT: found no symbols imported from the system, the check is broken"
+  failed=1
+fi
 dylibs "$gcenx" >"$tmp/gl"; dylibs "$upstream" >"$tmp/ul"
 same "install name and linked libraries" "$tmp/gl" "$tmp/ul"
 rpaths "$gcenx" >"$tmp/gr"; rpaths "$upstream" >"$tmp/ur"
@@ -67,7 +76,7 @@ echo "== The patched $name against the unpatched build"
 imports "$upstream" >"$tmp/ua"; imports "$patched" >"$tmp/pa"
 subset "imported symbols are a subset of the unpatched build's" "$tmp/ua" "$tmp/pa"
 exports "$patched" >"$tmp/pe"
-same "exported symbols" "$tmp/ue" "$tmp/pe"
+[ "$kind" = program ] || same "exported symbols" "$tmp/ue" "$tmp/pe"
 dylibs "$patched" >"$tmp/pl"
 same "install name and linked libraries" "$tmp/ul" "$tmp/pl"
 rpaths "$patched" >"$tmp/pr"
