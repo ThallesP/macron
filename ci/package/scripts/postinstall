@@ -42,11 +42,13 @@ as_user() {
 }
 
 # Writes this run into the install log and Installer's log, and, when there is
-# a summary, into the report the player sees.
+# a summary, into the report the player sees, without MoltenVK's extension
+# list that Wine prints while the Windows environment is prepared.
 finish() {
   status=$?
   cat "$run_log" >> "$log"
   cat "$run_log" >&3
+  rm -f "$report"
   if [ -n "$summary" ]; then
     {
       echo "$summary"
@@ -54,7 +56,7 @@ finish() {
       echo "Send this file to whoever gave you Macron if you need help. The full log is /Library/Logs/Macron-install.log."
       echo
       echo "---- what the installer did ----"
-      cat "$run_log"
+      grep -v -e '^\[mvk-info\]' -e "^$(printf '\t')" "$run_log"
     } > "$report"
     chmod 644 "$report"
     uid=$(id -u "$user" 2> /dev/null)
@@ -126,8 +128,7 @@ if ! as_user "$macron" runtime install; then
 fi
 
 if [ ! -e "$steam_dir/Steam.AppBundle/Steam/Contents/MacOS/steamclient.dylib" ]; then
-  echo "Steam is not installed, or has not been started yet, so Macron is not registered with it."
-  echo "Install Steam, start it once, quit it, then run in Terminal: macron steam enable"
+  steam_not_on "Steam is not installed, or has not been started yet (install Steam, start it once and sign in, then follow the steps below)"
   echo "== Done (without Steam)"
   exit 0
 fi
