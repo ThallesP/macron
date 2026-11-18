@@ -161,9 +161,31 @@ The patch gives a thread of the tasks `Audio` and `Pro Audio` `THREAD_PRIORITY_T
 
 What it does not do: Windows puts these threads in its realtime range, above a process's own time-critical threads, and Wine's server refuses that range to a process of normal priority class. So a game with busy time-critical threads of its own can still delay its sound thread. `tools/perf/sndload.c` measures late wake-ups of such a thread under load, with and without the registration.
 
+**On the M3 it changed nothing by itself** (2026-11-18): Deadlock's refills later than the buffer were 16 and 15 in a minute with the patch and 9 and 18 without, and `sndload` under load had 83 and 87 late wake-ups registered against 104 and 82 not. The thread was woken late, and no priority of its own changes that; 0015 is about the waking.
+
 On a sandbox (sbx_ttkjpgu5, three cores, overlay `macron.14`) `tools/perf/sndload.c` opens the same stream (1536 frames, 32 ms at 48 kHz) and keeps the cores busy with three ordinary threads and six at `THREAD_PRIORITY_HIGHEST`, mixing for 4 ms a wake-up. Three alternating 20 s runs each way: unregistered, the thread woke 1268 to 1370 times instead of about 1875, intervals p95 27 to 36 ms, 36 to 86 of them longer than the buffer; registered as `Pro Audio` (priority 0 before, 15 after, 0 after reverting), 1851 to 1869 times, p95 11.5 to 13 ms, 14 to 19 longer than the buffer. Those 14 to 19 are the sandbox's: with a lighter load (three threads at `HIGHEST`) both ways had 15 to 28 of them in that session and 1 to 2 in an earlier one, so it is the virtual machine stalling, not the thread's priority. What the patch does for Deadlock is the M3's to say.
 
 `avrt.dll` is a Windows module, built for i386 and x86_64; `../check-pe-exports.sh` checks that it exports what Gcenx's does.
+
+## 0015: the server runs at the top of the application priority band
+
+Every wait a Windows thread wakes from, every event, semaphore and mutex it signals and every input message goes through `wineserver`'s one thread (Gcenx's Wine has neither esync nor msync). macOS runs that thread like any other, at timeshare priority 31, so on a busy Mac it queues behind the game's own threads, and whatever it was about to wake waits with it, whatever that thread's own priority. Patch 0014 could not help for that reason: it raised the thread that is woken, not the one that wakes it.
+
+Measured on Thalles's M3 (2026-11-18) with `tools/perf/sndload.c` in its `--stream 0` mode: a time-critical thread signals every 10 ms, another time-critical thread waits for the signal, and eight ordinary and four high-priority threads keep the eight cores busy, 15 s a run.
+
+| | wake-ups later than 35 ms | signal to wake-up, p95 | p99 | longest |
+|---|---|---|---|---|
+| event, server as upstream (5 runs) | 27 to 48 | 20 to 25 ms | 44 to 57 ms | 118 to 192 ms |
+| event, server raised (2 runs) | 0 | 0.02 to 0.03 ms | 0.03 to 0.04 ms | 0.07 ms |
+| `WakeByAddressSingle`, no server (4 runs) | 0 | 0.01 ms | 0.01 to 0.02 ms | 0.03 ms |
+
+With only three busy threads the upstream server still let 3 and 7 wake-ups in 15 s arrive later than 35 ms (up to 169 ms); raised, none (longest interval 11.08 ms against a 10 ms period).
+
+The patch gives the server's thread what the server itself gives a time-critical thread of a normal process: not timeshare, importance 32, which is priority 63 (`ps -M` shows `63R`). `MACRON_WINESERVER_PRIORITY=normal` in the environment leaves it as upstream; that is how the two rows above were taken with one build. Where a process runs under a QoS clamp, as everything started over ssh on the sandboxes does (priority 20), the thread becomes fixed-priority at the clamp.
+
+**What it did not change: Deadlock's sound on its first screen.** Four starts on the M3, alternating: refills later than the buffer in a minute were 11 and 17 raised, 8 and 22 as upstream, and the long ones were the sound thread waiting for its wake-up either way (61 to 137 ms). `sndload` with a real stream, where Wine's own timer thread does the signalling, went from 81 and 90 late wake-ups to 53 and 61: better, not gone. So something in Wine's sound timer path is late by itself; that is open. Frame rate in those starts: a median 62.4 and 60.1 frames a second raised, 65.5 and 64.4 as upstream, on a Mac that goes from thermal level 0 to 2 in each start, so no difference can be read from four of them.
+
+`wineserver` is a Unix program. `../check-unix-lib.sh` checks that an unpatched build links and searches what Gcenx's does (Gcenx's is linked against the `libinotify` its tree ships, for folder change notifications, so the build is too) and that the patch adds no import but `mach_thread_self`.
 
 ## Building
 
