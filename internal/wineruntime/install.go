@@ -68,10 +68,11 @@ var dxmtOverlayModules = []string{
 	"lib/wine/x86_64-unix/winemetal.so",
 }
 
-// overlayUnixLibs are the overlay's Unix libraries that go into the plain
-// tree too, because the overlay's Windows modules there call into them:
-// opengl32.dll's calls to its Unix side are numbered, and patch 0007 adds one.
-var overlayUnixLibs = []string{"lib/wine/x86_64-unix/opengl32.so"}
+// overlayUnixFiles are the overlay's Unix files that go into the plain tree
+// too. opengl32.so because the overlay's opengl32.dll there calls into it by
+// number, and patch 0007 adds a call. wineserver because every game runs
+// through it, whichever tree it starts from (patch 0015).
+var overlayUnixFiles = []string{"lib/wine/x86_64-unix/opengl32.so", "bin/wineserver"}
 
 func Find(layout Layout, manifest Manifest) (Installed, error) {
 	dir := layout.RuntimeDir(manifest.Version)
@@ -244,14 +245,14 @@ func addWineOverlay(ctx context.Context, archive, staging string) error {
 			return err
 		}
 	}
-	for _, lib := range overlayUnixLibs {
-		source := filepath.Join(unpacked, lib)
+	for _, file := range overlayUnixFiles {
+		source := filepath.Join(unpacked, file)
 		if _, err := os.Stat(source); err != nil {
 			continue
 		}
-		output, err := HostCommand(ctx, "cp", source, filepath.Join(staging, string(TreePlain), lib)).CombinedOutput()
+		output, err := HostCommand(ctx, "cp", source, filepath.Join(staging, string(TreePlain), file)).CombinedOutput()
 		if err != nil {
-			return failure.Errorf(failure.CodeExtractFailed, "copying %s into the plain Wine tree: %s: %s", filepath.Base(lib), err, output)
+			return failure.Errorf(failure.CodeExtractFailed, "copying %s into the plain Wine tree: %s: %s", filepath.Base(file), err, output)
 		}
 	}
 	return os.RemoveAll(unpacked)

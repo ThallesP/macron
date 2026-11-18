@@ -52,6 +52,7 @@ func serve(t *testing.T) *fixture {
 	t.Helper()
 	wine := tarball(t, map[string]string{
 		"Wine Devel.app/Contents/Resources/wine/bin/wine":                          "wine",
+		"Wine Devel.app/Contents/Resources/wine/bin/wineserver":                    "wine wineserver",
 		"Wine Devel.app/Contents/Resources/wine/lib/wine/x86_64-windows/d3d11.dll": "wine d3d11",
 		"Wine Devel.app/Contents/Resources/wine/lib/wine/x86_64-unix/ntdll.so":     "ntdll",
 		"Wine Devel.app/Contents/Resources/wine/lib/wine/x86_64-unix/winemac.so":   "wine winemac",
@@ -68,6 +69,7 @@ func serve(t *testing.T) *fixture {
 		"lib/wine/i386-windows/wined3d.dll":   "macron wined3d 32",
 		"lib/wine/x86_64-windows/wined3d.dll": "macron wined3d",
 		"lib/wine/x86_64-unix/opengl32.so":    "macron opengl32 unix",
+		"bin/wineserver":                      "macron wineserver",
 		"share/doc/macron-wine/COPYING.LIB":   "licence",
 	})
 	dxmtOverlay := tarball(t, map[string]string{
@@ -166,6 +168,9 @@ func TestInstallBuildsAPlainAndADXMTTree(t *testing.T) {
 		}
 		if got := read(t, filepath.Join(installed.Root(tree), "lib/wine/x86_64-unix/opengl32.so")); got != "macron opengl32 unix" {
 			t.Errorf("%s tree opengl32.so = %q", tree, got)
+		}
+		if got := read(t, installed.Wineserver(tree)); got != "macron wineserver" {
+			t.Errorf("%s tree wineserver = %q", tree, got)
 		}
 	}
 	if got := read(t, installed.Wine(TreeDXMT)); got != "wine" {
