@@ -39,11 +39,13 @@ tar -xJf gcenx-wine.tar.xz -C gcenx --include '*/x86_64-unix/winemac.so' --inclu
   --include '*/i386-windows/wined3d.dll' --include '*/x86_64-windows/wined3d.dll' --include '*/x86_64-windows/wow64cpu.dll' \
   --include '*/x86_64-unix/opengl32.so' --include '*/i386-windows/opengl32.dll' --include '*/x86_64-windows/opengl32.dll' \
   --include '*/x86_64-windows/wineboot.exe' --include '*/i386-windows/avrt.dll' --include '*/x86_64-windows/avrt.dll' \
-  --include '*/bin/wineserver' --include '*/lib/libinotify.0.dylib'
+  --include '*/bin/wineserver' --include '*/lib/libinotify.0.dylib' --include '*/x86_64-unix/winecoreaudio.so'
 gcenx_winemac=$(find gcenx -path '*/x86_64-unix/winemac.so')
 gcenx_win32u=$(find gcenx -path '*/x86_64-unix/win32u.so')
 gcenx_opengl32=$(find gcenx -path '*/x86_64-unix/opengl32.so')
 gcenx_wineserver=$(find gcenx -path '*/bin/wineserver')
+gcenx_coreaudio=$(find gcenx -path '*/x86_64-unix/winecoreaudio.so')
+coreaudio_install_name=$(otool -D "$gcenx_coreaudio" | tail -n 1)
 wineserver_inotify=$(otool -L "$gcenx_wineserver" | awk '/inotify/ {print $1}')
 wineserver_rpath=$(otool -l "$gcenx_wineserver" | awk '$1 == "cmd" && $2 == "LC_RPATH" {r=1} r && $1 == "path" {print $2; exit}')
 echo "Gcenx's wineserver links $wineserver_inotify and searches $wineserver_rpath"
@@ -79,7 +81,12 @@ build() {
     dlls/wined3d/i386-windows/wined3d.dll dlls/wined3d/x86_64-windows/wined3d.dll dlls/wow64cpu/x86_64-windows/wow64cpu.dll \
     dlls/opengl32/opengl32.so dlls/opengl32/i386-windows/opengl32.dll dlls/opengl32/x86_64-windows/opengl32.dll \
     programs/wineboot/x86_64-windows/wineboot.exe dlls/avrt/i386-windows/avrt.dll dlls/avrt/x86_64-windows/avrt.dll \
-    server/wineserver)
+    server/wineserver dlls/winecoreaudio.drv/winecoreaudio.so)
+}
+
+keep_coreaudio() { # <upstream|patched>
+  cp build/dlls/winecoreaudio.drv/winecoreaudio.so "$work/winecoreaudio-$1.so"
+  install_name_tool -id "$coreaudio_install_name" "$work/winecoreaudio-$1.so"
 }
 
 # Gcenx's wineserver finds libinotify in the tree's lib folder, next to bin.
@@ -107,6 +114,7 @@ cp build/programs/wineboot/x86_64-windows/wineboot.exe "$work/wineboot-upstream.
 for arch in i386 x86_64; do cp "build/dlls/avrt/$arch-windows/avrt.dll" "$work/avrt-upstream-$arch.dll"; done
 keep_opengl32 upstream
 keep_wineserver upstream
+keep_coreaudio upstream
 
 for patch in "$here"/patches/*.patch; do
   patch -d src -p1 --forward <"$patch"
@@ -122,6 +130,7 @@ cp build/programs/wineboot/x86_64-windows/wineboot.exe "$work/wineboot-patched.e
 for arch in i386 x86_64; do cp "build/dlls/avrt/$arch-windows/avrt.dll" "$work/avrt-patched-$arch.dll"; done
 keep_opengl32 patched
 keep_wineserver patched
+keep_coreaudio patched
 
 "$here/check-abi.sh" "$gcenx_winemac" "$gcenx_win32u" "$work/winemac-upstream.so" "$work/win32u-upstream.so" "$work/winemac-patched.so" | tee "$out/abi-check.txt"
 for arch in i386 x86_64; do
@@ -146,6 +155,16 @@ ALLOWED_NEW_IMPORTS='_mach_thread_self libSystem)' \
   "$here/check-unix-lib.sh" "$gcenx_wineserver" "$work/wineserver-upstream" "$work/wineserver-patched" program | tee -a "$out/abi-check.txt"
 
 stage="$work/stage"
+# The sound timer of patch 0016 waits for Mach deadlines as a realtime thread.
+ALLOWED_NEW_IMPORTS='_mach_absolute_time libSystem)
+_mach_port_deallocate libSystem)
+_mach_task_self_ libSystem)
+_mach_thread_self libSystem)
+_mach_timebase_info libSystem)
+_mach_wait_until libSystem)
+_thread_policy_set libSystem)' \
+  "$here/check-unix-lib.sh" "$gcenx_coreaudio" "$work/winecoreaudio-upstream.so" "$work/winecoreaudio-patched.so" | tee -a "$out/abi-check.txt"
+
 rm -rf "$stage" && mkdir -p "$stage/bin" "$stage/lib/wine/x86_64-unix" "$stage/lib/wine/i386-windows" "$stage/lib/wine/x86_64-windows" "$stage/share/doc/macron-wine"
 cp "$work/winemac-patched.so" "$stage/lib/wine/x86_64-unix/winemac.so"
 for arch in i386 x86_64; do cp "$work/wined3d-patched-$arch.dll" "$stage/lib/wine/$arch-windows/wined3d.dll"; done
@@ -156,6 +175,8 @@ cp "$work/wineboot-patched.exe" "$stage/lib/wine/x86_64-windows/wineboot.exe"
 for arch in i386 x86_64; do cp "$work/avrt-patched-$arch.dll" "$stage/lib/wine/$arch-windows/avrt.dll"; done
 codesign --force --sign - "$stage/lib/wine/x86_64-unix/winemac.so"
 codesign --force --sign - "$stage/lib/wine/x86_64-unix/opengl32.so"
+cp "$work/winecoreaudio-patched.so" "$stage/lib/wine/x86_64-unix/winecoreaudio.so"
+codesign --force --sign - "$stage/lib/wine/x86_64-unix/winecoreaudio.so"
 cp "$work/wineserver-patched" "$stage/bin/wineserver"
 chmod 755 "$stage/bin/wineserver"
 codesign --force --sign - "$stage/bin/wineserver"

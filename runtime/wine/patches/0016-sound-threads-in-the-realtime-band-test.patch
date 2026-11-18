@@ -1,0 +1,252 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Wed, 18 Nov 2026 18:30:00 +0000
+Subject: [PATCH] winecoreaudio, avrt, server: Sound threads in the realtime
+ band (test build).
+
+Test build, with a trace (WINEDEBUG=+coreaudio): Wine's event timer for a
+sound stream waits for absolute deadlines as a realtime thread instead of
+sleeping a relative time at fixed priority; a thread registered for audio
+with avrt gets a realtime priority, which the server now gives a thread of
+a normal process on macOS; the device's callback counts the frames it
+wanted and did not find.
+---
+diff --git a/dlls/avrt/main.c b/dlls/avrt/main.c
+index e41db40..722b0bb 100644
+--- a/dlls/avrt/main.c
++++ b/dlls/avrt/main.c
+@@ -19,8 +19,11 @@
+ 
+ #include <stdarg.h>
+ 
++#include "ntstatus.h"
++#define WIN32_NO_STATUS
+ #include "windef.h"
+ #include "winbase.h"
++#include "winternl.h"
+ #include "winnls.h"
+ #include "wine/debug.h"
+ #include "avrt.h"
+@@ -62,6 +65,18 @@ static BOOL is_audio_task(const WCHAR *task)
+     return !wcsicmp(task, L"Audio") || !wcsicmp(task, L"Pro Audio");
+ }
+ 
++/* The Multimedia Class Scheduler runs an audio task's thread in the realtime
++ * range (16 to 26). Macron's server gives such a priority to a thread of any
++ * process and carries it to macOS's realtime band; a server that refuses it
++ * leaves the highest priority of a normal process. */
++static BOOL raise_for_audio(void)
++{
++    DWORD realtime = 24;
++
++    if (!NtSetInformationThread(GetCurrentThread(), ThreadPriority, &realtime, sizeof(realtime))) return TRUE;
++    return SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
++}
++
+ static HANDLE register_thread(BOOL audio, DWORD *index)
+ {
+     HANDLE handle = UNTRACKED_HANDLE;
+@@ -80,8 +95,7 @@ static HANDLE register_thread(BOOL audio, DWORD *index)
+         if (thread->thread_id) continue;
+         thread->thread_id = GetCurrentThreadId();
+         thread->previous_priority = previous;
+-        raised = audio && previous < THREAD_PRIORITY_TIME_CRITICAL &&
+-                 SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
++        raised = audio && previous < THREAD_PRIORITY_TIME_CRITICAL && raise_for_audio();
+         thread->raised = raised;
+         handle = (HANDLE)(UINT_PTR)(i + 1);
+         break;
+@@ -89,7 +103,7 @@ static HANDLE register_thread(BOOL audio, DWORD *index)
+     LeaveCriticalSection(&mm_threads_cs);
+ 
+     TRACE("thread %04lx, priority %d: handle %p, %s\n", GetCurrentThreadId(), previous, handle,
+-          raised ? "now time critical" : "priority unchanged");
++          raised ? "raised for audio" : "priority unchanged");
+     return handle;
+ }
+ 
+diff --git a/dlls/winecoreaudio.drv/coreaudio.c b/dlls/winecoreaudio.drv/coreaudio.c
+index 163faff..cdc20bc 100644
+--- a/dlls/winecoreaudio.drv/coreaudio.c
++++ b/dlls/winecoreaudio.drv/coreaudio.c
+@@ -48,6 +48,9 @@
+ #include <AudioToolbox/AudioConverter.h>
+ #include <AudioUnit/AudioUnit.h>
+ #include <os/lock.h>
++#include <mach/mach.h>
++#include <mach/mach_time.h>
++#include <mach/thread_policy.h>
+ 
+ #undef LoadResource
+ #undef CompareString
+@@ -100,6 +103,9 @@ struct coreaudio_stream
+     UINT32 wrap_bufsize_frames;
+     UINT64 written_frames;
+     INT32 getbuf_last;
++    /* what the device's thread saw, for the timer thread's trace */
++    UINT64 last_render_time, longest_render_gap;
++    UINT32 missing_frames, short_renders, renders;
+     WAVEFORMATEX *fmt;
+     BYTE *local_buffer, *cap_buffer, *wrap_buffer, *resamp_buffer, *tmp_buffer;
+ };
+@@ -444,10 +450,19 @@ static OSStatus ca_render_cb(void *user, AudioUnitRenderActionFlags *flags,
+ {
+     struct coreaudio_stream *stream = user;
+     UINT32 to_copy_bytes, to_copy_frames, chunk_bytes, chunk_frames, lcl_offs_bytes;
++    UINT64 now = mach_absolute_time();
+ 
+     os_unfair_lock_lock(&stream->lock);
+ 
+     if(stream->playing){
++        if(stream->last_render_time && now - stream->last_render_time > stream->longest_render_gap)
++            stream->longest_render_gap = now - stream->last_render_time;
++        stream->last_render_time = now;
++        stream->renders++;
++        if(stream->held_frames < nframes){
++            stream->short_renders++;
++            stream->missing_frames += nframes - stream->held_frames;
++        }
+         lcl_offs_bytes = stream->lcl_offs_frames * stream->fmt->nBlockAlign;
+         to_copy_frames = min(nframes, stream->held_frames);
+         to_copy_bytes = to_copy_frames * stream->fmt->nBlockAlign;
+@@ -1703,29 +1718,88 @@ static NTSTATUS unix_get_current_padding(void *args)
+     return STATUS_SUCCESS;
+ }
+ 
++/* Macron: the thread that tells a program a period has passed runs in the
++ * realtime band and waits for absolute deadlines.
++ *
++ * A program that keeps little sound queued (SDL keeps two periods at most)
++ * has a gap whenever this tick is a period or two late. Wine sleeps a relative
++ * time with NtDelayExecution, which yields the processor first and then waits
++ * in select(), whose timeout macOS may fire late for any thread outside the
++ * realtime band. A realtime thread's deadline is not coalesced and it runs
++ * ahead of every thread of the game.
++ *
++ * The server sets a thread's scheduling when it starts and again whenever the
++ * process's priority class changes, which takes the thread out of the realtime
++ * band: so the policy is set again every few seconds. */
++static void set_timer_thread_realtime(const struct mach_timebase_info *timebase, UINT64 period)
++{
++    struct thread_time_constraint_policy policy;
++    mach_port_t self = mach_thread_self();
++
++    policy.period = period;
++    policy.computation = 100000ull * timebase->denom / timebase->numer;  /* 100 us */
++    policy.constraint = 1000000ull * timebase->denom / timebase->numer;  /* 1 ms */
++    policy.preemptible = 1;
++    thread_policy_set(self, THREAD_TIME_CONSTRAINT_POLICY, (thread_policy_t)&policy,
++                      THREAD_TIME_CONSTRAINT_POLICY_COUNT);
++    mach_port_deallocate(mach_task_self(), self);
++}
++
+ static void unix_timer_loop(void *args)
+ {
+     struct coreaudio_stream *stream = args;
+-    LARGE_INTEGER delay, next, last;
+-    int adjust;
++    struct mach_timebase_info timebase;
++    UINT64 period, next, now, wake, signalled;
++    unsigned int tick = 0, late_wakes = 0, slow_events = 0;
+ 
+-    delay.QuadPart = -stream->period;
+-    NtQueryPerformanceCounter(&last, NULL);
+-    next.QuadPart = last.QuadPart + stream->period;
++    mach_timebase_info(&timebase);
++    period = (UINT64)stream->period * 100 * timebase.denom / timebase.numer;
++    next = mach_absolute_time();
+ 
+     while(!stream->please_quit){
++        if(tick == 0 || tick == 8 || !(tick % 256))
++            set_timer_thread_realtime(&timebase, period);
++        tick++;
++
++        signalled = mach_absolute_time();
+         NtSetEvent(stream->event, NULL);
+-        NtDelayExecution(FALSE, &delay);
+-        NtQueryPerformanceCounter(&last, NULL);
++        now = mach_absolute_time();
++        if(now - signalled > period / 4){
++            slow_events++;
++            TRACE("tick %u: setting the event took %u us\n", tick,
++                  (unsigned int)((now - signalled) * timebase.numer / timebase.denom / 1000));
++        }
+ 
+-        adjust = next.QuadPart - last.QuadPart;
+-        if(adjust > stream->period / 2)
+-            adjust = stream->period / 2;
+-        else if(adjust < -stream->period / 2)
+-            adjust = -stream->period / 2;
++        /* One tick a period on average: after a late one the next ones come
++         * half a period apart until the schedule is met again, as before. A
++         * schedule more than 16 periods behind is dropped. */
++        next += period;
++        if(next + 16 * period < now) next = now;
++        wake = max(next, now + period / 2);
++        mach_wait_until(wake);
++
++        now = mach_absolute_time();
++        if(now - wake > period / 4){
++            late_wakes++;
++            TRACE("tick %u: woke %u us late\n", tick,
++                  (unsigned int)((now - wake) * timebase.numer / timebase.denom / 1000));
++        }
+ 
+-        delay.QuadPart = -(stream->period + adjust);
+-        next.QuadPart += stream->period;
++        if(!(tick % 1024)){
++            UINT32 missing, short_renders, renders;
++            UINT64 gap;
++
++            os_unfair_lock_lock(&stream->lock);
++            missing = stream->missing_frames; short_renders = stream->short_renders;
++            renders = stream->renders; gap = stream->longest_render_gap;
++            stream->missing_frames = stream->short_renders = stream->renders = 0;
++            stream->longest_render_gap = 0;
++            os_unfair_lock_unlock(&stream->lock);
++            TRACE("1024 ticks: %u woke late, %u slow events; the device asked %u times, %u times for more than was queued "
++                  "(%u frames of silence), longest time between two asks %u us\n", late_wakes, slow_events, renders,
++                  short_renders, missing, (unsigned int)(gap * timebase.numer / timebase.denom / 1000));
++            late_wakes = slow_events = 0;
++        }
+     }
+ }
+ 
+diff --git a/server/thread.c b/server/thread.c
+index 9763c7c..3b34409 100644
+--- a/server/thread.c
++++ b/server/thread.c
+@@ -239,6 +239,20 @@ static void raise_server_priority(void)
+     if (setting && !strcmp( setting, "normal" )) return;
+ 
+     self = mach_thread_self();
++    if (setting && !strcmp( setting, "realtime" ))
++    {
++        /* for measuring: the server in the realtime band, as the threads it wakes for sound are */
++        struct thread_time_constraint_policy time_constraint_policy;
++
++        time_constraint_policy.period = 0;
++        time_constraint_policy.computation = mach_ticks_per_second / 200;  /* 5 ms */
++        time_constraint_policy.constraint = mach_ticks_per_second / 100;   /* 10 ms */
++        time_constraint_policy.preemptible = 1;
++        thread_policy_set( self, THREAD_TIME_CONSTRAINT_POLICY, (thread_policy_t)&time_constraint_policy,
++                           THREAD_TIME_CONSTRAINT_POLICY_COUNT );
++        mach_port_deallocate( mach_task_self(), self );
++        return;
++    }
+     extended_policy.timeshare = 0;
+     precedence_policy.importance = 32;  /* priority 63 */
+     thread_policy_set( self, THREAD_LATENCY_QOS_POLICY, (thread_policy_t)&latency_qos,
+@@ -827,7 +841,13 @@ unsigned int set_thread_priority( struct thread *thread, int priority )
+     int priority_class = thread->process->priority;
+ 
+     if (priority < LOW_PRIORITY + 1 || priority > HIGH_PRIORITY) return STATUS_INVALID_PARAMETER;
++#ifndef __APPLE__
+     if (priority_class != PROCESS_PRIOCLASS_REALTIME && priority >= LOW_REALTIME_PRIORITY) return STATUS_PRIVILEGE_NOT_HELD;
++#endif
++    /* Macron: on macOS a thread of a normal process may be given a realtime
++     * priority (NtSetInformationThread, ThreadPriority). avrt.dll asks for one
++     * for a thread registered for audio, as the Multimedia Class Scheduler does
++     * on Windows, where a program cannot ask by itself. */
+ 
+     thread->priority = priority;
+ 
