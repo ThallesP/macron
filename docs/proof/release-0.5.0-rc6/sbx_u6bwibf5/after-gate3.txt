@@ -1,0 +1,43 @@
+== Steam's client and its inserted libraries
+steam_osx: x86_64 arm64
+steamloader.dylib: i386 x86_64 arm64
+gameoverlayrenderer.dylib: x86_64 arm64
+== Install the package again
+installer: The install was successful.
+x86_64 arm64
+~/Library/Application Support/Macron/runtimes/wine-11.21-macron.14-dxmt-0.80-macron.2-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1
+== nvprobe with the dlss switch
+RESULT DXMT_ENABLE_NVEXT=1
+RESULT adapter vendor 0x10de device 0x2684 revision 0xa1 "NVIDIA GeForce RTX 4090" dedicated 2389 MB
+RESULT registry NGXPath: C:\Windows\System32, signature of nvngx.dll there: trusted (0x00000000)
+RESULT registry FullPath: C:\Windows\System32, signature of nvngx.dll there: trusted (0x00000000)
+RESULT NvAPI_Initialize: OK
+RESULT NGX init: OK
+RESULT NGX SuperSampling.Available=1
+RESULT DLSS feature 1280x720->1920x1080: not created (0xbad0001)
+== sndload, registered and not
+RESULT config task Pro Audio seconds 15 load 3 high 6 mix_ms 4.0 source stream processors 3
+RESULT priority before 0 after 15 registered yes
+RESULT wake intervals 1379 ms p50 10.24 p95 13.82 p99 15.57 max 37.78 later_than_two_periods 2 later_than_buffer 1 found_empty 1 timeouts 0
+RESULT priority at_end 15 reverted 0
+RESULT config task none seconds 15 load 3 high 6 mix_ms 4.0 source stream processors 3
+RESULT priority before 0 after 0 registered no
+RESULT wake intervals 987 ms p50 14.72 p95 28.73 p99 51.05 max 60.75 later_than_two_periods 203 later_than_buffer 33 found_empty 89 timeouts 0
+RESULT priority at_end 0 reverted 0
+== macron under DYLD_INSERT_LIBRARIES, as Steam starts it (a new prefix)
+exit 0
+macron: 15:14:02.681Z +0.00s game steam-990042, log ~/Library/Application Support/Macron/logs/steam-990042/20261118T151402Z.log
+macron: 15:14:02.683Z +0.00s the caller's DYLD_INSERT_LIBRARIES goes on to Wine: steamloader.dylib, gameoverlayrenderer.dylib
+macron: 15:14:03.179Z +0.50s made the Windows environment at ~/g3/prefix-ins/pfx from the runtime's template
+macron: 15:14:03.184Z +0.50s prefix ready
+1
+arm64: exit 0
+1
+x86_64: exit 0
+1
+
+== Added by hand from the same sandbox, after the script
+steam_osx and ipcserver run as ARM64 (vmmap --summary, "Code Type").
+macron built from 74ce27f (before c82349e), started the same way with both libraries in DYLD_INSERT_LIBRARIES and a new prefix:
+  built for amd64: exit 0, no PREFIX_FAILED
+  built for arm64: exit 125, PREFIX_FAILED (cp aborted by dyld)
