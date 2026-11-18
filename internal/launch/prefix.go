@@ -197,13 +197,13 @@ func clonePrefix(ctx context.Context, template, prefix string) error {
 	if err := os.MkdirAll(filepath.Dir(prefix), 0o755); err != nil {
 		return err
 	}
-	if exec.CommandContext(ctx, "cp", "-c", "-R", template, prefix).Run() == nil {
+	if wineruntime.HostCommand(ctx, "cp", "-c", "-R", template, prefix).Run() == nil {
 		return nil
 	}
 	if err := os.RemoveAll(prefix); err != nil {
 		return err
 	}
-	output, err := exec.CommandContext(ctx, "cp", "-R", template, prefix).CombinedOutput()
+	output, err := wineruntime.HostCommand(ctx, "cp", "-R", template, prefix).CombinedOutput()
 	if err != nil {
 		return failure.Errorf(failure.CodePrefixFailed, "copying the template prefix to %s: %s: %s", prefix, err, output)
 	}

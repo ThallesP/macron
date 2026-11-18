@@ -65,6 +65,9 @@ func Run(ctx context.Context, in Input) (int, error) {
 	}
 	tree := backendTrees[in.Profile.Backend]
 	env := Environment(in.Profile, in.Prefix, os.Environ())
+	if inserted := insertedLibraries(os.Getenv("DYLD_INSERT_LIBRARIES")); inserted != "" {
+		in.Progress("the caller's DYLD_INSERT_LIBRARIES goes on to Wine: " + inserted)
+	}
 	if in.SoftwareOpenGL {
 		env = append(env, "GALLIUM_DRIVER=llvmpipe", "WINEDLLOVERRIDES="+dllOverrides(in.Profile, map[string]string{"opengl32": "n,b"}))
 	}
@@ -137,6 +140,19 @@ func Run(ctx context.Context, in Input) (int, error) {
 		waitForWineserver(ctx, in.Runtime.Wineserver(tree), env)
 	}
 	return exitCode, nil
+}
+
+// insertedLibraries names the libraries of a DYLD_INSERT_LIBRARIES value
+// without their folders, which hold the user's name. Steam sets the variable
+// to its overlay loader for every game it starts.
+func insertedLibraries(value string) string {
+	names := []string{}
+	for _, library := range strings.Split(value, ":") {
+		if library != "" {
+			names = append(names, filepath.Base(library))
+		}
+	}
+	return strings.Join(names, ", ")
 }
 
 func Environment(profile fixes.Profile, prefix string, base []string) []string {

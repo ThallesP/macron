@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 
@@ -250,7 +249,7 @@ func addWineOverlay(ctx context.Context, archive, staging string) error {
 		if _, err := os.Stat(source); err != nil {
 			continue
 		}
-		output, err := exec.CommandContext(ctx, "cp", source, filepath.Join(staging, string(TreePlain), lib)).CombinedOutput()
+		output, err := HostCommand(ctx, "cp", source, filepath.Join(staging, string(TreePlain), lib)).CombinedOutput()
 		if err != nil {
 			return failure.Errorf(failure.CodeExtractFailed, "copying %s into the plain Wine tree: %s: %s", filepath.Base(lib), err, output)
 		}
@@ -259,7 +258,7 @@ func addWineOverlay(ctx context.Context, archive, staging string) error {
 }
 
 func copyTree(ctx context.Context, source, target string) error {
-	output, err := exec.CommandContext(ctx, "cp", "-R", source+"/.", target).CombinedOutput()
+	output, err := HostCommand(ctx, "cp", "-R", source+"/.", target).CombinedOutput()
 	if err != nil {
 		return failure.Errorf(failure.CodeExtractFailed, "copying %s into %s: %s: %s", filepath.Base(source), target, err, output)
 	}
@@ -291,7 +290,7 @@ func extract(ctx context.Context, archive, into string) error {
 	if err := os.MkdirAll(into, 0o755); err != nil {
 		return err
 	}
-	output, err := exec.CommandContext(ctx, "tar", "-xf", archive, "-C", into).CombinedOutput()
+	output, err := HostCommand(ctx, "tar", "-xf", archive, "-C", into).CombinedOutput()
 	if err != nil {
 		return failure.Errorf(failure.CodeExtractFailed, "unpacking %s: %s: %s", filepath.Base(archive), err, output)
 	}
@@ -303,7 +302,7 @@ func cloneTree(ctx context.Context, from, to string) error {
 	if runtime.GOOS == "darwin" {
 		args = append([]string{"-c"}, args...)
 	}
-	output, err := exec.CommandContext(ctx, "cp", args...).CombinedOutput()
+	output, err := HostCommand(ctx, "cp", args...).CombinedOutput()
 	if err != nil {
 		return failure.Errorf(failure.CodeExtractFailed, "copying the Wine tree: %s: %s", err, output)
 	}
@@ -314,7 +313,7 @@ func copyFiles(ctx context.Context, from, to string) error {
 	if _, err := os.Stat(to); err != nil {
 		return failure.Errorf(failure.CodeExtractFailed, "Wine has no %s folder for DXMT's files", filepath.Base(to))
 	}
-	output, err := exec.CommandContext(ctx, "cp", "-R", from+"/.", to).CombinedOutput()
+	output, err := HostCommand(ctx, "cp", "-R", from+"/.", to).CombinedOutput()
 	if err != nil {
 		return failure.Errorf(failure.CodeExtractFailed, "copying DXMT into Wine: %s: %s", err, output)
 	}

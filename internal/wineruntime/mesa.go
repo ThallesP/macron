@@ -3,7 +3,6 @@ package wineruntime
 import (
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/ThallesP/macron/internal/failure"
@@ -54,7 +53,7 @@ func EnsureMesa(ctx context.Context, downloadsDir string, installed Installed, a
 			members = append(members, string(bits)+"/"+dll)
 		}
 	}
-	output, err := exec.CommandContext(ctx, "tar", append([]string{"-xf", path, "-C", staging}, members...)...).CombinedOutput()
+	output, err := HostCommand(ctx, "tar", append([]string{"-xf", path, "-C", staging}, members...)...).CombinedOutput()
 	if err != nil {
 		return failure.Errorf(failure.CodeExtractFailed, "unpacking Mesa's OpenGL DLLs: %s: %s", err, output)
 	}

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/ThallesP/macron/internal/failure"
@@ -49,7 +48,7 @@ const gameModeInfoPlist = `<?xml version="1.0" encoding="UTF-8"?>
 // signBundle signs the bundle ad hoc, so its Info.plist is bound to the
 // loader inside it. A variable so tests can run where there is no codesign.
 var signBundle = func(ctx context.Context, app string) error {
-	output, err := exec.CommandContext(ctx, "codesign", "-f", "-s", "-", app).CombinedOutput()
+	output, err := HostCommand(ctx, "codesign", "-f", "-s", "-", app).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%w: %s", err, output)
 	}
