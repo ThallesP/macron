@@ -46,9 +46,11 @@ mingw=$(ls -d "$work"/llvm-mingw-*/bin)
 "$mingw/i686-w64-mingw32-clang" -O2 -msse2 -mfpmath=sse -mconsole "$root/tools/wow64-cost/cost.c" -o "$diagnose/cost32.exe"
 "$mingw/x86_64-w64-mingw32-clang" -O2 -mconsole "$root/tools/wow64-cost/cost.c" -o "$diagnose/cost64.exe"
 chmod 755 "$diagnose"/*
-chmod 755 "$payload/macron" "$here/scripts/postinstall"
+mkdir -p "$work/scripts"
+sed "s/@VERSION@/$version/" "$here/scripts/postinstall" > "$work/scripts/postinstall"
+chmod 755 "$payload/macron" "$work/scripts/postinstall"
 
-pkgbuild --root "$work/payload" --install-location / --scripts "$here/scripts" \
+pkgbuild --root "$work/payload" --install-location / --scripts "$work/scripts" \
   --identifier io.github.thallesp.macron --version "$package_version" "$work/macron.pkg"
 sed "s/@VERSION@/$package_version/" "$here/distribution.xml" > "$work/distribution.xml"
 productbuild --distribution "$work/distribution.xml" --resources "$here/resources" \

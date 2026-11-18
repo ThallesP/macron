@@ -26,7 +26,7 @@ if pgrep -x steam_osx > /dev/null; then
 fi
 
 sudo -u "$user" -H /usr/local/bin/macron uninstall
-rm -f /usr/local/bin/macron /usr/local/bin/macron-uninstall /Library/Logs/Macron-install.log
+rm -f /usr/local/bin/macron /usr/local/bin/macron-uninstall /Library/Logs/Macron-install.log "/Users/Shared/Macron install log.txt"
 rm -rf /usr/local/lib/macron
 pkgutil --forget io.github.thallesp.macron > /dev/null 2>&1 || true
 echo "removed /usr/local/bin/macron, /usr/local/bin/macron-uninstall, /usr/local/lib/macron and /Library/Logs/Macron-install.log"

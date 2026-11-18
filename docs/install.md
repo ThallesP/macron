@@ -48,15 +48,16 @@ Control-click > Open, which used to skip the check, no longer does since macOS 1
 ## What the install does
 
 1. Copies `macron` and `macron-uninstall` to `/usr/local/bin` and the Steam Play switch library to `/usr/local/lib/macron`.
-2. As you, not as root, runs `macron runtime install`: downloads Wine, DXMT, DXVK and the Steam bridge at pinned versions (about 265 MB) and unpacks them into `~/Library/Application Support/Macron` (about 2 GB as Finder counts it, less on disk because the second Wine tree is an APFS clone).
-3. Closes Steam if it is open, then runs `macron steam enable`:
+2. On an Apple silicon Mac that has no Rosetta 2 yet (a new Mac has none), installs it from Apple with `softwareupdate --install-rosetta --agree-to-license`, which accepts Apple's Rosetta licence for you. Wine is an Intel program and cannot start without it.
+3. As you, not as root, runs `macron runtime install`: downloads Wine, DXMT, DXVK and the Steam bridge at pinned versions (about 265 MB) and unpacks them into `~/Library/Application Support/Macron` (about 2 GB as Finder counts it, less on disk because the second Wine tree is an APFS clone).
+4. Closes Steam if it is open, then runs `macron steam enable`:
    - adds Macron to `~/Library/Application Support/Steam/compatibilitytools.d` and makes it the compatibility tool for every app in Steam's `config.vdf`, after backing that file up;
    - switches on the Steam Play code that ships, switched off, in Steam for Mac. For that it puts its library into `/Applications/Steam.app`, names it in the app's `Info.plist`, and signs Steam.app again ad hoc, because macOS only loads a library into an app whose signature allows it. Valve's three files that this changes (`Info.plist`, `steam_osx`, `CodeResources`) are kept in `~/Library/Application Support/Macron/steam-app-backup` and go back byte for byte on uninstall. `steamplay/README.md` in the repository has the details.
-4. Opens Steam again if it was open.
+5. Opens Steam again if it was open.
 
 Because Steam.app's signature changes, macOS forgets Steam's Accessibility and input-monitoring permissions and asks again the next time Steam wants them (they are for controllers through Steam Input). If macOS asks whether the installer or Terminal may modify apps (App Management), allow it; if it blocked the change, the log says so and `macron steam enable` in Terminal tries again.
 
-If Steam is a build Macron does not know yet (Steam updates itself), or any step fails, the install undoes itself and the log says why. Everything the install does is written to `/Library/Logs/Macron-install.log` (open it with Console or `cat`).
+If Rosetta or the runtime does not install (no internet, a full disk), the install undoes itself and Installer says it failed. If only the Steam step does not finish (macOS blocked the change to Steam.app under App Management, Steam is a build Macron does not know yet, or Steam would not quit), Macron stays installed and Steam Play is simply not on yet. Either way the installer opens `/Users/Shared/Macron install log.txt` in TextEdit: what went wrong, what to do next, and the log of that run, ready to send to whoever helps you. To finish the Steam step, quit Steam and run `macron steam enable` in Terminal; if that says "Operation not permitted", turn on Terminal under System Settings > Privacy & Security > App Management and run it again. Every install run is also appended to `/Library/Logs/Macron-install.log`.
 
 ## Using it
 

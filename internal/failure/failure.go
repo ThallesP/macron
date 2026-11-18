@@ -29,6 +29,7 @@ const (
 	CodeSteamAppChanged   Code = "STEAM_APP_CHANGED"
 	CodeSwitchMissing     Code = "STEAM_PLAY_SWITCH_MISSING"
 	CodeSwitchFailed      Code = "STEAM_PLAY_SWITCH_FAILED"
+	CodeRosettaMissing    Code = "ROSETTA_NOT_INSTALLED"
 )
 
 type Error struct {

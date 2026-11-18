@@ -27,6 +27,9 @@ func runtimeCommand(ctx context.Context, args []string, stdout, stderr io.Writer
 		fmt.Fprintln(stdout, installed.Dir)
 		return 0
 	}
+	if err := wineruntime.CheckRosetta(ctx); err != nil {
+		return fail(stderr, err)
+	}
 	installed, err := wineruntime.Install(ctx, layout, wineruntime.Pinned, progressTo(stderr))
 	if err != nil {
 		return fail(stderr, err)

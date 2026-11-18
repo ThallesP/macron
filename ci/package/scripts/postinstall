@@ -2,12 +2,26 @@
 # Runs as root after the installer copied macron to /usr/local/bin. Does the
 # rest as the logged-in user: installs the runtime into their home and, when
 # Steam is installed, closes it, switches Steam Play on with macron as its
-# tool (macron steam enable), and opens Steam again if it was open. Any
-# failure undoes what this install added, so there is never half an install.
+# tool (macron steam enable), and opens Steam again if it was open.
+#
+# On an Apple silicon Mac without Rosetta 2 it installs Rosetta first: Wine is
+# an x86_64 program, and runtime install runs it to prepare the Windows
+# environment. Rosetta and the runtime decide whether the install succeeds: if
+# either fails, the install undoes what it added, so there is never half an
+# install (Rosetta, if it went in, stays). When the Steam step does not finish
+# (macOS's App Management block on a Mac with SIP on, a Steam build macron
+# does not know, Steam that will not quit), Macron stays installed and the
+# report says how to finish with macron steam enable.
+#
+# Whenever the install fails or Steam Play is not on, this run's log goes to
+# /Users/Shared/Macron install log.txt and opens in TextEdit, so the player
+# can send it on: Installer's own failure screen cannot show why.
 set -u
 log=/Library/Logs/Macron-install.log
-exec > >(tee -a "$log") 2>&1
-echo "== Macron install, $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+report="/Users/Shared/Macron install log.txt"
+run_log=$(mktemp /tmp/macron-install.XXXXXX) || run_log=/tmp/macron-install.$$
+exec 3>&1
+exec > "$run_log" 2>&1
 cd /
 
 macron=/usr/local/bin/macron
@@ -20,18 +34,42 @@ is_fresh=0
 steam_client="$steam_dir/Steam.AppBundle/Steam/Contents/MacOS/steam_osx"
 was_hooked=0
 [ -e "$steam_dir/compatibilitytools.d/macron" ] && was_hooked=1
-did_try_enable=0
 was_steam_open=0
+summary=""
 
 as_user() {
   sudo -u "$user" -H "$@"
 }
 
+# Writes this run into the install log and Installer's log, and, when there is
+# a summary, into the report the player sees.
+finish() {
+  status=$?
+  cat "$run_log" >> "$log"
+  cat "$run_log" >&3
+  if [ -n "$summary" ]; then
+    {
+      echo "$summary"
+      echo
+      echo "Send this file to whoever gave you Macron if you need help. The full log is /Library/Logs/Macron-install.log."
+      echo
+      echo "---- what the installer did ----"
+      cat "$run_log"
+    } > "$report"
+    chmod 644 "$report"
+    uid=$(id -u "$user" 2> /dev/null)
+    if [ -n "$uid" ] && [ "$user" != root ] && [ "$user" != loginwindow ]; then
+      launchctl asuser "$uid" sudo -u "$user" open -e "$report" > /dev/null 2>&1
+    fi
+  fi
+  rm -f "$run_log"
+  exit "$status"
+}
+trap finish EXIT
+
 undo() {
   echo "Install failed: $1"
-  if [ "$did_try_enable" = 1 ] && [ "$was_hooked" = 0 ]; then
-    as_user "$macron" steam disable
-  fi
+  summary="Macron did not install: $1."
   if [ "$is_fresh" = 0 ]; then
     echo "Kept $macron_home and Steam's registration from the earlier install."
     exit 1
@@ -44,13 +82,47 @@ undo() {
   exit 1
 }
 
+steam_not_on() {
+  echo "NOTE: $1"
+  echo "NOTE: Macron is installed; Steam Play is not on yet."
+  summary="Macron is installed, but Steam Play is not on yet: $1.
+
+To finish:
+1. Quit Steam.
+2. Open Terminal and run: macron steam enable
+3. If that says \"Operation not permitted\", macOS blocked the change to Steam.app. Open System Settings > Privacy & Security > App Management, turn on Terminal (add it with + if it is not listed), and run the command again."
+}
+
+echo "== Macron install, $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+echo "Macron:  @VERSION@"
+echo "macOS:   $(sw_vers -productVersion) ($(sw_vers -buildVersion)), $(uname -m)"
+echo "SIP:     $(csrutil status 2> /dev/null)"
+
 if [ -z "$home" ] || [ "$user" = root ] || [ "$user" = loginwindow ]; then
   undo "nobody is logged in to the desktop; log in and run the installer again"
 fi
 echo "user: $user ($home)"
 
+# Wine is an x86_64 program, and a new Apple silicon Mac has no Rosetta 2 until
+# something asks for it.
+has_rosetta() {
+  arch -x86_64 /usr/bin/true > /dev/null 2>&1
+}
+if [ "$(sysctl -n hw.optional.arm64 2> /dev/null)" = 1 ] && ! has_rosetta; then
+  echo "Rosetta 2 is not installed, and Wine needs it on an Apple silicon Mac; installing it from Apple."
+  softwareupdate --install-rosetta --agree-to-license
+  for _ in $(seq 1 15); do
+    has_rosetta && break
+    sleep 1
+  done
+  if ! has_rosetta; then
+    undo "Rosetta 2, which Macron needs on an Apple silicon Mac, did not install (check the internet connection and run the installer again, or run in Terminal: softwareupdate --install-rosetta)"
+  fi
+  echo "Rosetta 2 is installed."
+fi
+
 if ! as_user "$macron" runtime install; then
-  undo "the runtime did not install (the lines above say why)"
+  undo "the Windows runtime did not install (check the internet connection and free disk space, then run the installer again)"
 fi
 
 if [ ! -e "$steam_dir/Steam.AppBundle/Steam/Contents/MacOS/steamclient.dylib" ]; then
@@ -69,18 +141,22 @@ if pgrep -x steam_osx > /dev/null; then
   done
 fi
 if pgrep -x steam_osx > /dev/null; then
-  echo "NOTE: Steam did not quit, so Macron did not switch Steam Play on."
-  echo "NOTE: quit Steam, then run in Terminal: macron steam enable"
+  steam_not_on "Steam did not quit when asked"
   echo "== Done (Steam still to enable)"
   exit 0
 fi
 
-did_try_enable=1
-if ! as_user "$macron" steam enable; then
-  undo "macron steam enable failed (the lines above say why)"
+if as_user "$macron" steam enable; then
+  echo "== Done: Steam Play is on with Macron as its tool"
+else
+  if [ "$was_hooked" = 0 ]; then
+    as_user "$macron" steam disable > /dev/null 2>&1
+  fi
+  steam_not_on "macron steam enable failed"
+  echo "== Done (Steam still to enable)"
 fi
 if [ "$was_steam_open" = 1 ]; then
   as_user open -a /Applications/Steam.app
   echo "Opened Steam again."
 fi
-echo "== Done: Steam Play is on with Macron as its tool"
+exit 0
