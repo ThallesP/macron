@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/ThallesP/macron/fixes"
@@ -189,6 +190,7 @@ func withFrameCounter(profile fixes.Profile) fixes.Profile {
 	env["DXVK_HUD"] = "fps"
 	env["MTL_HUD_ENABLED"] = "1"
 	env["MTL_HUD_LOG_ENABLED"] = "1"
+	env["DXMT_CONFIG"] = strings.TrimPrefix(env["DXMT_CONFIG"]+";dxmt.logLatency=True", ";")
 	profile.Env = env
 	return profile
 }

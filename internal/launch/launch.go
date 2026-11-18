@@ -72,6 +72,9 @@ func Run(ctx context.Context, in Input) (int, error) {
 	if err := EnsurePrefix(ctx, PrefixInput{Runtime: in.Runtime, Backend: in.Profile.Backend, Prefix: in.Prefix, Env: env, Output: in.Output, Progress: in.Progress}); err != nil {
 		return 0, err
 	}
+	if err := syncNGXCore(in.Runtime.Root(tree), in.Prefix); err != nil {
+		return 0, failure.Errorf(failure.CodePrefixFailed, "putting the runtime's nvngx.dll into the prefix: %s", err)
+	}
 	if in.SoftwareOpenGL {
 		if err := wineruntime.EnsureMesa(ctx, in.DownloadsDir, in.Runtime, wineruntime.Mesa, in.Progress); err != nil {
 			return 0, err
@@ -144,7 +147,27 @@ func Environment(profile fixes.Profile, prefix string, base []string) []string {
 	for _, name := range slices.Sorted(maps.Keys(profile.Env)) {
 		env = append(env, name+"="+profile.Env[name])
 	}
+	if both, ok := dxmtConfigOfBoth(profile, base); ok {
+		env = append(env, "DXMT_CONFIG="+both)
+	}
 	return env
+}
+
+// DXMT_CONFIG is a list of options, and DXMT takes the last value of each.
+// When the profile and the user both set it, the game gets the profile's
+// options followed by the user's, so the user's win and the profile's others
+// stay.
+func dxmtConfigOfBoth(profile fixes.Profile, base []string) (string, bool) {
+	own, ok := profile.Env["DXMT_CONFIG"]
+	if !ok {
+		return "", false
+	}
+	for _, entry := range slices.Backward(base) {
+		if users, ok := strings.CutPrefix(entry, "DXMT_CONFIG="); ok {
+			return own + ";" + users, true
+		}
+	}
+	return "", false
 }
 
 func dllOverrides(profile fixes.Profile, extra map[string]string) string {

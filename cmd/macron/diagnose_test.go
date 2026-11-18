@@ -68,6 +68,24 @@ func TestReadFrameRateLogCountsMetalHUDHitches(t *testing.T) {
 	}
 }
 
+func TestReadFrameRateLogReadsDXMTsFrameLatency(t *testing.T) {
+	text := strings.Join([]string{
+		"macron: logging the frame rate (show-fps exists)",
+		"info:  Latency: frame 300, 70.2 fps, start to GPU done 55.9 ms (max 61.0)",
+		"info:  Latency: frame 600, 70.8 fps, start to GPU done 24.1 ms (max 31.5), slept 4.2 ms; CPU 6.0, encode 2.1, GPU 13.8 ms a frame",
+		"info:  Latency: frame 900, 70.6 fps, start to GPU done 25.0 ms (max 30.2), slept 4.4 ms; CPU 6.1, encode 2.0, GPU 13.9 ms a frame",
+	}, "\n")
+
+	log, ok := readFrameRateLog("20261118T050000Z.log", text)
+
+	if !ok {
+		t.Fatal("not read as a frame-rate log")
+	}
+	if summary := log.summary(); !strings.Contains(summary, "a frame's start to the end of its GPU work: 3 readings, median 25.0 ms, lowest 24.1, highest 55.9") {
+		t.Errorf("summary = %q", summary)
+	}
+}
+
 func TestReadFrameRateLogSkipsStartsWithoutTheCounter(t *testing.T) {
 	if _, isFrameRateLog := readFrameRateLog("steam-1/a.log", "macron: starting Game.exe with the dxmt backend"); isFrameRateLog {
 		t.Fatal("a start without show-fps was read as a frame-rate log")

@@ -102,9 +102,20 @@ func TestFrameCounterLogsTheFrameRateWithoutTouchingTheProfile(t *testing.T) {
 	if len(profile.Env) != 1 {
 		t.Fatalf("the profile's own env changed: %v", profile.Env)
 	}
-	for name, want := range map[string]string{"WINEDEBUG": "-all,+fps", "DXVK_HUD": "fps", "MTL_HUD_ENABLED": "1", "MTL_HUD_LOG_ENABLED": "1", "DXMT_LOG_LEVEL": "info"} {
+	for name, want := range map[string]string{"WINEDEBUG": "-all,+fps", "DXVK_HUD": "fps", "MTL_HUD_ENABLED": "1", "MTL_HUD_LOG_ENABLED": "1", "DXMT_LOG_LEVEL": "info", "DXMT_CONFIG": "dxmt.logLatency=True"} {
 		if got.Env[name] != want {
 			t.Errorf("%s = %q, want %q", name, got.Env[name], want)
 		}
+	}
+}
+
+func TestTheFrameCounterKeepsTheProfilesDXMTOptions(t *testing.T) {
+	profile := fixes.Default("steam-1")
+	profile.Env = map[string]string{"DXMT_CONFIG": "dxgi.maxFrameLatency=1"}
+
+	got := withFrameCounter(profile)
+
+	if want := "dxgi.maxFrameLatency=1;dxmt.logLatency=True"; got.Env["DXMT_CONFIG"] != want {
+		t.Errorf("DXMT_CONFIG = %q, want %q", got.Env["DXMT_CONFIG"], want)
 	}
 }

@@ -529,6 +529,25 @@ func TestTheUsersWineDebugChannelsWin(t *testing.T) {
 	}
 }
 
+func TestEnvironmentJoinsTheProfilesAndTheUsersDXMTOptions(t *testing.T) {
+	profile := fixes.Default("x")
+	profile.Env = map[string]string{"DXMT_CONFIG": "dxmt.logLatency=True"}
+
+	both := Environment(profile, "/prefix", []string{"DXMT_CONFIG=dxmt.latencySleep=False"})
+	onlyProfile := Environment(profile, "/prefix", nil)
+	onlyUser := Environment(fixes.Default("x"), "/prefix", []string{"DXMT_CONFIG=dxmt.latencySleep=False"})
+
+	if got, want := lastValue(both, "DXMT_CONFIG"), "dxmt.logLatency=True;dxmt.latencySleep=False"; got != want {
+		t.Errorf("both: DXMT_CONFIG=%q, want the profile's options and then the user's, %q", got, want)
+	}
+	if got := lastValue(onlyProfile, "DXMT_CONFIG"); got != "dxmt.logLatency=True" {
+		t.Errorf("only the profile: DXMT_CONFIG=%q", got)
+	}
+	if got := lastValue(onlyUser, "DXMT_CONFIG"); got != "dxmt.latencySleep=False" {
+		t.Errorf("only the user: DXMT_CONFIG=%q", got)
+	}
+}
+
 func lastValue(env []string, name string) string {
 	value := ""
 	for _, entry := range env {

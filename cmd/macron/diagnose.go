@@ -33,6 +33,7 @@ var (
 	frameRateLine  = regexp.MustCompile(`trace:fps:(\w+).*@ approx ([0-9.]+)fps`)
 	startLine      = regexp.MustCompile(`starting (.+) with the (\w+) backend`)
 	hudLine        = regexp.MustCompile(`metal-HUD:(.*)`)
+	latencyLine    = regexp.MustCompile(`Latency: frame \d+, [0-9.]+ fps, start to GPU done ([0-9.]+) ms`)
 	notANumber     = regexp.MustCompile(`[^0-9.]`)
 )
 
@@ -201,6 +202,7 @@ type frameRateLog struct {
 	HasBridge bool
 	Rates     []float64
 	Intervals []float64
+	Latencies []float64
 }
 
 func readFrameRateLog(name string, text string) (frameRateLog, bool) {
@@ -224,6 +226,12 @@ func readFrameRateLog(name string, text string) (frameRateLog, bool) {
 	}
 	for _, match := range hudLine.FindAllStringSubmatch(text, -1) {
 		log.Intervals = append(log.Intervals, hudIntervals(match[1])...)
+	}
+	for _, match := range latencyLine.FindAllStringSubmatch(text, -1) {
+		latency, err := strconv.ParseFloat(match[1], 64)
+		if err == nil {
+			log.Latencies = append(log.Latencies, latency)
+		}
 	}
 	return log, true
 }
@@ -254,6 +262,11 @@ func (l frameRateLog) summary() string {
 	}
 	if len(l.Intervals) > 0 {
 		lines = append(lines, "   Metal HUD: "+intervalSummary(l.Intervals))
+	}
+	if len(l.Latencies) > 0 {
+		sorted := slices.Clone(l.Latencies)
+		sort.Float64s(sorted)
+		lines = append(lines, fmt.Sprintf("   DXMT, a frame's start to the end of its GPU work: %d readings, median %.1f ms, lowest %.1f, highest %.1f", len(sorted), sorted[len(sorted)/2], sorted[0], sorted[len(sorted)-1]))
 	}
 	if len(lines) == 1 {
 		lines = append(lines, "   no frame counter lines and no Metal HUD lines")
