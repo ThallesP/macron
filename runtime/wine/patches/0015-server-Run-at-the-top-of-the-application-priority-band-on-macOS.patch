@@ -1,0 +1,74 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Wed, 18 Nov 2026 16:10:00 +0000
+Subject: [PATCH] server: Run at the top of the application priority band on
+ macOS.
+
+Every wait a Windows thread wakes from, every event it sets and every
+input message goes through the server's one thread. macOS runs it as an
+ordinary timeshare thread (priority 31), so it queues behind the game's
+own busy threads, and whatever it was about to wake waits with it,
+whatever that thread's priority.
+
+Measured on an M3 with every core busy (tools/perf/sndload.c in Macron's
+repository): a set event took a median 0.4 ms to wake a time-critical
+thread, 23 ms at the 95th percentile, 54 ms at the 99th and up to 192 ms;
+a wake that does not come through the server (WakeByAddressSingle) took
+0.03 ms at most. In Deadlock, 11 of the 15 longest gaps between refills
+of the sound buffer in a minute were its time-critical sound thread
+waiting to be woken.
+
+The server's thread now gets what the server gives a time-critical
+thread of a normal process: not timeshare, importance 32 (priority 63).
+MACRON_WINESERVER_PRIORITY=normal leaves it as it was.
+---
+diff --git a/server/thread.c b/server/thread.c
+index bb9728f..9763c7c 100644
+--- a/server/thread.c
++++ b/server/thread.c
+@@ -220,6 +220,38 @@ static void apply_thread_priority( struct thread *thread )
+ #elif defined(__APPLE__)
+ static unsigned int mach_ticks_per_second;
+ 
++/* Macron: the server runs at the top of the application priority band, where
++ * it puts a time-critical thread of a normal process. Every wait a Windows
++ * thread wakes from, every event it sets and every input message goes through
++ * this one thread. As an ordinary timeshare thread it queued behind the game's
++ * own busy threads: on an M3 with every core busy a set event took a median
++ * 0.4 ms to wake a time-critical thread, but 23 ms at the 95th percentile and
++ * up to 192 ms, against 0.03 ms at most for a wake that does not come through
++ * here. MACRON_WINESERVER_PRIORITY=normal leaves the thread as it was. */
++static void raise_server_priority(void)
++{
++    struct thread_extended_policy extended_policy;
++    struct thread_precedence_policy precedence_policy;
++    int latency_qos = LATENCY_QOS_TIER_UNSPECIFIED, throughput_qos = THROUGHPUT_QOS_TIER_UNSPECIFIED;
++    const char *setting = getenv( "MACRON_WINESERVER_PRIORITY" );
++    mach_port_t self;
++
++    if (setting && !strcmp( setting, "normal" )) return;
++
++    self = mach_thread_self();
++    extended_policy.timeshare = 0;
++    precedence_policy.importance = 32;  /* priority 63 */
++    thread_policy_set( self, THREAD_LATENCY_QOS_POLICY, (thread_policy_t)&latency_qos,
++                       THREAD_LATENCY_QOS_POLICY_COUNT );
++    thread_policy_set( self, THREAD_THROUGHPUT_QOS_POLICY, (thread_policy_t)&throughput_qos,
++                       THREAD_THROUGHPUT_QOS_POLICY_COUNT );
++    thread_policy_set( self, THREAD_EXTENDED_POLICY, (thread_policy_t)&extended_policy,
++                       THREAD_EXTENDED_POLICY_COUNT );
++    thread_policy_set( self, THREAD_PRECEDENCE_POLICY, (thread_policy_t)&precedence_policy,
++                       THREAD_PRECEDENCE_POLICY_COUNT );
++    mach_port_deallocate( mach_task_self(), self );
++}
++
+ void init_threading(void)
+ {
+     struct mach_timebase_info tb_info;
+@@ -232,6 +264,7 @@ void init_threading(void)
+         const unsigned int best_guess = 24000000U;
+         mach_ticks_per_second = best_guess;
+     }
++    raise_server_priority();
+ }
+ 
+ static int get_mach_importance( int effective_priority )
