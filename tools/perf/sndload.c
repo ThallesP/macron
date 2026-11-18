@@ -2,7 +2,8 @@
  * with and without registering it for audio (Wine patch 0014).
  *
  *   sndload.exe [--task NAME|none] [--seconds S] [--load N] [--high N]
- *               [--mix MS] [--stream 0|1] [--out FILE]
+ *               [--mix MS] [--stream 0|1] [--wake event|address]
+ *               [--timer sleep|address] [--out FILE]
  *
  * The sound thread does what a game's does: it opens a shared, event-driven
  * WASAPI stream on the default output with a 512-frame period (as Deadlock
@@ -11,7 +12,16 @@
  * the buffer with silence after spinning for MS milliseconds (default 2: a
  * game mixes). Nothing is heard. Without an output device, or with
  * --stream 0, a time-critical thread sets the event every 10 ms instead, as
- * Wine's own audio timer thread does, against a 35 ms buffer on paper.
+ * Wine's own audio timer thread does, against a 35 ms buffer on paper. That
+ * thread notes when each tick was due and when it signalled, so RESULT tick
+ * splits a late wake-up in two: how late the timer was, and how long the
+ * oldest signal the sound thread had not yet seen took to wake it. Under Wine an event's signal goes
+ * through wineserver; --wake address (with --stream 0) signals with
+ * WakeByAddressSingle instead, which does not, so the two side by side show
+ * what wineserver adds. The timer thread sleeps with Sleep(), as Wine's does
+ * (NtDelayExecution, which yields the processor before it waits); --timer
+ * address makes it wait on an address with a timeout instead, which does not
+ * yield.
  *
  * The load is N threads that never sleep at normal priority (default: one a
  * processor) and N at THREAD_PRIORITY_HIGHEST (default: half as many), which
@@ -23,7 +33,7 @@
  * and later than the whole buffer, and how often it found the buffer empty
  * (an audible gap).
  *
- * Build: x86_64-w64-mingw32-gcc -O2 -o sndload.exe sndload.c -lole32 -lavrt */
+ * Build: x86_64-w64-mingw32-gcc -O2 -o sndload.exe sndload.c -lole32 -lavrt -lsynchronization */
 #define COBJMACROS
 #include <initguid.h>
 #include <windows.h>
@@ -39,11 +49,15 @@
 #define TIMER_PERIOD_MS 10.0
 #define TIMER_BUFFER_MS 35.0
 #define MAX_WAKES 200000
+#define TICK_RING 4096
 
 static FILE *result_file;
 static volatile LONG quit;
 static LARGE_INTEGER frequency;
 static HANDLE wake_event;
+static BOOL wake_by_address, timer_waits_on_address;
+static volatile LONG tick_count;
+static volatile double tick_due_ms[TICK_RING], tick_signalled_ms[TICK_RING];
 
 static void result(const char *format, ...)
 {
@@ -89,10 +103,21 @@ static DWORD WINAPI timer_thread(void *unused)
     double next = now_ms();
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
     while (!quit) {
-        SetEvent(wake_event);
+        LONG tick = tick_count + 1;
+        tick_due_ms[tick % TICK_RING] = next;
+        tick_signalled_ms[tick % TICK_RING] = now_ms();
+        InterlockedExchange(&tick_count, tick);
+        if (wake_by_address) WakeByAddressSingle((void *)&tick_count);
+        else SetEvent(wake_event);
         next += TIMER_PERIOD_MS;
         double wait = next - now_ms();
-        if (wait > 0) Sleep((DWORD)(wait + 0.5));
+        if (wait <= 0) continue;
+        if (timer_waits_on_address) {
+            LONG never_changes = 0, same = 0;
+            WaitOnAddress(&never_changes, &same, sizeof(same), (DWORD)(wait + 0.5));
+        } else {
+            Sleep((DWORD)(wait + 0.5));
+        }
     }
     return 0;
 }
@@ -101,6 +126,21 @@ static int compare_doubles(const void *a, const void *b)
 {
     double x = *(const double *)a, y = *(const double *)b;
     return (x > y) - (x < y);
+}
+
+static BOOL wait_for_tick(LONG consumed)
+{
+    if (!wake_by_address) return WaitForSingleObject(wake_event, 2000) == WAIT_OBJECT_0;
+    while (tick_count == consumed)
+        if (!WaitOnAddress((void *)&tick_count, &consumed, sizeof(consumed), 2000)) return FALSE;
+    return TRUE;
+}
+
+static void result_spread(const char *name, double *values, size_t count)
+{
+    qsort(values, count, sizeof(*values), compare_doubles);
+    result("RESULT tick %s ms p50 %.2f p95 %.2f p99 %.2f max %.2f\n", name, values[count / 2], values[count * 95 / 100],
+           values[count * 99 / 100], values[count - 1]);
 }
 
 struct stream {
@@ -175,6 +215,8 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--high")) high = atoi(argv[i + 1]);
         else if (!strcmp(argv[i], "--mix")) mix_ms = atof(argv[i + 1]);
         else if (!strcmp(argv[i], "--stream")) want_stream = atoi(argv[i + 1]);
+        else if (!strcmp(argv[i], "--wake")) wake_by_address = !strcmp(argv[i + 1], "address");
+        else if (!strcmp(argv[i], "--timer")) timer_waits_on_address = !strcmp(argv[i + 1], "address");
         else if (!strcmp(argv[i], "--out")) out = argv[i + 1];
     }
     result_file = fopen(out, "w");
@@ -183,11 +225,12 @@ int main(int argc, char **argv)
     CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
     struct stream stream = {0};
-    BOOL streaming = want_stream && open_stream(&stream);
+    BOOL streaming = want_stream && !wake_by_address && open_stream(&stream);
     double period_ms = streaming ? stream.period_ms : TIMER_PERIOD_MS;
     double buffer_ms = streaming ? stream.buffer_ms : TIMER_BUFFER_MS;
-    result("RESULT config task %s seconds %.0f load %d high %d mix_ms %.1f source %s processors %lu\n", task, seconds, load, high, mix_ms,
-           streaming ? "stream" : "timer", (unsigned long)info.dwNumberOfProcessors);
+    result("RESULT config task %s seconds %.0f load %d high %d mix_ms %.1f source %s wake %s timer %s processors %lu\n", task, seconds, load,
+           high, mix_ms, streaming ? "stream" : "timer", wake_by_address ? "address" : "event",
+           timer_waits_on_address ? "address" : "sleep", (unsigned long)info.dwNumberOfProcessors);
 
     int before = GetThreadPriority(GetCurrentThread());
     HANDLE registration = NULL;
@@ -212,14 +255,23 @@ int main(int argc, char **argv)
     }
 
     double *intervals = malloc(MAX_WAKES * sizeof(*intervals));
-    size_t wakes = 0;
+    double *timer_late = malloc(MAX_WAKES * sizeof(*timer_late));
+    double *signal_to_wake = malloc(MAX_WAKES * sizeof(*signal_to_wake));
+    size_t wakes = 0, ticks = 0;
+    LONG consumed = 0;
     unsigned empty = 0, timeouts = 0;
     double start = now_ms(), last = 0, warm_until = start + 2000, end = start + 2000 + seconds * 1000;
     while (now_ms() < end && wakes < MAX_WAKES) {
-        if (WaitForSingleObject(wake_event, 2000) != WAIT_OBJECT_0) { timeouts++; continue; }
+        if (!wait_for_tick(consumed)) { timeouts++; continue; }
         double woke = now_ms();
         BOOL measuring = woke >= warm_until;
         if (measuring && last) intervals[wakes++] = woke - last;
+        LONG newest = tick_count, oldest = consumed + 1;
+        if (measuring && !streaming && newest >= oldest && newest - oldest < TICK_RING) {
+            timer_late[ticks] = tick_signalled_ms[oldest % TICK_RING] - tick_due_ms[oldest % TICK_RING];
+            signal_to_wake[ticks++] = woke - tick_signalled_ms[oldest % TICK_RING];
+        }
+        consumed = newest;
         last = woke;
         spin_ms(mix_ms);
         if (streaming && fill(&stream) == 0 && measuring) empty++;
@@ -243,6 +295,10 @@ int main(int argc, char **argv)
     result("RESULT wake intervals %zu ms p50 %.2f p95 %.2f p99 %.2f max %.2f later_than_two_periods %u later_than_buffer %u found_empty %u timeouts %u\n",
            wakes, intervals[wakes / 2], intervals[wakes * 95 / 100], intervals[wakes * 99 / 100], intervals[wakes - 1], late_periods,
            late_buffer, empty, timeouts);
+    if (ticks) {
+        result_spread("timer_late", timer_late, ticks);
+        result_spread("signal_to_wake", signal_to_wake, ticks);
+    }
     result("RESULT priority at_end %d reverted %d\n", at_end, reverted);
     return 0;
 }
