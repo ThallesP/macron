@@ -64,8 +64,17 @@ On its "Early Development Build" dialog, with its scene drawing behind it, from 
 
 So for Deadlock on this Mac the lag is not a queue DXMT adds. What is left to look at: the frame rate once the Mac is warm, the path from the mouse to the game, and what CrossOver does differently, none of which is measured.
 
+### Deadlock with DLSS on the M3
+
+Test build 2 (the patches as published, with its own certificate), `DXMT_ENABLE_NVEXT=1`, the same dialog screen.
+
+- NGX loads DXMT's `nvngx.dll` (`Loaded NGXCore from path (C:\Windows\System32\nvngx.dll)`), the game no longer backs down from DLSS, and the Metal HUD shows MetalFX's temporal scaler from 1112x720 to 1920x1243.
+- First 60 s of each start: DLSS from a cool Mac 65.1 frames a second, 14.31 ms of GPU time a frame; FSR2 started at thermal level 1, 51.6 and 18.50 ms; a DLSS start at level 1, 31.5. The starts differ in temperature and in the render scale the game chose (0.667 against 0.579), so this says DLSS runs, not what it gains.
+- The scene behind the dialog was black in the screenshots of both starts, so the picture under DLSS is not judged.
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.
+- 0005: a game's DLSS reaches MetalFX. Shown on the M3 with Deadlock.
 - **Open: a game the GPU holds back that does not ask for a limit itself** keeps three frames queued (79 ms at 51 frames a second in the test program). Neither reading of the GPU is safe to turn on. What a fix needs is a way to tell when an Apple GPU can take another frame without waiting, which Metal's command buffer times did not give for a simple program. For a game they did show a wait (Deadlock: 5 to 19 ms between scheduling and start), so `start` may work there; it has not been run on one.
 - **Open: vsync on a real display**, and whether the sleep ever makes a frame miss its refresh there.

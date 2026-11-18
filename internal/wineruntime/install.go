@@ -55,10 +55,22 @@ var dxmtArchitectures = []string{"x86_64-windows", "x86_64-unix", "i386-windows"
 
 var windowsArchitectures = []string{"i386-windows", "x86_64-windows"}
 
+// dxmtOverlayModules are what a DXMT overlay must hold. They only work
+// together: d3d11.dll calls winemetal.dll, which calls winemetal.so by number,
+// and dxgi.dll trusts the certificate of the nvngx.dll it was built with.
+var dxmtOverlayModules = []string{
+	"lib/wine/x86_64-windows/d3d11.dll",
+	"lib/wine/x86_64-windows/winemetal.dll",
+	"lib/wine/x86_64-windows/dxgi.dll",
+	"lib/wine/x86_64-windows/nvngx.dll",
+	"lib/wine/i386-windows/d3d11.dll",
+	"lib/wine/i386-windows/winemetal.dll",
+	"lib/wine/i386-windows/dxgi.dll",
+	"lib/wine/x86_64-unix/winemetal.so",
+}
+
 // overlayUnixLibs are the overlay's Unix libraries that go into the plain
 // tree too, because the overlay's Windows modules there call into them:
-const dxmtOverlayModule = "lib/wine/x86_64-windows/d3d11.dll"
-
 // opengl32.dll's calls to its Unix side are numbered, and patch 0007 adds one.
 var overlayUnixLibs = []string{"lib/wine/x86_64-unix/opengl32.so"}
 
@@ -192,14 +204,16 @@ func addDXMT(ctx context.Context, archive, staging string) error {
 }
 
 // The DXMT overlay (runtime/dxmt) replaces DXMT's own modules in the DXMT tree
-// only: the plain tree keeps Wine's d3d11.dll.
+// only: the plain tree keeps Wine's d3d11.dll and has no winemetal.
 func addDXMTOverlay(ctx context.Context, archive, staging string) error {
 	unpacked := filepath.Join(staging, "unpacked-dxmt-overlay")
 	if err := extract(ctx, archive, unpacked); err != nil {
 		return err
 	}
-	if _, err := os.Stat(filepath.Join(unpacked, dxmtOverlayModule)); err != nil {
-		return failure.Errorf(failure.CodeExtractFailed, "%s has no %s", filepath.Base(archive), dxmtOverlayModule)
+	for _, module := range dxmtOverlayModules {
+		if _, err := os.Stat(filepath.Join(unpacked, module)); err != nil {
+			return failure.Errorf(failure.CodeExtractFailed, "%s has no %s", filepath.Base(archive), module)
+		}
 	}
 	if err := copyTree(ctx, unpacked, filepath.Join(staging, string(TreeDXMT))); err != nil {
 		return err

@@ -71,9 +71,15 @@ func serve(t *testing.T) *fixture {
 		"share/doc/macron-wine/COPYING.LIB":   "licence",
 	})
 	dxmtOverlay := tarball(t, map[string]string{
-		"lib/wine/x86_64-windows/d3d11.dll": "macron dxmt d3d11",
-		"lib/wine/i386-windows/d3d11.dll":   "macron dxmt d3d11 32",
-		"share/macron/dxmt/LICENSE":         "dxmt licence",
+		"lib/wine/x86_64-windows/d3d11.dll":     "macron dxmt d3d11",
+		"lib/wine/x86_64-windows/winemetal.dll": "macron winemetal",
+		"lib/wine/x86_64-windows/dxgi.dll":      "macron dxgi",
+		"lib/wine/x86_64-windows/nvngx.dll":     "macron nvngx",
+		"lib/wine/i386-windows/d3d11.dll":       "macron dxmt d3d11 32",
+		"lib/wine/i386-windows/winemetal.dll":   "macron winemetal 32",
+		"lib/wine/i386-windows/dxgi.dll":        "macron dxgi 32",
+		"lib/wine/x86_64-unix/winemetal.so":     "macron winemetal unix",
+		"share/macron/dxmt/LICENSE":             "dxmt licence",
 	})
 	dxvk := tarball(t, map[string]string{
 		"dxvk-macOS/x64/d3d11.dll":     "dxvk d3d11",
@@ -130,7 +136,7 @@ func TestInstallBuildsAPlainAndADXMTTree(t *testing.T) {
 	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/i386-windows/d3d11.dll")); got != "macron dxmt d3d11 32" {
 		t.Errorf("DXMT tree 32-bit d3d11.dll = %q", got)
 	}
-	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/x86_64-windows/winemetal.dll")); got != "winemetal" {
+	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/x86_64-windows/winemetal.dll")); got != "macron winemetal" {
 		t.Errorf("DXMT tree winemetal.dll = %q", got)
 	}
 	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "share/macron/dxmt/LICENSE")); got != "dxmt licence" {
@@ -139,7 +145,7 @@ func TestInstallBuildsAPlainAndADXMTTree(t *testing.T) {
 	if got := read(t, filepath.Join(installed.Root(TreePlain), "lib/wine/i386-windows/d3d11.dll")); got != "wine d3d11 32" {
 		t.Errorf("plain tree 32-bit d3d11.dll = %q", got)
 	}
-	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/x86_64-unix/winemetal.so")); got != "winemetal unix" {
+	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/x86_64-unix/winemetal.so")); got != "macron winemetal unix" {
 		t.Errorf("DXMT tree winemetal.so = %q", got)
 	}
 	if got := read(t, filepath.Join(installed.Root(TreeDXMT), "lib/wine/x86_64-unix/winemac.so")); got != "macron winemac" {
