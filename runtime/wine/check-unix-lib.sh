@@ -10,6 +10,8 @@
 # imports nothing from Wine's libraries and nothing links against it, so for
 # one (a fourth argument `program`) the import list may be empty and the
 # exported symbols, which only say whether it was stripped, are not compared.
+# ALLOWED_NEW_IMPORTS lists, one a line and as this script prints them, the
+# system symbols a patch is known to add; each one found is printed.
 # Usage: check-unix-lib.sh <gcenx lib.so> <built lib.so> <patched lib.so> [program]
 set -euo pipefail
 
@@ -74,7 +76,10 @@ same "rpaths" "$tmp/gr" "$tmp/ur"
 
 echo "== The patched $name against the unpatched build"
 imports "$upstream" >"$tmp/ua"; imports "$patched" >"$tmp/pa"
-subset "imported symbols are a subset of the unpatched build's" "$tmp/ua" "$tmp/pa"
+printf '%s\n' "${ALLOWED_NEW_IMPORTS:-}" | sed '/^$/d' | sort >"$tmp/allowed"
+comm -13 "$tmp/ua" "$tmp/pa" | comm -12 - "$tmp/allowed" | sed 's/^/allowed new import: /'
+comm -23 "$tmp/pa" "$tmp/allowed" >"$tmp/pa-checked"
+subset "imported symbols are a subset of the unpatched build's" "$tmp/ua" "$tmp/pa-checked"
 exports "$patched" >"$tmp/pe"
 [ "$kind" = program ] || same "exported symbols" "$tmp/ue" "$tmp/pe"
 dylibs "$patched" >"$tmp/pl"
