@@ -1,0 +1,673 @@
+From: Macron <noreply@github.com>
+Subject: [PATCH] dxmt: start a frame only when the encoder is about to be free
+ for it (dxmt.latencySleep)
+
+A frame passes three stages, each on its own thread: the application until
+Present, DXMT's encode thread until the frame's last command buffer is
+committed, and the GPU. The encode thread takes one frame at a time, and a
+present holds it until a drawable is free. An application that it holds back
+runs as far ahead as the frame latency limit allows: with DXGI's default of
+3, three frames wait between the application's input and the screen. On an
+M3, a program drawing 6,000 small quads a frame in a window ran at 120 frames
+a second with 3.0 frames queued and 33 ms from a frame's start to the end of
+its GPU work. On Windows the GPU vendors' low-latency modes (NVIDIA Reflex,
+AMD Anti-Lag 2) take such a queue away for applications that use them; DXMT
+answers neither.
+
+FrameLatencyTracker (dxmt_latency.cpp) follows each frame through the three
+stages. When at least three of the last seven frames waited for the encoder,
+Present sleeps until the next frame, started then, reaches the encoder just
+as it is done with the frames in flight, less dxmt.latencyTolerance. It takes
+the longest time the application needed in those seven frames and the
+shortest the encoder needed, so that a wrong estimate starts a frame early (a
+moment in the queue) and not late (the encoder without work). The same
+program then ran at 120 frames a second with 1.0 frames queued and 16.6 ms
+(eight runs each way on the M3, tools/perf/latency.sh in Macron's
+repository). DXVK's latency tracker (dxvk_latency_builtin.cpp) does this for
+the GPU.
+
+For the GPU it is not done here. Two readings of when the GPU takes a frame
+can be tried with dxmt.latencyGpuModel, and neither is on:
+- "finish" takes the GPU to work on one frame at a time, as DXVK's does. On
+  the M3, with the GPU as the limit, Metal reported 33 ms of work on each
+  frame and frames started 20 ms apart, and with this reading the program
+  fell from 46 to 51 frames a second to 20 to 33 while the Mac was cool
+  (its queue did fall, from 3.0 frames to 1.2 to 1.4).
+- "start" asks Metal when the GPU started the frame's first command buffer
+  (GPUStartTime) and takes the next one to be due one interval later. For
+  that program Metal reported no wait before the start however many frames
+  were queued, so this reading never acted.
+
+- dxmt.latencySleep (default True): the sleep.
+- dxmt.latencySleepWithVsync (default True): whether it also applies to a
+  present that waits for the display (vsync, a frame cap). Such a present
+  holds the encode thread until a drawable is free, so the encoder's time is
+  then the display's interval. False leaves those presents to the frame
+  latency limit alone.
+- dxmt.latencyTolerance (microseconds, default 1000, 0 to 50000): how much
+  earlier than computed a frame starts.
+- dxmt.latencyGpuModel (default none; finish, start): see above.
+- dxmt.logLatency (default False): every 300 frames, one info line with the
+  frame rate, the time from a frame's start to the end of its GPU work (median
+  and maximum of the last frames), the frames in flight, the sleep, what the
+  application and the encoder took and how long frames waited for the
+  encoder, and Metal's times for the GPU.
+- dxmt.logLatencyFrames (default False): one info line a frame with all of
+  its times, for working out what a change to the above would do.
+- The sleep waits on an address nobody changes (RtlWaitOnAddress, which
+  counts in 100 ns) and spins the last 300 microseconds. Sleep() counts in
+  milliseconds, and it and NtDelayExecution yield the processor before they
+  wait under Wine; on a busy three-core machine that yield cost whole time
+  slices and the program two thirds of its frame rate.
+- One info line says the frame latency limit in use when a device is made,
+  and one each time the application asks for another. (Deadlock asks for 1.)
+
+diff --git a/src/d3d11/d3d11_device.cpp b/src/d3d11/d3d11_device.cpp
+index 4106e81..55f92cf 100644
+--- a/src/d3d11/d3d11_device.cpp
++++ b/src/d3d11/d3d11_device.cpp
+@@ -1132,6 +1132,7 @@ public:
+                       *this->device.get()) {
+     frame_latency_cap_ = std::clamp(Config::getInstance().getOption<int>("dxgi.maxFrameLatency", 0), 0, (int)kMaxFrameLatency);
+     cmd_queue_.SetMaxLatency(ActualFrameLatency());
++    Logger::info(str::format("Maximum frame latency: ", ActualFrameLatency(), " in use"));
+     if (adapter_->GetLocalD3DKMT()) {
+       D3DKMT_CREATEDEVICE create = {};
+       create.hAdapter = adapter_->GetLocalD3DKMT();
+@@ -1248,7 +1249,10 @@ public:
+     // MSDN: values can range from 1 to 16; 0 resets latency to the default
+     if (MaxLatency > kMaxFrameLatency)
+       return E_INVALIDARG;
+-    frame_latency_ = MaxLatency ? MaxLatency : kDefaultFrameLatency;
++    UINT requested = MaxLatency ? MaxLatency : kDefaultFrameLatency;
++    if (requested != frame_latency_)
++      Logger::info(str::format("Maximum frame latency: the application asks for ", MaxLatency));
++    frame_latency_ = requested;
+     cmd_queue_.SetMaxLatency(ActualFrameLatency());
+     return S_OK;
+   }
+diff --git a/src/d3d11/d3d11_swapchain.cpp b/src/d3d11/d3d11_swapchain.cpp
+index 29333c9..e4b25e7 100644
+--- a/src/d3d11/d3d11_swapchain.cpp
++++ b/src/d3d11/d3d11_swapchain.cpp
+@@ -770,6 +770,8 @@ public:
+     chunk->signal_frame_latency_fence_ = cmd_queue.CurrentFrameSeq();
+     uint64_t frame = cmd_queue.CurrentFrameSeq();
+     bool wait_presented = vsync_duration > 0;
++    if (cmd_queue.latency().enabled())
++      cmd_queue.latency().notifyPresent(frame, wait_presented);
+     if (target_) {
+       auto output = static_cast<MTLDXGIOutput *>(target_.ptr());
+       presenter->changeGammaRamp(output->GetGammaRamp());
+diff --git a/src/dxmt/dxmt_command_queue.cpp b/src/dxmt/dxmt_command_queue.cpp
+index a27ab86..4c492e3 100644
+--- a/src/dxmt/dxmt_command_queue.cpp
++++ b/src/dxmt/dxmt_command_queue.cpp
+@@ -82,6 +82,7 @@ CommandQueue::CommitCurrentChunk() {
+   chunk.resource_initializer_event_id = initializer.flushToWait();
+   auto& statistics = CurrentFrameStatistics();
+   statistics.command_buffer_count++;
++  chunk.first_of_frame_ = statistics.command_buffer_count == 1;
+ #if ASYNC_ENCODING
+   ready_for_encode.fetch_add(1, std::memory_order_release);
+   ready_for_encode.notify_one();
+@@ -141,6 +142,8 @@ CommandQueue::CommitChunkInternal(CommandChunk &chunk, uint64_t seq) {
+   }
+   chunk.encode(chunk.attached_cmdbuf, this->argument_encoding_ctx);
+   cmdbuf.commit();
++  if (chunk.signal_frame_latency_fence_ != ~0ull && latency_tracker_.enabled())
++    latency_tracker_.notifyEncoded(chunk.signal_frame_latency_fence_);
+ 
+   ready_for_commit.fetch_add(1, std::memory_order_release);
+   ready_for_commit.notify_one();
+@@ -188,6 +191,18 @@ CommandQueue::WaitForFinishThread() {
+       }
+     }
+ 
++    if (latency_tracker_.enabled()) {
++      auto cmdbuf = chunk.attached_cmdbuf.handle;
++      if (chunk.first_of_frame_)
++        latency_tracker_.notifyStarted(
++            chunk.frame_ + 1, MTLCommandBuffer_property(cmdbuf, WMTCommandBufferPropertyKernelEndTime),
++            MTLCommandBuffer_property(cmdbuf, WMTCommandBufferPropertyGPUStartTime)
++        );
++      if (chunk.signal_frame_latency_fence_ != ~0ull)
++        latency_tracker_.notifyFinished(
++            chunk.signal_frame_latency_fence_, MTLCommandBuffer_property(cmdbuf, WMTCommandBufferPropertyGPUEndTime)
++        );
++    }
+     if (chunk.signal_frame_latency_fence_ != ~0ull)
+       frame_latency_fence_.signal(chunk.signal_frame_latency_fence_);
+ 
+diff --git a/src/dxmt/dxmt_command_queue.hpp b/src/dxmt/dxmt_command_queue.hpp
+index 5eb1c44..e4e88ac 100644
+--- a/src/dxmt/dxmt_command_queue.hpp
++++ b/src/dxmt/dxmt_command_queue.hpp
+@@ -6,6 +6,7 @@
+ #include "dxmt_command.hpp"
+ #include "dxmt_command_list.hpp"
+ #include "dxmt_context.hpp"
++#include "dxmt_latency.hpp"
+ #include "dxmt_occlusion_query.hpp"
+ #include "dxmt_resource_initializer.hpp"
+ #include "dxmt_ring_bump_allocator.hpp"
+@@ -106,6 +107,7 @@ public:
+   uint64_t chunk_event_id;
+   uint64_t frame_;
+   uint64_t signal_frame_latency_fence_;
++  bool first_of_frame_ = false;
+   QueryReadbacks readback;
+   uint64_t resource_initializer_event_id;
+ 
+@@ -151,6 +153,7 @@ private:
+   uint64_t encoder_seq = 1;
+   uint64_t frame_count = 0;
+   uint32_t max_latency_ = 3;
++  FrameLatencyTracker latency_tracker_;
+ 
+   // Whether frame N's drawable signals presented_event; written when frame N is encoded, read after frame N's GPU
+   // work is done. Frames waited on are at most 16 behind the newest, so 32 slots never overlap.
+@@ -261,10 +264,13 @@ public:
+       statistics.at(frame_count).present_latency_interval += (t1 - t0);
+     }
+     statistics.at(frame_count).latency = max_latency_;
++    latency_tracker_.sleepAndBeginFrame(frame_count);
+   }
+ 
+   uint32_t GetMaxLatency() { return max_latency_; }
+ 
++  FrameLatencyTracker &latency() { return latency_tracker_; }
++
+   void SetMaxLatency(uint32_t value) { max_latency_ = value; };
+ 
+   void
+diff --git a/src/dxmt/dxmt_latency.cpp b/src/dxmt/dxmt_latency.cpp
+new file mode 100644
+index 0000000..e1c98e4
+--- /dev/null
++++ b/src/dxmt/dxmt_latency.cpp
+@@ -0,0 +1,349 @@
++#include "dxmt_latency.hpp"
++#include "config/config.hpp"
++#include "log/log.hpp"
++#include <algorithm>
++#include <cstdio>
++#include <mutex>
++
++namespace dxmt {
++
++namespace {
++
++using time_point = clock::time_point;
++using duration = clock::duration;
++
++constexpr duration kMaxSleep = std::chrono::milliseconds(100);
++// A timed wait can return this much late; the rest of a delay is spent spinning
++constexpr duration kWaitSlack = std::chrono::microseconds(300);
++// A frame waited for a stage when it waited longer than this
++constexpr int64_t kWaitedNs = 300'000;
++
++using RtlWaitOnAddressProc =
++    LONG(WINAPI *)(const void *address, const void *compare, SIZE_T size, const LARGE_INTEGER *timeout);
++
++int64_t
++nanoseconds(duration d) {
++  return std::chrono::duration_cast<std::chrono::nanoseconds>(d).count();
++}
++
++int64_t
++nanoseconds(time_point t) {
++  return nanoseconds(t.time_since_epoch());
++}
++
++time_point
++fromNanoseconds(int64_t ns) {
++  return time_point(std::chrono::duration_cast<duration>(std::chrono::nanoseconds(ns)));
++}
++
++double
++milliseconds(duration d) {
++  return std::chrono::duration<double, std::milli>(d).count();
++}
++
++// Waits on an address nobody changes, for its timeout: that counts in 100 ns and does not give up the processor
++// first. Sleep() counts in milliseconds, and it and NtDelayExecution yield before they wait under Wine; a thread
++// that yields on a busy machine can lose a whole time slice, which is longer than any sleep here. The end is spun
++// for the same reason.
++void
++sleepUntil(time_point target) {
++  static auto wait =
++      reinterpret_cast<RtlWaitOnAddressProc>(GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "RtlWaitOnAddress"));
++  static const LONG unchanged = 0;
++  auto remaining = target - clock::now();
++  if (wait && remaining > kWaitSlack) {
++    LONG compare = 0;
++    LARGE_INTEGER interval;
++    interval.QuadPart = -nanoseconds(remaining - kWaitSlack) / 100;
++    wait(&unchanged, &compare, sizeof(compare), &interval);
++  }
++  while (clock::now() < target)
++    YieldProcessor();
++}
++
++} // namespace
++
++FrameLatencyTracker::FrameLatencyTracker() {
++  auto &config = Config::getInstance();
++  sleep_enabled_ = config.getOption<bool>("dxmt.latencySleep", true);
++  sleep_with_vsync_ = config.getOption<bool>("dxmt.latencySleepWithVsync", true);
++  auto gpu_model = config.getOption<std::string>("dxmt.latencyGpuModel", "none");
++  gpu_paced_ = gpu_model == "finish" || gpu_model == "start";
++  gpu_overlaps_frames_ = gpu_model == "start";
++  log_enabled_ = config.getOption<bool>("dxmt.logLatency", false);
++  log_frames_ = config.getOption<bool>("dxmt.logLatencyFrames", false);
++  created_ = clock::now();
++  tolerance_ = std::chrono::microseconds(std::clamp(config.getOption<int>("dxmt.latencyTolerance", 1000), 0, 50000));
++  beginFrame(1, clock::now(), {});
++}
++
++FrameLatencyTracker::Frame *
++FrameLatencyTracker::find(uint64_t frame) {
++  auto &entry = frames_[frame % kFrameCount];
++  return frame && entry.id == frame ? &entry : nullptr;
++}
++
++void
++FrameLatencyTracker::notifyPresent(uint64_t frame, bool waits_for_display) {
++  std::lock_guard lock(mutex_);
++  if (auto entry = find(frame)) {
++    entry->present = clock::now();
++    entry->waits_for_display = waits_for_display;
++  }
++}
++
++void
++FrameLatencyTracker::notifyEncoded(uint64_t frame) {
++  std::lock_guard lock(mutex_);
++  if (auto entry = find(frame))
++    entry->encoded = clock::now();
++}
++
++void
++FrameLatencyTracker::notifyStarted(uint64_t frame, uint64_t kernel_end, uint64_t gpu_start) {
++  std::lock_guard lock(mutex_);
++  if (auto entry = find(frame)) {
++    entry->kernel_end = kernel_end;
++    entry->gpu_start = gpu_start;
++  }
++}
++
++void
++FrameLatencyTracker::notifyFinished(uint64_t frame, uint64_t gpu_end) {
++  std::lock_guard lock(mutex_);
++  auto entry = find(frame);
++  if (!entry)
++    return;
++  entry->finished = clock::now();
++  entry->gpu_end = gpu_end;
++  newest_finished_ = std::max(newest_finished_, frame);
++  if (!log_frames_)
++    return;
++  // Every time of one frame, in microseconds since this tracker was made; Metal's two in milliseconds since the
++  // frame was encoded would need its clock, so they are given as the time the GPU worked and the time before it began
++  auto since = [this](time_point t) {
++    return t == time_point() ? -1ll : (long long)(nanoseconds(t - created_) / 1000);
++  };
++  char line[256];
++  snprintf(
++      line, sizeof(line), "LatencyFrame: %llu start %lld present %lld encoded %lld finished %lld slept %lld gpu %lld wait %lld%s",
++      (unsigned long long)frame, since(entry->start), since(entry->present), since(entry->encoded),
++      since(entry->finished), (long long)(nanoseconds(entry->slept) / 1000),
++      (long long)((entry->gpu_end - entry->gpu_start) / 1000), (long long)((entry->gpu_start - entry->kernel_end) / 1000),
++      entry->waits_for_display ? " vsync" : ""
++  );
++  Logger::info(line);
++}
++
++bool
++FrameLatencyTracker::gpuTook(
++    const Frame &frame, const Frame &previous, int64_t metal_clock_offset, time_point &taken, bool &waited
++) {
++  if (!gpu_overlaps_frames_) {
++    taken = std::max(frame.encoded, previous.finished);
++    waited = nanoseconds(previous.finished - frame.encoded) > kWaitedNs;
++    return true;
++  }
++  if (!frame.gpu_start || metal_clock_offset == INT64_MAX)
++    return false;
++  taken = fromNanoseconds(frame.gpu_start + metal_clock_offset);
++  waited = frame.gpu_start - frame.kernel_end > kWaitedNs;
++  return true;
++}
++
++/**
++From the last frames the GPU finished: the longest the application took and
++the shortest and longest the encoder took, whether frames waited for the
++encoder, whether they waited for the GPU to take them and how far apart it
++then took them, and how far Metal's clock is from this one. Each time is used
++where it errs towards starting a frame early, where it waits a moment; a late
++frame leaves the limiting stage without work and costs frame rate. So the
++shortest says when a stage is done with the frames in flight, and the longest
++how long the next frame takes to get there. False while a frame is missing,
++as in the first frames.
++*/
++bool
++FrameLatencyTracker::estimate(Estimate &result) {
++  uint64_t first = newest_finished_ - kEstimateFrames;
++  auto previous = find(first);
++  if (!previous || previous->finished == time_point())
++    return false;
++  result.metal_clock_offset = INT64_MAX;
++  for (size_t i = 0; i <= kEstimateFrames; i++) {
++    auto frame = find(first + i);
++    if (!frame || frame->present == time_point() || frame->encoded == time_point() || frame->finished == time_point())
++      return false;
++    if (frame->gpu_end)
++      result.metal_clock_offset = std::min(result.metal_clock_offset, nanoseconds(frame->finished) - frame->gpu_end);
++  }
++  size_t waited_for_encoder = 0, waited_for_gpu = 0;
++  time_point previous_taken;
++  bool waited = false;
++  bool taken_known = previous->id > 1 && find(first - 1) &&
++                     gpuTook(*previous, *find(first - 1), result.metal_clock_offset, previous_taken, waited);
++  result.cpu = duration::zero();
++  result.encode = duration::max();
++  result.longest_encode = duration::zero();
++  result.gpu_interval = duration::max();
++  for (size_t i = 1; i <= kEstimateFrames; i++) {
++    auto frame = find(first + i);
++    auto encode_begin = std::max(frame->present, previous->encoded);
++    result.cpu = std::max(result.cpu, frame->present - frame->start);
++    result.encode = std::min(result.encode, frame->encoded - encode_begin);
++    result.longest_encode = std::max(result.longest_encode, frame->encoded - encode_begin);
++    if (nanoseconds(encode_begin - frame->present) > kWaitedNs)
++      waited_for_encoder++;
++    time_point taken;
++    bool known = gpuTook(*frame, *previous, result.metal_clock_offset, taken, waited);
++    if (known && taken_known && waited) {
++      waited_for_gpu++;
++      result.gpu_interval = std::min(result.gpu_interval, taken - previous_taken);
++    }
++    taken_known = known;
++    previous_taken = taken;
++    previous = frame;
++  }
++  result.encoder_holds = waited_for_encoder >= kFramesThatWaited;
++  result.gpu_holds = gpu_paced_ && waited_for_gpu >= kFramesThatWaited && result.gpu_interval > duration::zero();
++  return true;
++}
++
++/**
++When the frame after this one should start, or no time at all when no stage
++holds frames back. From the frames still in flight follows when the encoder is
++done with this frame and, when the GPU holds frames back, when it takes this
++frame; it takes the next one interval later. The next frame reaches the
++encoder one CPU time after its start and the GPU one encode time later. The
++later of the starts that bring it to a holding stage on time is the one that
++keeps the slower stage busy.
++*/
++FrameLatencyTracker::time_point
++FrameLatencyTracker::computeStart(uint64_t frame, const Estimate &est, time_point now) {
++  time_point encoded, taken;
++  const Frame *previous = nullptr;
++  for (uint64_t id = frame >= kFrameCount ? frame - kFrameCount + 1 : 1; id <= frame; id++) {
++    auto entry = find(id);
++    if (!entry || entry->present == time_point()) {
++      previous = nullptr;
++      continue;
++    }
++    encoded =
++        entry->encoded != time_point() ? entry->encoded : std::max(now, std::max(entry->present, encoded) + est.encode);
++    if (est.gpu_holds) {
++      // Known once the GPU has finished the frame before and, for Metal's own time, this one too
++      bool waited;
++      bool known = previous && previous->finished != time_point() && entry->encoded != time_point() &&
++                   (entry->finished != time_point() || !gpu_overlaps_frames_) &&
++                   gpuTook(*entry, *previous, est.metal_clock_offset, taken, waited);
++      if (!known)
++        taken = std::max(encoded, taken + est.gpu_interval);
++    }
++    previous = entry;
++  }
++  time_point target;
++  if (est.encoder_holds)
++    target = encoded;
++  if (est.gpu_holds)
++    target = std::max(target, taken + est.gpu_interval - est.longest_encode);
++  if (target == time_point())
++    return target;
++  return target - est.cpu - tolerance_;
++}
++
++void
++FrameLatencyTracker::sleepAndBeginFrame(uint64_t frame) {
++  Estimate est;
++  time_point target;
++  bool estimated = false;
++  if (enabled()) {
++    std::lock_guard lock(mutex_);
++    auto presented = find(frame);
++    estimated = estimate(est);
++    if (estimated && sleep_enabled_ && presented && (sleep_with_vsync_ || !presented->waits_for_display))
++      target = computeStart(frame, est, clock::now());
++    if (log_enabled_ && frame % kLogInterval == 0)
++      log(frame, est, estimated);
++  }
++
++  auto before = clock::now();
++  if (target > before)
++    sleepUntil(std::min(target, before + kMaxSleep));
++  auto start = clock::now();
++
++  std::lock_guard lock(mutex_);
++  beginFrame(frame + 1, start, start - before);
++}
++
++void
++FrameLatencyTracker::beginFrame(uint64_t frame, time_point start, duration slept) {
++  auto &entry = frames_[frame % kFrameCount];
++  entry = {};
++  entry.id = frame;
++  entry.start = start;
++  entry.slept = slept;
++}
++
++void
++FrameLatencyTracker::log(uint64_t frame, const Estimate &est, bool estimated) {
++  auto now = clock::now();
++  double frames_per_second =
++      last_log_ != time_point() ? kLogInterval / std::chrono::duration<double>(now - last_log_).count() : 0.0;
++  last_log_ = now;
++
++  std::array<duration, kFrameCount> latency, slept, encoder_wait;
++  std::array<int64_t, kFrameCount> gpu_wait, gpu_time, gpu_interval;
++  size_t count = 0, timed = 0, spaced = 0;
++  for (auto &entry : frames_) {
++    if (!entry.id || entry.finished == time_point())
++      continue;
++    auto previous = find(entry.id - 1);
++    latency[count] = entry.finished - entry.start;
++    slept[count] = entry.slept;
++    encoder_wait[count] =
++        previous && previous->encoded > entry.present ? previous->encoded - entry.present : duration::zero();
++    count++;
++    if (!entry.gpu_start || !entry.gpu_end)
++      continue;
++    gpu_wait[timed] = entry.gpu_start - entry.kernel_end;
++    gpu_time[timed] = entry.gpu_end - entry.gpu_start;
++    timed++;
++    if (previous && previous->gpu_start)
++      gpu_interval[spaced++] = entry.gpu_start - previous->gpu_start;
++  }
++  if (!count)
++    return;
++  std::sort(latency.begin(), latency.begin() + count);
++  std::sort(slept.begin(), slept.begin() + count);
++  std::sort(encoder_wait.begin(), encoder_wait.begin() + count);
++  std::sort(gpu_wait.begin(), gpu_wait.begin() + timed);
++  std::sort(gpu_time.begin(), gpu_time.begin() + timed);
++  std::sort(gpu_interval.begin(), gpu_interval.begin() + spaced);
++
++  char line[512];
++  int length = snprintf(
++      line, sizeof(line),
++      "Latency: frame %llu, %.1f fps, start to GPU done %.1f ms (max %.1f), %llu in flight, slept %.1f ms (max %.1f)",
++      (unsigned long long)frame, frames_per_second, milliseconds(latency[count / 2]), milliseconds(latency[count - 1]),
++      (unsigned long long)(frame - newest_finished_), milliseconds(slept[count / 2]), milliseconds(slept[count - 1])
++  );
++  if (estimated && length > 0 && (size_t)length < sizeof(line))
++    length += snprintf(
++        line + length, sizeof(line) - length,
++        "; CPU %.1f, encode %.1f ms a frame, waited %.1f for the encoder%s; the GPU %s",
++        milliseconds(est.cpu), milliseconds(est.encode), milliseconds(encoder_wait[count / 2]),
++        est.encoder_holds ? " (it holds frames)" : "", est.gpu_holds ? "holds frames, one every" : "holds none"
++    );
++  if (estimated && est.gpu_holds && length > 0 && (size_t)length < sizeof(line))
++    length += snprintf(line + length, sizeof(line) - length, " %.1f ms", milliseconds(est.gpu_interval));
++  if (timed && spaced && length > 0 && (size_t)length < sizeof(line))
++    snprintf(
++        line + length, sizeof(line) - length,
++        "; Metal: the GPU started a frame %.1f ms after it was scheduled (min %.1f), worked on it %.1f ms and "
++        "started frames %.1f ms apart (min %.1f)",
++        gpu_wait[timed / 2] / 1e6, gpu_wait[0] / 1e6, gpu_time[timed / 2] / 1e6, gpu_interval[spaced / 2] / 1e6,
++        gpu_interval[0] / 1e6
++    );
++  Logger::info(line);
++}
++
++} // namespace dxmt
+diff --git a/src/dxmt/dxmt_latency.hpp b/src/dxmt/dxmt_latency.hpp
+new file mode 100644
+index 0000000..d23e3c7
+--- /dev/null
++++ b/src/dxmt/dxmt_latency.hpp
+@@ -0,0 +1,117 @@
++#pragma once
++
++#include "dxmt_statistics.hpp"
++#include "thread.hpp"
++#include <array>
++#include <cstdint>
++
++namespace dxmt {
++
++/**
++Follows each frame from the moment the application starts it until the GPU has
++finished it, and delays the start of the next frame so that it reaches the
++encoder just as the encoder can take it.
++
++A frame passes three stages, each on its own thread: the application (until it
++calls Present), the encoder (until the frame's last command buffer is
++committed) and the GPU. The encoder takes one frame at a time, and a present
++holds it until a drawable is free: with vsync or a frame cap that is once a
++display interval, and without them a window was still seen to get only two
++drawables a refresh on an M3. An application that the encoder holds back runs as far
++ahead as the frame latency limit allows, and every frame it has queued is a
++frame of input latency. The delay removes that queue without making the
++encoder wait for work, so the frame rate stays what it was. Nothing is delayed
++unless frames measurably waited for the encoder.
++
++The same could be done for an application that the GPU holds back, and two
++readings of when the GPU takes a frame are here to try (dxmt.latencyGpuModel),
++both off unless asked for. "finish" takes the GPU to work on one frame at a
++time. Apple's GPUs do not: an M3 was seen working on a frame for 33 ms while
++starting one every 20 ms, and with this reading a program that the GPU held
++back lost up to half its frame rate there. "start" asks Metal when the GPU
++started the frame's first command buffer and how long that waited; for a
++simple program Metal reports no wait at all, so it does nothing, and for a
++game it has not been measured.
++*/
++class FrameLatencyTracker {
++public:
++  using time_point = clock::time_point;
++  using duration = clock::duration;
++
++  FrameLatencyTracker();
++
++  /** Whether the encode and finish threads need to report at all. */
++  bool enabled() const { return sleep_enabled_ || log_enabled_ || log_frames_; }
++
++  /** Application thread: Present was called for this frame. */
++  void notifyPresent(uint64_t frame, bool waits_for_display);
++
++  /** Encode thread: the command buffer that presents this frame is committed. */
++  void notifyEncoded(uint64_t frame);
++
++  /**
++  Finish thread: the GPU has finished the first command buffer of this frame.
++  Metal's times for it, in nanoseconds of its own clock: when the kernel had
++  scheduled it and when the GPU started it.
++  */
++  void notifyStarted(uint64_t frame, uint64_t kernel_end, uint64_t gpu_start);
++
++  /** Finish thread: the GPU has finished this frame, at gpu_end by Metal's clock. */
++  void notifyFinished(uint64_t frame, uint64_t gpu_end);
++
++  /** Application thread, last thing in Present: sleeps, then starts the frame after this one. */
++  void sleepAndBeginFrame(uint64_t frame);
++
++private:
++  struct Frame {
++    uint64_t id = 0;
++    time_point start;
++    time_point present;
++    time_point encoded;
++    time_point finished;
++    duration slept{};
++    int64_t kernel_end = 0;
++    int64_t gpu_start = 0;
++    int64_t gpu_end = 0;
++    bool waits_for_display = false;
++  };
++
++  /** What the last frames say about the stages. Metal's times are in nanoseconds. */
++  struct Estimate {
++    duration cpu{};
++    duration encode{};
++    duration longest_encode{};
++    duration gpu_interval{};
++    bool encoder_holds = false;
++    bool gpu_holds = false;
++    int64_t metal_clock_offset = 0;
++  };
++
++  static constexpr size_t kFrameCount = 16;
++  static constexpr size_t kEstimateFrames = 7;
++  static constexpr size_t kFramesThatWaited = 3;
++  static constexpr uint64_t kLogInterval = 300;
++
++  Frame *find(uint64_t frame);
++  /** When the GPU took this finished frame, and whether the frame had waited for it. */
++  bool gpuTook(const Frame &frame, const Frame &previous, int64_t metal_clock_offset, time_point &taken, bool &waited);
++  void beginFrame(uint64_t frame, time_point start, duration slept);
++  bool estimate(Estimate &result);
++  time_point computeStart(uint64_t frame, const Estimate &est, time_point now);
++  void log(uint64_t frame, const Estimate &est, bool estimated);
++
++  dxmt::mutex mutex_;
++  std::array<Frame, kFrameCount> frames_;
++  uint64_t newest_finished_ = 0;
++  time_point last_log_;
++  duration tolerance_;
++  bool sleep_enabled_;
++  bool sleep_with_vsync_;
++  bool gpu_paced_;
++  bool gpu_overlaps_frames_;
++  bool log_enabled_;
++  bool log_frames_;
++  time_point created_;
++};
++
++} // namespace dxmt
+diff --git a/src/dxmt/meson.build b/src/dxmt/meson.build
+index 6b8902d..8f4fd8b 100644
+--- a/src/dxmt/meson.build
++++ b/src/dxmt/meson.build
+@@ -2,6 +2,7 @@ dxmt_src = [
+   'dxmt_format.cpp',
+   'dxmt_names.cpp',
+   'dxmt_command_queue.cpp',
++  'dxmt_latency.cpp',
+   'dxmt_command.cpp',
+   'dxmt_capture.cpp',
+   'dxmt_info.cpp',

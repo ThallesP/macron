@@ -1,0 +1,214 @@
+From: Macron <noreply@github.com>
+Subject: [PATCH] dxgi: with the NVIDIA extension on, let NGX load nvngx.dll and
+ describe a card that games' own lists know
+
+With DXMT_ENABLE_NVEXT=1 a game sees an NVIDIA card and DXMT's nvngx.dll
+turns its DLSS calls into MetalFX. Deadlock (Source 2, Direct3D 11) still
+reported DLSS as not available. Its console with NGX's logging on
+(NGXCore's LogLevel) shows why: NGX finds C:\Windows\System32\nvngx.dll
+through the registry and then refuses to load it, error 0x80092009
+(CRYPT_E_NO_MATCH): the file has no signature. NGX loads its core only when
+the file's signature chains to a root the machine trusts.
+
+- dxgi.dll adds the certificate nvngx.dll is signed with to the prefix's Root
+  store, once, when the first DXGI factory is made and the extension is on
+  (not while the DLL loads: opening the store loads crypt32, which syncs the
+  store with the host's roots). The certificate comes from
+  dxgi_ngx_certificate.h, which Macron's runtime/dxmt/build.sh writes for
+  every build together with a key that signs that build's nvngx.dll and is
+  then deleted. As the file is in this patch it holds no certificate and
+  nothing is trusted. The approach is Mullion's
+  (https://github.com/dttdrv/mullion, LGPL 2.1, src/dxgi/dxgi.cpp and
+  src/nvngx/signing at 36f5b82b0e9bccadb5c12a159a719caa5a2191ed), which
+  keeps one key as a repository secret instead.
+- NGX asks for nvlddmkm\NGXCore's NGXPath before NGXCore's FullPath, so both
+  are set (and removed again when the extension is off, as FullPath was).
+- The adapter was "Apple M3" with NVIDIA's vendor id, device 0 and revision
+  0. It is now the card DXMT's NVAPI already describes
+  (NvAPI_GPU_GetFullName, NvAPI_GPU_GetArchInfo): "NVIDIA GeForce RTX 4090",
+  device 0x2684, revision 0xA1, unless dxgi.customDeviceId or
+  dxgi.customDeviceDesc say otherwise. Source 2 prints "Disable asynchronous
+  shader creation because of an old driver that might crash" for an NVIDIA
+  adapter whose revision is below 0xA1 (read in rendersystemdx11.dll: the
+  compare is on DXGI_ADAPTER_DESC's VendorId and Revision).
+
+diff --git a/src/dxgi/dxgi.cpp b/src/dxgi/dxgi.cpp
+index cb1a6cf..301ed0a 100644
+--- a/src/dxgi/dxgi.cpp
++++ b/src/dxgi/dxgi.cpp
+@@ -1,8 +1,12 @@
+ #include "dxgi_interfaces.h"
++#include "dxgi_ngx_certificate.h"
+ #include "log/log.hpp"
+ #include "util_env.hpp"
+ #include "winemetal.h"
+ #include <mutex>
++#ifdef _WIN32
++#include <wincrypt.h>
++#endif
+ 
+ namespace dxmt {
+ Logger Logger::s_instance("dxgi.log");
+@@ -12,14 +16,50 @@ VendorExtension g_extension_enabled = VendorExtension::None;
+ #ifdef _WIN32
+ std::once_flag nvext_init;
+ 
++// NGX, the library DLSS games link, loads its core (nvngx.dll) only when the file's signature chains to a root the
++// machine trusts. Macron signs its nvngx.dll with a key made for that one build and thrown away (runtime/dxmt/build.sh
++// in Macron's repository), and this adds that build's certificate to the prefix's Root store. The certificate names
++// Macron, is not a certificate authority and is trusted only inside the prefix. Not called from DllMain: opening the
++// store loads crypt32, which syncs the store with the host's roots.
++static void TrustNGXCertificate() {
++  if (sizeof(macron_ngx_certificate) < 64)
++    return;
++  HMODULE crypt32 = LoadLibraryW(L"crypt32.dll");
++  if (!crypt32)
++    return;
++  auto open = (decltype(&CertOpenStore))GetProcAddress(crypt32, "CertOpenStore");
++  auto add = (decltype(&CertAddEncodedCertificateToStore))GetProcAddress(crypt32, "CertAddEncodedCertificateToStore");
++  auto close = (decltype(&CertCloseStore))GetProcAddress(crypt32, "CertCloseStore");
++  HCERTSTORE store =
++      open && add && close ? open(CERT_STORE_PROV_SYSTEM_W, 0, 0, CERT_SYSTEM_STORE_LOCAL_MACHINE, L"Root") : nullptr;
++  if (store) {
++    if (add(store, X509_ASN_ENCODING, macron_ngx_certificate, sizeof(macron_ngx_certificate),
++            CERT_STORE_ADD_USE_EXISTING, nullptr))
++      Logger::info("NVEXT: the prefix trusts the certificate nvngx.dll is signed with");
++    else
++      Logger::warn("NVEXT: could not add nvngx.dll's certificate to the prefix's Root store; games will not load it");
++    close(store, 0);
++  }
++  FreeLibrary(crypt32);
++}
++
++void PrepareVendorExtension() {
++  static std::once_flag once;
++  if (g_extension_enabled == VendorExtension::Nvidia)
++    std::call_once(once, TrustNGXCertificate);
++}
++
++// Where NGX looks for its core: the registry values NGXCore's FullPath (under NVIDIA Corporation, Global) and,
++// first, NGXPath (under the nvlddmkm service's NGXCore). Both name System32, where the prefix has DXMT's nvngx.dll.
+ static void InitializeVendorExtensionNV() {
+ #ifdef __i386__
+   return;
+ #endif
+-  HKEY key1 = nullptr, key2 = nullptr, key3 = nullptr;
++  HKEY key1 = nullptr, key2 = nullptr, key3 = nullptr, key4 = nullptr;
+   auto name1 = L"{41FCC608-8496-4DEF-B43E-7D9BD675A6FF}";
+   auto name2 = L"FullPath";
+-  WCHAR value3[] = L"C:\\Windows\\System32";
++  auto name3 = L"NGXPath";
++  WCHAR folder[] = L"C:\\Windows\\System32";
+   if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                       L"SOFTWARE\\NVIDIA Corporation\\Global", 0, nullptr, 0,
+                       KEY_ALL_ACCESS, nullptr, &key1, nullptr) ||
+@@ -28,18 +68,23 @@ static void InitializeVendorExtensionNV() {
+                       0, KEY_ALL_ACCESS, nullptr, &key2, nullptr) ||
+       RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                       L"SOFTWARE\\NVIDIA Corporation\\Global\\NGXCore", 0,
+-                      nullptr, 0, KEY_ALL_ACCESS, nullptr, &key3, nullptr)) {
++                      nullptr, 0, KEY_ALL_ACCESS, nullptr, &key3, nullptr) ||
++      RegCreateKeyExW(HKEY_LOCAL_MACHINE,
++                      L"SYSTEM\\ControlSet001\\Services\\nvlddmkm\\NGXCore", 0,
++                      nullptr, 0, KEY_ALL_ACCESS, nullptr, &key4, nullptr)) {
+     goto cleanup;
+   }
+   if (env::getEnvVar("DXMT_ENABLE_NVEXT") != "1") {
+     RegDeleteValueW(key1, name1);
+     RegDeleteValueW(key2, name1);
+     RegDeleteValueW(key3, name2);
++    RegDeleteValueW(key4, name3);
+   } else {
+     DWORD _1 = 1;
+     RegSetValueExW(key1, name1, 0, REG_DWORD, (const BYTE *)&_1, sizeof(_1));
+     RegSetValueExW(key2, name1, 0, REG_DWORD, (const BYTE *)&_1, sizeof(_1));
+-    RegSetValueExW(key3, name2, 0, REG_SZ, (const BYTE *)value3, sizeof(value3));
++    RegSetValueExW(key3, name2, 0, REG_SZ, (const BYTE *)folder, sizeof(folder));
++    RegSetValueExW(key4, name3, 0, REG_SZ, (const BYTE *)folder, sizeof(folder));
+     Logger::info("Vendor extension enabled: NVEXT");
+     g_extension_enabled = VendorExtension::Nvidia;
+   }
+@@ -47,6 +92,7 @@ static void InitializeVendorExtensionNV() {
+   if (key1) RegCloseKey(key1);
+   if (key2) RegCloseKey(key2);
+   if (key3) RegCloseKey(key3);
++  if (key4) RegCloseKey(key4);
+ };
+ 
+ static void InitializeMetalCachePath() {
+diff --git a/src/dxgi/dxgi_adapter.cpp b/src/dxgi/dxgi_adapter.cpp
+index 1b3d37c..fab5859 100644
+--- a/src/dxgi/dxgi_adapter.cpp
++++ b/src/dxgi/dxgi_adapter.cpp
+@@ -139,11 +139,22 @@ public:
+ 
+     std::memset(pDesc->Description, 0, sizeof(pDesc->Description));
+ 
++    // With the NVIDIA extension on, the card is the one DXMT's NVAPI describes (NvAPI_GPU_GetFullName,
++    // NvAPI_GPU_GetArchInfo): a name, a device and a revision that games' own lists of NVIDIA cards know. A vendor
++    // id of NVIDIA's with device 0 and revision 0 reads as a card from before any of them (Source 2 turns
++    // asynchronous shader creation off below revision A1).
++    bool nvidia = options_.customVendorId < 0 && g_extension_enabled == VendorExtension::Nvidia;
++    std::string nvidia_name = "NVIDIA GeForce RTX 4090";
++
+     if (!options_.customDeviceDesc.empty()) {
+       str::transcodeString(
+           pDesc->Description,
+           sizeof(pDesc->Description) / sizeof(pDesc->Description[0]) - 1,
+           options_.customDeviceDesc.c_str(), options_.customDeviceDesc.size());
++    } else if (nvidia) {
++      str::transcodeString(
++          pDesc->Description, sizeof(pDesc->Description) / sizeof(pDesc->Description[0]) - 1, nvidia_name.c_str(),
++          nvidia_name.size());
+     } else {
+       device_.name().getCString((char *)pDesc->Description, sizeof(pDesc->Description), WMTUTF16StringEncoding);
+     }
+@@ -160,11 +171,11 @@ public:
+     if (options_.customDeviceId >= 0) {
+       pDesc->DeviceId = options_.customDeviceId;
+     } else {
+-      pDesc->DeviceId = 0;
++      pDesc->DeviceId = nvidia ? 0x2684 : 0;
+     }
+ 
+     pDesc->SubSysId = 0;
+-    pDesc->Revision = 0;
++    pDesc->Revision = nvidia ? 0xA1 : 0;
+     if (device_.hasUnifiedMemory())
+       pDesc->DedicatedVideoMemory = device_.recommendedMaxWorkingSetSize() / 2; // FIXME: use a more appropriate value
+     else
+diff --git a/src/dxgi/dxgi_factory.cpp b/src/dxgi/dxgi_factory.cpp
+index 0b3fa09..9e5a289 100644
+--- a/src/dxgi/dxgi_factory.cpp
++++ b/src/dxgi/dxgi_factory.cpp
+@@ -309,6 +309,7 @@ private:
+ 
+ extern "C" HRESULT __stdcall CreateDXGIFactory2(UINT Flags, REFIID riid,
+                                                 void **ppFactory) {
++  PrepareVendorExtension();
+   try {
+     MTLDXGIFactory* factory = new MTLDXGIFactory(Flags);
+     HRESULT hr = factory->QueryInterface(riid, ppFactory);
+diff --git a/src/dxgi/dxgi_interfaces.h b/src/dxgi/dxgi_interfaces.h
+index e7e759e..a73fb1d 100644
+--- a/src/dxgi/dxgi_interfaces.h
++++ b/src/dxgi/dxgi_interfaces.h
+@@ -30,4 +30,7 @@ enum class VendorExtension {
+ };
+ 
+ extern VendorExtension g_extension_enabled;
++
++/** Whatever a vendor extension needs that cannot be done while the DLL loads. */
++void PrepareVendorExtension();
+ } // namespace dxmt
+diff --git a/src/dxgi/dxgi_ngx_certificate.h b/src/dxgi/dxgi_ngx_certificate.h
+new file mode 100644
+index 0000000..d391789
+--- /dev/null
++++ b/src/dxgi/dxgi_ngx_certificate.h
+@@ -0,0 +1,5 @@
++#pragma once
++
++// The certificate nvngx.dll is signed with, in DER. Macron's build writes this file anew for every build
++// (runtime/dxmt/build.sh in Macron's repository); as it is here, nothing is trusted.
++static const unsigned char macron_ngx_certificate[] = {0};

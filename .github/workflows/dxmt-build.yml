@@ -1,8 +1,9 @@
-# Builds DXMT's d3d11.dll with Macron's patches (runtime/dxmt) on a GitHub
-# macOS runner and, when started on main, publishes it as a release asset that
-# internal/wineruntime pins by URL and SHA-256. DXMT is LGPL: the release
-# carries the patches and the patched source file and names the exact source
-# it was built from.
+# Builds the DXMT modules Macron's patches change (runtime/dxmt: d3d11.dll,
+# winemetal.dll and winemetal.so) on a GitHub macOS runner and, when started
+# on main, publishes them as a release asset that internal/wineruntime pins by
+# URL and SHA-256. DXMT is LGPL: the release carries the patches and the
+# patched source files and names the exact source it was built from.
+# winemetal.so links LLVM statically; that build is kept in the Actions cache.
 #
 # Manual trigger only. Never add a pull_request, push or schedule trigger here.
 name: DXMT build
@@ -16,9 +17,18 @@ permissions:
 jobs:
   build:
     runs-on: macos-26
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+      - name: The LLVM pin
+        id: llvm
+        run: |
+          . runtime/dxmt/release.env
+          echo "key=dxmt-llvm-$LLVM_COMMIT-macos-$MACOS_TARGET-x86_64" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/work/llvm-darwin
+          key: ${{ steps.llvm.outputs.key }}
       - name: Build the patched modules
         run: runtime/dxmt/build.sh "$RUNNER_TEMP/work" out
       - name: Summary
@@ -58,16 +68,16 @@ jobs:
           cp runtime/dxmt/patches/*.patch out/
           patches=$(cd out && ls *.patch)
           {
-            echo "DXMT $DXMT_TAG's \`d3d11.dll\` (x86_64 and i386) with Macron's patches, as an overlay for DXMT's [$DXMT_TAG release](https://github.com/3Shain/dxmt/releases/tag/$DXMT_TAG) in Macron's DXMT tree. Unpack it over that tree. It stops DXMT from keeping every shader a game creates in its parsed form: on a sandbox, Overwatch's process at its sign-in screen went from 7.9 GB to 1.8 GB (docs/overwatch-memory.md)."
+            echo "DXMT $DXMT_TAG's \`d3d11.dll\` and \`winemetal.dll\` (x86_64 and i386) and \`winemetal.so\` with Macron's patches, as an overlay for DXMT's [$DXMT_TAG release](https://github.com/3Shain/dxmt/releases/tag/$DXMT_TAG) in Macron's DXMT tree. Unpack it over that tree. What the patches do is in [runtime/dxmt/README.md]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/runtime/dxmt/README.md)."
             echo
             echo "- \`$ASSET_NAME\`: SHA-256 \`$sha\`"
-            echo "- Source: DXMT \`$DXMT_TAG\` (commit \`$DXMT_COMMIT\`, $DXMT_REPO) with these patches, attached below and in the archive under \`share/macron/dxmt/\`:"
+            echo "- Source: DXMT \`$DXMT_TAG\` (commit \`$DXMT_COMMIT\`, $DXMT_REPO) with these patches, attached below and in the archive under \`share/macron/dxmt/\` next to the patched source files (\`patched-source.tar.gz\`):"
             for patch in $patches; do
               echo "  - [\`$patch\`]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/runtime/dxmt/patches/$patch)"
             done
             echo "- Built by $RUN_URL from $GITHUB_SHA with [runtime/dxmt/build.sh]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/runtime/dxmt/build.sh)."
             echo
-            echo "DXMT and these patches are licensed under the GNU LGPL 2.1 or later; the licence text is in the archive under \`share/macron/dxmt/LICENSE\`."
+            echo "DXMT and these patches are licensed under the GNU LGPL 2.1 or later; the licence text is in the archive under \`share/macron/dxmt/LICENSE\`. \`winemetal.so\` statically links LLVM \`$LLVM_TAG\` (commit \`$LLVM_COMMIT\`, $LLVM_REPO), under the Apache License 2.0 with LLVM exceptions (\`share/macron/dxmt/LLVM-LICENSE.TXT\`)."
           } > notes.md
           gh release create "$RELEASE_TAG" --latest=false --target "$GITHUB_SHA" --title "DXMT ${DXMT_TAG#v} for Macron (${RELEASE_TAG#runtime-dxmt-})" \
             --notes-file notes.md "out/$ASSET_NAME" "out/$ASSET_NAME.sha256" $(for patch in $patches; do echo "out/$patch"; done)
