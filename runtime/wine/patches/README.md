@@ -161,6 +161,8 @@ The patch gives a thread of the tasks `Audio` and `Pro Audio` `THREAD_PRIORITY_T
 
 What it does not do: Windows puts these threads in its realtime range, above a process's own time-critical threads, and Wine's server refuses that range to a process of normal priority class. So a game with busy time-critical threads of its own can still delay its sound thread. `tools/perf/sndload.c` measures late wake-ups of such a thread under load, with and without the registration.
 
+On a sandbox (sbx_ttkjpgu5, three cores, overlay `macron.14`) `tools/perf/sndload.c` opens the same stream (1536 frames, 32 ms at 48 kHz) and keeps the cores busy with three ordinary threads and six at `THREAD_PRIORITY_HIGHEST`, mixing for 4 ms a wake-up. Three alternating 20 s runs each way: unregistered, the thread woke 1268 to 1370 times instead of about 1875, intervals p95 27 to 36 ms, 36 to 86 of them longer than the buffer; registered as `Pro Audio` (priority 0 before, 15 after, 0 after reverting), 1851 to 1869 times, p95 11.5 to 13 ms, 14 to 19 longer than the buffer. Those 14 to 19 are the sandbox's: with a lighter load (three threads at `HIGHEST`) both ways had 15 to 28 of them in that session and 1 to 2 in an earlier one, so it is the virtual machine stalling, not the thread's priority. What the patch does for Deadlock is the M3's to say.
+
 `avrt.dll` is a Windows module, built for i386 and x86_64; `../check-pe-exports.sh` checks that it exports what Gcenx's does.
 
 ## Building
