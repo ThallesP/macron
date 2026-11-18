@@ -1,0 +1,138 @@
+52b96307283459b67b27be1452f86820179de5a9ed343eb9c7301e861b892b46  Macron-0.5.0-rc6.dmg
+steam.sh: Steam is at its login window
+
+== The installer under test
+52b96307283459b67b27be1452f86820179de5a9ed343eb9c7301e861b892b46  /Users/runner/g3/Macron-0.5.0-rc6.dmg
+
+== Steam, signed in to the test account
+steam.sh: signed in to the test account
+steam.sh: app 871720 is already in the library
+steam.sh: app 404410 is already in the library
+
+== Before Macron: the Windows-only game cannot be installed, the Mac game installs and runs
+steam.sh: stock Steam: 871720 is AVAILABLE FOR another platform, Install is greyed out
+[2026-11-18 17:30:44] AppID 404410 state changed : Fully Installed,Update Queued,
+[2026-11-18 17:30:44] AppID 404410 state changed : Fully Installed,
+[2026-11-18 17:30:44] AppID 404410 scheduler finished : removed from schedule (result No Error, state 0xc) 
+steam.sh: Steam installed 404410 into its library; the page shows PLAY
+steam.sh: 404410 is running: its window is open and Steam shows STOP
+steam.sh: 404410 stopped from Steam; Steam is back at PLAY
+
+== Done with the stock Steam
+
+== Install Macron.pkg from the DMG, with Steam open
+total 21648
+-rw-r--r--  1 runner  staff  11063781 Nov 18 17:23 Macron.pkg
+-rw-r--r--  1 runner  staff     12459 Nov 18 17:23 Read me.txt
+installer: Package name is Macron
+installer: Installing at base path /
+installer: The install was successful.
+backup:          true
+steam app:       /Applications/Steam.app
+steam play:      on
+== Done: Steam Play is on with Macron as its tool
+Opened Steam again.
+steam dir:       /Users/runner/Library/Application Support/Steam
+build:           1794536281 (known: true)
+steamclient:     sha256 55a9341f7e411f52bae049193a98071ae666b0fddb90ab3cae6aa527d9d84335
+steam_osx:       sha256 99cc08899ce366b9518c0a3782d1ae5954762894d2bf54cc2069c41df86162af
+tool registered: true
+default tool:    true
+backup:          true
+steam app:       /Applications/Steam.app
+steam play:      on
+steam.sh: Steam is at its main window
+
+== Steam Play is on in the running client
+[2026-11-18 17:35:35] pid 19597: Steam Play is on (build 1794536281, steamclient.dylib 221faa3a6a2c36c99130b0a45028af1b)
+
+== Install the Windows-only game with Steam's Install button
+[2026-11-18 17:36:46] AppID 871720 state changed : Fully Installed,Update Queued,
+[2026-11-18 17:36:46] AppID 871720 state changed : Fully Installed,
+[2026-11-18 17:36:46] AppID 871720 scheduler finished : removed from schedule (result No Error, state 0xc) 
+steam.sh: Steam installed 871720 into its library; the page shows PLAY
+Ultimate Custom Night.exe
+
+== Play starts it through macron
+steam.sh: 871720 is running: its window is open and Steam shows STOP
+[2026-11-18 17:37:06] StartSession: appID 871720 session 73bc7214f2b176b1
+[2026-11-18 17:37:06] Command prefix for tool 0 "Macron" set to: "'/Users/runner/Library/Application Support/Steam/compatibilitytools.d/macron/.'/macron waitforexitandrun ".
+macron: 17:37:08.308Z +0.00s game steam-871720, log /Users/runner/Library/Application Support/Macron/logs/steam-871720/20261118T173708Z.log
+macron: 17:37:08.311Z +0.00s the caller's DYLD_INSERT_LIBRARIES goes on to Wine: steamloader.dylib, gameoverlayrenderer.dylib
+macron: 17:37:09.104Z +0.80s made the Windows environment at /Users/runner/Library/Application Support/Steam/steamapps/compatdata/871720/pfx from the runtime's template
+macron: 17:37:09.116Z +0.81s prefix ready
+macron: 17:37:09.116Z +0.81s starting Ultimate Custom Night.exe with the dxmt backend
+macron: 17:37:09.213Z +0.91s writing the registry keys games read to find Steam
+macron: 17:37:12.985Z +4.68s starting it through steam.exe, which connects it to the Mac Steam client (Steam bridge)
+macron: 17:37:12.986Z +4.68s Steam bridge ready
+macron: 17:37:13.000Z +4.69s game process started (Wine process 22447)
+
+== Quitting the game returns Steam to Play
+steam.sh: 871720 quit; Steam is back at PLAY
+
+== Steam's Stop button stops it too
+steam.sh: 871720 is running: its window is open and Steam shows STOP
+steam.sh: 871720 stopped from Steam; Steam is back at PLAY
+
+== The Mac-native game still runs as before, not through macron
+steam.sh: 404410 is running: its window is open and Steam shows STOP
+[2026-11-18 17:39:26] AppID 404410 adding PID 26658 as a tracked process "'/Users/runner/Library/Application Support/Steam/steamapps/common/Endless Sky/Endless Sky.app/Contents/MacOS/Endless Sky'"
+steam.sh: 404410 stopped from Steam; Steam is back at PLAY
+
+== Done with Steam's buttons
+
+== sudo macron-uninstall, with Steam open
+Steam is open; asking it to quit.
+Steam: removed macron's compatibility tool and put config.vdf's old mapping back (/Users/runner/Library/Application Support/Steam)
+Steam.app:       Valve's files are back, byte for byte
+removing /Users/runner/Library/Application Support/Macron/runtimes
+removing /Users/runner/Library/Application Support/Macron/logs
+removing /Users/runner/Library/Application Support/Macron/downloads
+removed /Users/runner/Library/Application Support/Macron
+The program itself is still at /usr/local/bin/macron: sudo /usr/local/bin/macron-uninstall removes it.
+removed /usr/local/bin/macron, /usr/local/bin/macron-uninstall, /usr/local/lib/macron and /Library/Logs/Macron-install.log
+
+== Steam is as it was
+/Applications/Steam.app: accepted
+source=Notarized Developer ID
+origin=Developer ID Application: Valve Corporation (MXGJJ98X76)
+config-before.vdf.private:0
+config.vdf:0
+steam.sh: Steam is at its main window
+steam.sh: stock Steam: 871720 is AVAILABLE FOR another platform, Install is greyed out
+
+== Gate 3 flow passed
+GATE3 RESULT: exit 0
+== Install the package again
+installer: The install was successful.
+x86_64 arm64
+~/Library/Application Support/Macron/runtimes/wine-11.21-macron.15-dxmt-0.80-macron.2-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1
+wine/bin/wineserver 5c2f6788eb21b7f4 links @rpath/libinotify.0.dylib
+wine-dxmt/bin/wineserver 5c2f6788eb21b7f4 links @rpath/libinotify.0.dylib
+== nvprobe with the dlss switch
+RESULT DXMT_ENABLE_NVEXT=1
+RESULT adapter vendor 0x10de device 0x2684 revision 0xa1 "NVIDIA GeForce RTX 4090" dedicated 2389 MB
+RESULT registry NGXPath: C:\Windows\System32, signature of nvngx.dll there: trusted (0x00000000)
+RESULT registry FullPath: C:\Windows\System32, signature of nvngx.dll there: trusted (0x00000000)
+RESULT NvAPI_Initialize: OK
+RESULT NGX init: OK
+RESULT NGX SuperSampling.Available=1
+RESULT DLSS feature 1280x720->1920x1080: not created (0xbad0001)
+== a folder's change notification
+exit 0: RESULT notify: before the file quiet, after it signalled
+== the server's thread while a program runs, raised and with MACRON_WINESERVER_PRIORITY=normal
+raised: 20R 20T 
+RESULT config task Pro Audio seconds 8 load 3 high 1 mix_ms 2.0 source timer wake event timer sleep processors 3
+RESULT wake intervals 801 ms p50 10.25 p95 11.67 p99 13.06 max 25.91 later_than_two_periods 1 later_than_buffer 0 found_empty 0 timeouts 0
+RESULT tick signal_to_wake ms p50 0.15 p95 1.01 p99 2.19 max 4.74
+normal: 20T 20T 
+RESULT config task Pro Audio seconds 8 load 3 high 1 mix_ms 2.0 source timer wake event timer sleep processors 3
+RESULT wake intervals 800 ms p50 10.26 p95 11.32 p99 12.52 max 26.55 later_than_two_periods 1 later_than_buffer 0 found_empty 0 timeouts 0
+RESULT tick signal_to_wake ms p50 0.16 p95 0.62 p99 2.18 max 4.62
+== sndload on a stream, registered and not
+RESULT config task Pro Audio seconds 15 load 3 high 6 mix_ms 4.0 source stream wake event timer sleep processors 3
+RESULT priority before 0 after 15 registered yes
+RESULT wake intervals 1407 ms p50 10.19 p95 13.15 p99 14.24 max 15.13 later_than_two_periods 0 later_than_buffer 0 found_empty 1 timeouts 0
+RESULT config task none seconds 15 load 3 high 6 mix_ms 4.0 source stream wake event timer sleep processors 3
+RESULT priority before 0 after 0 registered no
+RESULT wake intervals 921 ms p50 13.06 p95 42.11 p99 69.32 max 90.24 later_than_two_periods 224 later_than_buffer 87 found_empty 132 timeouts 0

@@ -1,0 +1,33 @@
+== Install the package again
+installer: The install was successful.
+x86_64 arm64
+~/Library/Application Support/Macron/runtimes/wine-11.21-macron.15-dxmt-0.80-macron.2-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1
+wine/bin/wineserver 5c2f6788eb21b7f4 links @rpath/libinotify.0.dylib
+wine-dxmt/bin/wineserver 5c2f6788eb21b7f4 links @rpath/libinotify.0.dylib
+== nvprobe with the dlss switch
+RESULT DXMT_ENABLE_NVEXT=1
+RESULT adapter vendor 0x10de device 0x2684 revision 0xa1 "NVIDIA GeForce RTX 4090" dedicated 2389 MB
+RESULT registry NGXPath: C:\Windows\System32, signature of nvngx.dll there: trusted (0x00000000)
+RESULT registry FullPath: C:\Windows\System32, signature of nvngx.dll there: trusted (0x00000000)
+RESULT NvAPI_Initialize: OK
+RESULT NGX init: OK
+RESULT NGX SuperSampling.Available=1
+RESULT DLSS feature 1280x720->1920x1080: not created (0xbad0001)
+== a folder's change notification
+exit 0: RESULT notify: before the file quiet, after it signalled
+== the server's thread while a program runs, raised and with MACRON_WINESERVER_PRIORITY=normal
+raised: 20R 20T 
+RESULT config task Pro Audio seconds 8 load 3 high 1 mix_ms 2.0 source timer wake event timer sleep processors 3
+RESULT wake intervals 801 ms p50 10.25 p95 11.67 p99 13.06 max 25.91 later_than_two_periods 1 later_than_buffer 0 found_empty 0 timeouts 0
+RESULT tick signal_to_wake ms p50 0.15 p95 1.01 p99 2.19 max 4.74
+normal: 20T 20T 
+RESULT config task Pro Audio seconds 8 load 3 high 1 mix_ms 2.0 source timer wake event timer sleep processors 3
+RESULT wake intervals 800 ms p50 10.26 p95 11.32 p99 12.52 max 26.55 later_than_two_periods 1 later_than_buffer 0 found_empty 0 timeouts 0
+RESULT tick signal_to_wake ms p50 0.16 p95 0.62 p99 2.18 max 4.62
+== sndload on a stream, registered and not
+RESULT config task Pro Audio seconds 15 load 3 high 6 mix_ms 4.0 source stream wake event timer sleep processors 3
+RESULT priority before 0 after 15 registered yes
+RESULT wake intervals 1407 ms p50 10.19 p95 13.15 p99 14.24 max 15.13 later_than_two_periods 0 later_than_buffer 0 found_empty 1 timeouts 0
+RESULT config task none seconds 15 load 3 high 6 mix_ms 4.0 source stream wake event timer sleep processors 3
+RESULT priority before 0 after 0 registered no
+RESULT wake intervals 921 ms p50 13.06 p95 42.11 p99 69.32 max 90.24 later_than_two_periods 224 later_than_buffer 87 found_empty 132 timeouts 0
