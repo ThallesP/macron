@@ -71,8 +71,9 @@ var dxmtOverlayModules = []string{
 // overlayUnixFiles are the overlay's Unix files that go into the plain tree
 // too. opengl32.so because the overlay's opengl32.dll there calls into it by
 // number, and patch 0007 adds a call. wineserver because every game runs
-// through it, whichever tree it starts from (patch 0015).
-var overlayUnixFiles = []string{"lib/wine/x86_64-unix/opengl32.so", "bin/wineserver"}
+// through it, whichever tree it starts from (patch 0015). winecoreaudio.so
+// because a game's sound goes through it in either tree (patch 0016).
+var overlayUnixFiles = []string{"lib/wine/x86_64-unix/opengl32.so", "bin/wineserver", "lib/wine/x86_64-unix/winecoreaudio.so"}
 
 func Find(layout Layout, manifest Manifest) (Installed, error) {
 	dir := layout.RuntimeDir(manifest.Version)
