@@ -126,6 +126,40 @@ So on the sandboxes the mouse's path is not where a player's lag is. On the M3 t
 - **A drawn scene, at last.** The notice on the first screen is the game's own (`CCitadelIntroPopupsController::CheckShowIntroPopups` in `client.dll`) and is governed by the console variable `deadlock_early_development_warning_disabled`, which its "Don't show this again" box sets in `cfg/machine_convars.vcfg`. With `+deadlock_early_development_warning_disabled 1` as a launch argument the game goes to its title screen with no input: "PRESS ANY KEY TO START" over a drawn city at night, seen from a rooftop, with smoke and birds moving. That needs a key, so it is as far as a test goes; `+map dl_hideout` loads the hideout behind it. At a 1280x829 picture that scene ran at 119.2, 120.0 and 120.0 frames a second in its first three half-minutes, 12.2 to 12.9 ms from a frame's start to the end of its GPU work, 8.3 to 8.4 ms of GPU work a frame, then 109 and 68 at thermal level 2 (thread "Deadlock on the M3: past the first dialog without a click"). 120 is the ceiling a window's drawables set here (docs/perf/README.md), so the scene is no heavier than the black screen behind the notice was.
 - 1280x829 was a window in the middle of a 1920x1243 desktop. Whether the game's own full-screen mode at such a size runs the same was not tried: it changes the display's mode, which a test on somebody's desktop may not do.
 
+## Deadlock on the M3: a smaller screen that fills the display
+
+2026-11-20, eleven starts in two sessions (threads "Deadlock on the M3: a smaller picture that fills the screen" and "Deadlock on the M3: the smaller picture's second build, the sound thread in the real-time band, and a start in the practice map"; files in `~/macron-perf/scale/` and `~/macron-perf/scale2/` on that Mac). Wine patch 0017 shows the game a screen of fewer pixels and scales the picture up to the display, whose mode stays what it was (`runtime/wine/patches/README.md`, "0017"). The released rc7 runtime with the `winemac.so` under test; `+deadlock_early_development_warning_disabled 1`, so the title screen over its drawn city; no `video.txt`, so the game chose its settings each time. Medians of the first two or three half-minutes, the Mac at thermal level 0:
+
+| the screen the game is shown | what it rendered | frames a second | start to GPU done |
+|---|---|---|---|
+| 1920x1243, the display's own | 1112x720, upscaled | 75.0, 74.5 | 22.9 to 23.9 ms |
+| 1440x932 | 1112x720, upscaled | 90.3, 89.0 | 18.9 to 19.5 ms |
+| 1280x829 (two starts) | 1112x720, upscaled | 92.6, 93.6; 93.4, 92.7 | 18.6 to 19.1 ms |
+| **1098x711** (two starts) | 1098x711 as it is | **97.3, 100.1, 100.1; 100.2, 99.2** | **16.5 to 18.1 ms** |
+| 1024x663 | 1024x663 as it is | 107.2, 104.0 | 15.9 to 16.2 ms |
+| 1440x932 with a `video.txt` made at the display's size | 835x540, upscaled | 102.0, 100.9 | 17.1 to 17.8 ms |
+
+- **The game renders 720 lines whatever screen it has** and upscales to the screen (`mat_viewportscale` 0.579, 0.773 and 0.869 for the first three rows: 720 lines each time). So a smaller screen takes away the work at the screen's size and nothing else, until the screen is below 720 lines and is rendered as it is. `+mat_viewportscale 0.58` on the command line changed nothing: the game wrote its own 0.869.
+- **Deadlock's profile shows it 780,000 pixels**, 1098x711 on this display: 97 to 100 on the title, 6 ms less from a frame's start to the end of its GPU work than at the display's size. The picture fills the screen edge to edge (the window is at 0,0 and 1920x1243 points in every start of the second build); its text is slightly soft, and at 1024x663 softer and slightly blocky.
+- A player whose settings were made at the display's size keeps the scale they had (0.58), now of the smaller screen: fewer pixels than before, faster and blurrier, until they raise the game's own setting.
+
+## Deadlock on the M3: in the practice map, and heat
+
+The same two sessions and a third (thread "Deadlock on the M3: does a frame limit keep the practice map out of the heat collapse", files in `~/macron-perf/scale3/`). `+map new_player_basics` loads the game's offline practice map with no input: first person, in front of a shop, the interface drawn. **This is the first measurement of the game being played rather than of a menu.** A 1098x711 screen, each start from thermal level 0 after three minutes at it:
+
+| | 0-30 s | 30-60 | 60-90 | 90-120 | 120-150 | 150-180 | 180-210 | 210-240 | level 1, level 2 from |
+|---|---|---|---|---|---|---|---|---|---|
+| no limit (two starts, 150 s) | 70.1, 75.4 | 70.0, 70.3 | 52.7, 52.7 | 29.3, 30.7 | 18.3, 14.1 | | | | 50 s, 65 s |
+| `+fps_max 60` | 59.9 | 59.9 | 58.8 | 58.8 | 46.2 | 26.6 | 29.3 | 42.5 | 80 s, 100 s (back to 1 at 211 s) |
+| `+fps_max 45` (two starts) | 44.2, 44.9 | 44.7, 45.0 | 45.0, 45.0 | 44.4, 45.0 | 44.9, 44.9 | 45.0, 45.0 | 45.0, 45.0 | 44.6, 43.3 | 131 s, 181 s |
+| `+fps_max 36` | 35.9 | 36.0 | 36.0 | 36.0 | 36.0 | 36.0 | 36.0 | 36.0 | 170 s, never |
+
+- **Without a limit the game is at 14 to 30 frames a second a minute and a half after it starts**, with 70 to 92 ms from a frame's start to the end of its GPU work (24 ms while cool), and stays there. That, and not Wine or the sound driver, is what playing on this Mac was like.
+- **Held to a rate the Mac can keep, it keeps it**: 36 for four minutes without reaching level 2; 45 for four minutes, the last one at level 2 with single stretches of 34 to 39. 60 is too much: level 2 at 100 s, then 26 to 46.
+- The GPU works on a frame for 16 ms while cool whatever the limit (20 to 23 ms once warm), so at 45 frames a second it is busy nine tenths of the time. The game used 1.3 processor cores at 45 and 1.8 at 60, `wineserver` 0.05 to 0.1; everything else on the Mac together, the test's own tools among it, 0.6 to 1.4.
+- **The game's own limit adds a frame of latency by this measure**: 40 to 43 ms from start to GPU done at 45, 49 to 54 ms at 36, 32 ms at 60. It waits after the frame has started.
+- **Sound**: no frame missing in any report of any start (0016). The game's own `Audio device starved` lines come in the first 12 s of a start (0 to 4, while it loads) and when the Mac is throttled: 1 and 5 between 132 and 137 s in the two starts without a limit, 1 at 229 s in one of the two at 45 (its lowest stretch), none after loading at 36, at 60 or in the other at 45.
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.
