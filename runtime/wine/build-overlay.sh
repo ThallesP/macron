@@ -155,8 +155,9 @@ done
 ALLOWED_NEW_IMPORTS='_mach_thread_self libSystem)' \
   "$here/check-unix-lib.sh" "$gcenx_wineserver" "$work/wineserver-upstream" "$work/wineserver-patched" program | tee -a "$out/abi-check.txt"
 
-# Patch 0016 waits for CoreAudio's pulls on a Mach semaphore, times them, reads
-# its settings from the environment and reports on stderr.
+# Patch 0016 waits for CoreAudio's pulls on a Mach semaphore, times them, gives
+# the thread that hands them on a time constraint, reads its settings from the
+# environment and reports on stderr.
 ALLOWED_NEW_IMPORTS='___stderrp libSystem)
 _atoi libSystem)
 _fprintf libSystem)
@@ -164,12 +165,15 @@ _getenv libSystem)
 _mach_absolute_time libSystem)
 _mach_task_self_ libSystem)
 _mach_timebase_info libSystem)
+_pthread_mach_thread_np libSystem)
+_pthread_self libSystem)
 _semaphore_create libSystem)
 _semaphore_destroy libSystem)
 _semaphore_signal libSystem)
 _semaphore_timedwait libSystem)
 _strcmp libSystem)
-_strtol libSystem)' \
+_strtol libSystem)
+_thread_policy_set libSystem)' \
   "$here/check-unix-lib.sh" "$gcenx_coreaudio" "$work/winecoreaudio-upstream.so" "$work/winecoreaudio-patched.so" | tee -a "$out/abi-check.txt"
 
 stage="$work/stage"
