@@ -1,0 +1,25 @@
+up-1: pulled 240128 in 5.0 s (30720 missing);240128 in 5.0 s (37376 missing);96768 in 2.1 s (13312 missing);
+fixed-1: pulled 240640 in 5.0 s (512 missing);240128 in 5.0 s (0 missing);95744 in 2.2 s (0 missing);
+rt-1: pulled 240128 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);96256 in 2.2 s (0 missing);
+up-2: pulled 240640 in 5.0 s (36864 missing);240128 in 5.0 s (33792 missing);96256 in 2.2 s (13312 missing);
+fixed-2: pulled 240640 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);95744 in 2.2 s (0 missing);
+rt-2: pulled 240640 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);95744 in 2.1 s (0 missing);
+up-3: pulled 240128 in 5.0 s (28160 missing);240128 in 5.0 s (28672 missing);96256 in 2.2 s (11264 missing);
+fixed-3: pulled 240640 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);95744 in 2.1 s (0 missing);
+rt-3: pulled 240640 in 5.0 s (0 missing);239616 in 5.0 s (0 missing);95744 in 2.1 s (0 missing);
+up-4: pulled 241664 in 5.0 s (30208 missing);241152 in 5.0 s (35840 missing);94208 in 2.1 s (11264 missing);
+fixed-4: pulled 240640 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);95744 in 2.1 s (0 missing);
+rt-4: pulled 240640 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);95744 in 2.1 s (0 missing);
+up-5: pulled 240128 in 5.0 s (34304 missing);240128 in 5.0 s (31744 missing);95744 in 2.1 s (15360 missing);
+fixed-5: pulled 240128 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);95744 in 2.2 s (0 missing);
+rt-5: pulled 240640 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);95744 in 2.1 s (0 missing);
+up-6: pulled 240128 in 5.0 s (26112 missing);240640 in 5.0 s (34816 missing);95744 in 2.1 s (14848 missing);
+fixed-6: pulled 240640 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);95744 in 2.0 s (0 missing);
+rt-6: pulled 240640 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);93696 in 2.1 s (0 missing);
+up-7: pulled 240128 in 5.0 s (28672 missing);241664 in 5.0 s (33792 missing);95744 in 2.2 s (11264 missing);
+fixed-7: pulled 240128 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);95744 in 2.2 s (0 missing);
+rt-7: pulled 240640 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);95744 in 2.0 s (0 missing);
+up-8: pulled 240640 in 5.0 s (32768 missing);241152 in 5.0 s (34816 missing);95744 in 2.1 s (14848 missing);
+fixed-8: pulled 241152 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);95744 in 2.0 s (0 missing);
+rt-8: pulled 240640 in 5.0 s (0 missing);240128 in 5.0 s (0 missing);95744 in 2.2 s (0 missing);
+PULL-DONE

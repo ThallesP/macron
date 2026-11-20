@@ -1,0 +1,15 @@
+before-1: HUNG after 240s, last line: render.c:1948: hpctime 3093 after underrun; sample in before-1.sample.txt
+after-1: 66s;render: 5221 tests executed (48 marked as todo, 1 as flaky, 9 failures), 2 skipped.; failed:  5 render.c:1867, 4 render.c:1903,
+before-2: 64s;render: 5214 tests executed (48 marked as todo, 2 as flaky, 2 failures), 2 skipped.; failed:  1 render.c:1282, 1 render.c:1297,
+after-2: 62s;render: 5220 tests executed (48 marked as todo, 1 as flaky, 0 failures), 2 skipped.; failed: 
+before-3: 66s;render: 5218 tests executed (48 marked as todo, 0 as flaky, 1 failure), 2 skipped.; failed:  1 render.c:1288,
+after-3: 64s;render: 5220 tests executed (48 marked as todo, 2 as flaky, 0 failures), 2 skipped.; failed: 
+before-4: 68s;render: 5218 tests executed (48 marked as todo, 4 as flaky, 1 failure), 2 skipped.; failed:  1 render.c:1288,
+after-4: 62s;render: 5220 tests executed (48 marked as todo, 1 as flaky, 0 failures), 2 skipped.; failed: 
+before-5: 66s;render: 5221 tests executed (48 marked as todo, 1 as flaky, 3 failures), 2 skipped.; failed:  1 render.c:1288, 1 render.c:1762, 1 render.c:1867,
+after-5: 62s;render: 5220 tests executed (48 marked as todo, 2 as flaky, 0 failures), 2 skipped.; failed: 
+before-6: 66s;render: 5221 tests executed (48 marked as todo, 2 as flaky, 1 failure), 2 skipped.; failed:  1 render.c:1282,
+after-6: 64s;render: 5220 tests executed (48 marked as todo, 2 as flaky, 0 failures), 2 skipped.; failed: 
+before-7: 68s;render: 5218 tests executed (48 marked as todo, 2 as flaky, 1 failure), 2 skipped.; failed:  1 render.c:1288,
+after-7: 64s;render: 5220 tests executed (48 marked as todo, 1 as flaky, 2 failures), 2 skipped.; failed:  1 render.c:1930, 1 render.c:1931,
+LOOP-DONE

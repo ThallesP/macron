@@ -1,0 +1,24 @@
+before-1 mmdevapi:render exit 1;render: 5218 tests executed (48 marked as todo, 1 as flaky, 1 failure), 2 skipped.; failed: 1 render.c:1288,
+before-1 winmm:wave exit 142; no summary; failed: 1 wave.c:1281, 1 wave.c:1310, 1 wave.c:1674, 1 wave.c:1677, 1 wave.c:1686, 1 wave.c:1780, 1 wave.c:1783, 1 wave.c:1786,
+before-1 dsound:dsound exit 0;dsound: 7108 tests executed (38 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: none
+before-1 dsound:dsound8 exit 0;dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: none
+after-1 mmdevapi:render exit 0;render: 5220 tests executed (48 marked as todo, 1 as flaky, 0 failures), 2 skipped.; failed: none
+after-1 winmm:wave exit 2;wave: 7268 tests executed (64 marked as todo, 0 as flaky, 2 failures), 0 skipped.; failed: 1 wave.c:1281, 1 wave.c:1310,
+after-1 dsound:dsound exit 0;dsound: 7108 tests executed (38 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: none
+after-1 dsound:dsound8 exit 0;dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: none
+before-2 mmdevapi:render exit 1;render: 5220 tests executed (48 marked as todo, 2 as flaky, 1 failure), 2 skipped.; failed: 1 render.c:1288,
+before-2 winmm:wave exit 2;wave: 7268 tests executed (64 marked as todo, 0 as flaky, 2 failures), 0 skipped.; failed: 1 wave.c:1281, 1 wave.c:1310,
+before-2 dsound:dsound exit 0;dsound: 7108 tests executed (38 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: none
+before-2 dsound:dsound8 exit 0;dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: none
+after-2 mmdevapi:render exit 142; no summary; failed: none
+after-2 winmm:wave exit 2;wave: 7268 tests executed (64 marked as todo, 0 as flaky, 2 failures), 0 skipped.; failed: 1 wave.c:1281, 1 wave.c:1310,
+after-2 dsound:dsound exit 0;dsound: 7108 tests executed (38 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: none
+after-2 dsound:dsound8 exit 0;dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: none
+before-3 mmdevapi:render exit 1;render: 5220 tests executed (48 marked as todo, 3 as flaky, 1 failure), 2 skipped.; failed: 1 render.c:1288,
+before-3 winmm:wave exit 142; no summary; failed: 1 wave.c:1281, 1 wave.c:1310, 1 wave.c:1674, 1 wave.c:1677, 1 wave.c:1686, 1 wave.c:1780, 1 wave.c:1783, 1 wave.c:1786,
+before-3 dsound:dsound exit 0;dsound: 7108 tests executed (38 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: none
+before-3 dsound:dsound8 exit 0;dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: none
+after-3 mmdevapi:render exit 0;render: 5220 tests executed (48 marked as todo, 2 as flaky, 0 failures), 2 skipped.; failed: none
+after-3 winmm:wave exit 2;wave: 7268 tests executed (64 marked as todo, 0 as flaky, 2 failures), 0 skipped.; failed: 1 wave.c:1281, 1 wave.c:1310,
+after-3 dsound:dsound exit 0;dsound: 7108 tests executed (38 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: none
+after-3 dsound:dsound8 exit 1;dsound8: 8186 tests executed (5 marked as todo, 0 as flaky, 1 failure), 0 skipped.; failed: 1 dsound8.c:1800,
