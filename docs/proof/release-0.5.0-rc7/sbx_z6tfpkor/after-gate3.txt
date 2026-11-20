@@ -1,0 +1,41 @@
+== Install the package again
+installer: The install was successful.
+~/Library/Application Support/Macron/runtimes/wine-11.21-macron.16-dxmt-0.80-macron.2-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1
+wine/lib/wine/x86_64-unix/winecoreaudio.so 3be2a877870b10675a7d04961fe0f6075377f6f18acd35e48c886f73ff2fb346 1 adhoc-signed
+wine/bin/wineserver 5c2f6788eb21b7f4
+wine-dxmt/lib/wine/x86_64-unix/winecoreaudio.so 3be2a877870b10675a7d04961fe0f6075377f6f18acd35e48c886f73ff2fb346 1 adhoc-signed
+wine-dxmt/bin/wineserver 5c2f6788eb21b7f4
+== shipped (X=1), exit 0
+RESULT stream: 44100 Hz on a 48000 Hz device, 2 channels, buffer 1411 frames (32.00 ms), period 441 frames (10.00 ms), latency 21.32 ms, policy sdl
+RESULT wake intervals 3176 ms p50 9.74 p95 19.53 p99 19.77 max 182.64 later_than_two_periods 23 later_than_buffer 8 found_empty 324 timeouts 0
+RESULT written 1324323 frames in 3003 writes over 30.00 s, which plays 1323206 frames
+macron-audio: stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, engine, timer in the real-time band: 15.0 s, 662401 frames pulled, 5660 missing in 3 gaps (longest 4815), 1510 writes, reserve 8820 (470 to 8820, held 5 min), least left 0, 1388 events, 250 more after a write, 1 without a pull, pull to event max 2259.78 ms (10 over 2 ms), event set max 141.11 ms, event to client max 175.17 ms (13 over a period)
+macron-audio: stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, engine, timer in the real-time band: 15.0 s, 661536 frames pulled, 0 missing in 0 gaps (longest 0), 1500 writes, reserve 8820 (470 to 8820, held 5 min), least left 0, 1398 events, 205 more after a write, 1 without a pull, pull to event max 113.06 ms (3 over 2 ms), event set max 122.64 ms, event to client max 124.66 ms (5 over a period)
+macron-audio: stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, engine, timer in the real-time band: 2.1 s, 88090 frames pulled, 0 missing in 0 gaps (longest 0), 201 writes, reserve 8820 (470 to 8820, held 5 min), least left 0, 187 events, 23 more after a write, 0 without a pull, pull to event max 0.27 ms (0 over 2 ms), event set max 2.47 ms, event to client max 4.55 ms (0 over a period)
+== upstream (MACRON_AUDIO=upstream), exit 0
+RESULT stream: 44100 Hz on a 48000 Hz device, 2 channels, buffer 1411 frames (32.00 ms), period 441 frames (10.00 ms), latency 10.66 ms, policy sdl
+RESULT wake intervals 2816 ms p50 10.22 p95 12.80 p99 14.24 max 194.74 later_than_two_periods 1 later_than_buffer 1 found_empty 218 timeouts 0
+RESULT written 1241856 frames in 2816 writes over 30.01 s, which plays 1323254 frames
+macron-audio: stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, upstream: 15.0 s, 662401 frames pulled, 40259 missing in 123 gaps (longest 423), 1408 writes, reserve 0 (0 to 0, held 0 min), least left -1, 1409 events, 0 more after a write, 0 without a pull, pull to event max 0.00 ms (0 over 2 ms), event set max 8.55 ms, event to client max 29.32 ms (1 over a period)
+macron-audio: stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, upstream: 15.0 s, 661968 frames pulled, 40986 missing in 107 gaps (longest 8094), 1408 writes, reserve 0 (0 to 0, held 0 min), least left -1, 1408 events, 0 more after a write, 0 without a pull, pull to event max 0.00 ms (0 over 2 ms), event set max 184.43 ms, event to client max 186.69 ms (2 over a period)
+macron-audio: stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, upstream: 2.2 s, 88954 frames pulled, 5237 missing in 16 gaps (longest 395), 190 writes, reserve 0 (0 to 0, held 0 min), least left -1, 189 events, 0 more after a write, 0 without a pull, pull to event max 0.00 ms (0 over 2 ms), event set max 2.68 ms, event to client max 4.72 ms (0 over a period)
+== shipped-48k (X=1), exit 0
+RESULT stream: 48000 Hz on a 48000 Hz device, 2 channels, buffer 1536 frames (32.00 ms), period 513 frames (10.69 ms), latency 21.33 ms, policy sdl
+RESULT wake intervals 2814 ms p50 10.67 p95 10.90 p99 12.73 max 105.72 later_than_two_periods 2 later_than_buffer 1 found_empty 13 timeouts 0
+RESULT written 1441017 frames in 2809 writes over 30.00 s, which plays 1439964 frames
+macron-audio: stream 1, 48000 Hz (period 512, buffer 1536) on a 48000 Hz device, engine, timer in the real-time band: 15.0 s, 720896 frames pulled, 0 missing in 0 gaps (longest 0), 1411 writes, reserve 2560 (512 to 9600, held 1 min), least left 1, 1408 events, 10 more after a write, 1 without a pull, pull to event max 1569.73 ms (2 over 2 ms), event set max 13.10 ms, event to client max 23.24 ms (2 over a period)
+macron-audio: stream 1, 48000 Hz (period 512, buffer 1536) on a 48000 Hz device, engine, timer in the real-time band: 15.0 s, 720384 frames pulled, 1926 missing in 1 gaps (longest 1926), 1405 writes, reserve 4998 (512 to 9600, held 5 min), least left 0, 1400 events, 12 more after a write, 0 without a pull, pull to event max 84.61 ms (1 over 2 ms), event set max 95.11 ms, event to client max 97.19 ms (1 over a period)
+macron-audio: stream 1, 48000 Hz (period 512, buffer 1536) on a 48000 Hz device, engine, timer in the real-time band: 2.2 s, 95232 frames pulled, 0 missing in 0 gaps (longest 0), 187 writes, reserve 4998 (512 to 9600, held 5 min), least left 0, 186 events, 0 more after a write, 0 without a pull, pull to event max 0.12 ms (0 over 2 ms), event set max 2.13 ms, event to client max 4.19 ms (0 over a period)
+== timer-fixed (MACRON_AUDIO_TIMER=fixed), exit 0
+RESULT stream: 44100 Hz on a 48000 Hz device, 2 channels, buffer 1411 frames (32.00 ms), period 441 frames (10.00 ms), latency 21.32 ms, policy sdl
+RESULT wake intervals 3175 ms p50 9.76 p95 19.54 p99 19.88 max 124.48 later_than_two_periods 27 later_than_buffer 2 found_empty 251 timeouts 0
+RESULT written 1321677 frames in 2997 writes over 29.99 s, which plays 1322386 frames
+macron-audio: stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, engine, timer in the application band: 15.0 s, 661969 frames pulled, 1231 missing in 3 gaps (longest 414), 1508 writes, reserve 4991 (470 to 8820, held 5 min), least left 0, 1408 events, 205 more after a write, 1 without a pull, pull to event max 1118.00 ms (24 over 2 ms), event set max 10.05 ms, event to client max 25.72 ms (4 over a period)
+macron-audio: stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, engine, timer in the application band: 15.0 s, 661105 frames pulled, 0 missing in 0 gaps (longest 0), 1498 writes, reserve 4991 (470 to 8820, held 5 min), least left 0, 1396 events, 197 more after a write, 0 without a pull, pull to event max 105.20 ms (22 over 2 ms), event set max 114.86 ms, event to client max 116.93 ms (2 over a period)
+macron-audio: stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, engine, timer in the application band: 2.1 s, 88090 frames pulled, 0 missing in 0 gaps (longest 0), 202 writes, reserve 4991 (470 to 8820, held 5 min), least left 0, 188 events, 23 more after a write, 0 without a pull, pull to event max 2.46 ms (3 over 2 ms), event set max 1.19 ms, event to client max 4.84 ms (0 over a period)
+== uninstall
+removed ~/Library/Application Support/Macron
+The program itself is still at /usr/local/bin/macron: sudo /usr/local/bin/macron-uninstall removes it.
+removed /usr/local/bin/macron, /usr/local/bin/macron-uninstall, /usr/local/lib/macron and /Library/Logs/Macron-install.log
+Macron's folder is gone
+AFTER-DONE
