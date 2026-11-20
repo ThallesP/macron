@@ -17,10 +17,10 @@ number, and the twelve commonest by name. Without the variable nothing is
 counted.
 ---
 diff --git a/server/request.c b/server/request.c
-index 5135ed5..f828b5d 100644
+index 5135ed5..7ed9472 100644
 --- a/server/request.c
 +++ b/server/request.c
-@@ -268,11 +268,69 @@ static void send_reply( union generic_reply *reply )
+@@ -268,11 +268,71 @@ static void send_reply( union generic_reply *reply )
  }
  
  /* call a request handler */
@@ -36,7 +36,7 @@ index 5135ed5..f828b5d 100644
 +#define STATS_INTERVAL (5 * TICKS_PER_SEC)
 +#define STATS_NAMED 12
 +
-+static FILE *stats_file;
++static const char *stats_path;
 +static int stats_checked;
 +static unsigned int stats_counts[REQ_NB_REQUESTS];
 +static unsigned int stats_total;
@@ -45,9 +45,11 @@ index 5135ed5..f828b5d 100644
 +static void stats_report(void)
 +{
 +    double seconds = (double)(monotonic_time - stats_since) / TICKS_PER_SEC;
++    FILE *file = fopen( stats_path, "a" );
 +    int i, n;
 +
-+    fprintf( stats_file, "macron-server: %.1f s, %u requests (%.0f a second):", seconds, stats_total,
++    if (!file) return;
++    fprintf( file, "macron-server: %.1f s, %u requests (%.0f a second):", seconds, stats_total,
 +             stats_total / seconds );
 +    for (n = 0; n < STATS_NAMED; n++)
 +    {
@@ -55,11 +57,11 @@ index 5135ed5..f828b5d 100644
 +        for (i = 0; i < REQ_NB_REQUESTS; i++)
 +            if (stats_counts[i] && (most < 0 || stats_counts[i] > stats_counts[most])) most = i;
 +        if (most < 0) break;
-+        fprintf( stats_file, " %s %u", get_request_name( most ), stats_counts[most] );
++        fprintf( file, " %s %u", get_request_name( most ), stats_counts[most] );
 +        stats_counts[most] = 0;
 +    }
-+    fputc( '\n', stats_file );
-+    fflush( stats_file );
++    fprintf( file, "\n" );
++    fclose( file );
 +    memset( stats_counts, 0, sizeof(stats_counts) );
 +    stats_total = 0;
 +    stats_since = monotonic_time;
@@ -71,10 +73,10 @@ index 5135ed5..f828b5d 100644
 +    {
 +        const char *path = getenv( "MACRON_SERVER_STATS" );
 +        stats_checked = 1;
-+        if (path && *path) stats_file = fopen( path, "a" );
++        if (path && *path) stats_path = path;
 +        stats_since = monotonic_time;
 +    }
-+    if (!stats_file) return;
++    if (!stats_path) return;
 +    if (monotonic_time - stats_since >= STATS_INTERVAL) stats_report();
 +    if (req < REQ_NB_REQUESTS) stats_counts[req]++;
 +    stats_total++;
