@@ -224,6 +224,25 @@ In those two Deadlock starts the reserve was 58 ms for the first 90 s and 29 ms 
 
 `winecoreaudio.so` is a Unix library. `../check-unix-lib.sh` checks that an unpatched build imports, exports and links what Gcenx's does and that the patch adds only the imports named in `build-overlay.sh` (the Mach semaphore and thread policy calls, `getenv`, `fprintf`).
 
+## 0017: a scale between Windows pixels and Mac points other than 2
+
+Wine's Mac driver has one scale between what Windows sees and what the Mac shows: Retina mode, where a Windows pixel is half a Mac point and every conversion multiplies or divides by 2. The patch makes that factor a number. With `MACRON_RENDER_PIXELS=<n>` in a game's environment, Windows sees the main display with about that many pixels instead of its size in points, at the same shape, and everything is scaled up to where it would have been: a window the size of that screen covers the real one, a click lands where it points, and a Metal layer's drawable is the smaller size and is scaled up smoothly.
+
+It is for a game that the GPU cannot draw at the display's size. On Thalles's M3 Deadlock's borderless window at the display's 1920x1243 ran at 67 frames a second; half the rendered pixels at that size gave 83, the lowest quality settings nothing more, and a 1280x829 picture 118: what the game does at the picture's size (its upscaler, what follows it, its interface) is most of a frame, and a lower render scale inside the game does not shrink that (`docs/perf/latency.md`). A game that is shown a smaller screen renders the smaller picture by itself, as a borderless window, and the picture fills the screen. The display's mode is not changed, so nothing else on the Mac moves or is resized, which a game's own full-screen mode at a lower resolution would do.
+
+- A number of pixels and not a size, so that a profile's number means the same work on any display. The width comes out even and the height follows from the display's shape.
+- The mode the display is in is the only one Windows is shown while a scale is set: the scale belongs to that mode. A game that asks for another gets the answer it gets for any mode a display does not have.
+- Relative mouse movement is not scaled, so a game's mouse sensitivity is what it is without the setting. Positions are.
+- Not with Retina mode, never larger than the display, and at least a third of its width; anything else is no scale at all.
+- OpenGL surfaces are not scaled: this is for Direct3D through DXMT, and a profile may only ask for it with that backend.
+- The setting is read from the process's environment block, so `winemac.so` imports nothing new.
+
+`macron` sets the variable for a game whose profile names a size (`renderPixels`) on the chips the profile names (`renderPixelsChips`), unless whoever starts the game has set it; `MACRON_RENDER_PIXELS=0` turns it off. `fixes/games/deadlock.json` is the first: 1440x932 pixels' worth on the chips with the base GPU.
+
+On a sandbox (sbx_dzv7m2rb, a 1024x768-point display) with `tools/perf/gpuload.c --borderless 1` and `MACRON_RENDER_PIXELS=442368`: Windows sees a 768x576 screen and that one mode (33 modes without the setting); the Direct3D 11 window is at 0,0 and 1024x768 points on the Mac; clicks at five places on the Mac arrive at three quarters of their coordinates (950,300 at 712,225; 1000,740 at 750,555); the picture and a console window beside it are drawn a third larger and smoothed. A request for 640x480 is refused, one for the display's own mode accepted, and DXGI's exclusive full screen succeeds with the screen's size unchanged, exactly as without the setting. 900,000 (more than the display has) and 20,000 (below a third of its width) change nothing.
+
+Like 0001, 0002 and 0005 it changes only `winemac.so`, which `../check-abi.sh` checks.
+
 ## Building
 
 `.github/workflows/wine-build.yml` runs `../build-overlay.sh` on a macos-26 runner: it builds `winemac.so` (x86_64), `wined3d.dll` (i386 and x86_64), `wow64cpu.dll` (x86_64), `opengl32` (`opengl32.so`, x86_64; `opengl32.dll`, i386 and x86_64) `wineboot.exe` (x86_64), `avrt.dll` (i386 and x86_64) `wineserver` (x86_64) and `winecoreaudio.so` (x86_64) from the source above, unpatched and patched, compares them with Gcenx's, and packs the patched ones as an overlay (`bin/wineserver`, `lib/wine/x86_64-unix/{winemac,opengl32,winecoreaudio}.so`, `lib/wine/{i386,x86_64}-windows/{wined3d,opengl32,avrt}.dll`, `lib/wine/x86_64-windows/{wow64cpu.dll,wineboot.exe}`, plus this folder and Wine's licence under `share/doc/macron-wine/`). Run from `main`, it publishes the overlay as a release; `internal/wineruntime` pins it by URL and SHA-256, copies all of it into the DXMT Wine tree, and copies the Windows modules (`wined3d.dll`, `wow64cpu.dll`, `opengl32.dll`, `wineboot.exe`, `avrt.dll`), `opengl32.so`, `winecoreaudio.so` and `wineserver` into the plain tree too, which keeps Gcenx's `winemac.so`.
