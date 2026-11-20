@@ -1,0 +1,120 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Fri, 20 Nov 2026 22:15:00 +0000
+Subject: [PATCH] server: Count requests by name when asked to.
+
+Every wait on an event, semaphore or mutex, every handle and most of
+what a Windows program asks of its system is a request to the server on
+macOS: a round trip from the calling thread, two context switches for it
+and one turn of the single-threaded server. Linux has ntsync for the
+waits; macOS has nothing in upstream Wine. How many of them a game makes
+a frame, and which, says what moving them into the process would be
+worth, and nothing measured it without WINEDEBUG=+server, which slows
+the server to a crawl and changes what it measures.
+
+With MACRON_SERVER_STATS=<file> in the server's environment it appends a
+line to that file every five seconds in which there were requests: their
+number, and the twelve commonest by name. Without the variable nothing is
+counted.
+---
+diff --git a/server/request.c b/server/request.c
+index 5135ed5..f828b5d 100644
+--- a/server/request.c
++++ b/server/request.c
+@@ -268,11 +268,69 @@ static void send_reply( union generic_reply *reply )
+ }
+ 
+ /* call a request handler */
++/* MACRON_SERVER_STATS=<file> in the server's environment (it has the
++ * environment of the process that started it) appends one line to that file
++ * every five seconds in which there were requests: how many, and the twelve
++ * commonest by name. A request is a round trip from a thread of a Windows
++ * process: two context switches for that thread and one turn of this
++ * single-threaded server, so their number a frame is what a game pays for
++ * everything Wine does here and not in the process itself: waits, events,
++ * semaphores, mutexes, handles, files, windows, messages. Nothing is counted
++ * without the variable. */
++#define STATS_INTERVAL (5 * TICKS_PER_SEC)
++#define STATS_NAMED 12
++
++static FILE *stats_file;
++static int stats_checked;
++static unsigned int stats_counts[REQ_NB_REQUESTS];
++static unsigned int stats_total;
++static timeout_t stats_since;
++
++static void stats_report(void)
++{
++    double seconds = (double)(monotonic_time - stats_since) / TICKS_PER_SEC;
++    int i, n;
++
++    fprintf( stats_file, "macron-server: %.1f s, %u requests (%.0f a second):", seconds, stats_total,
++             stats_total / seconds );
++    for (n = 0; n < STATS_NAMED; n++)
++    {
++        int most = -1;
++        for (i = 0; i < REQ_NB_REQUESTS; i++)
++            if (stats_counts[i] && (most < 0 || stats_counts[i] > stats_counts[most])) most = i;
++        if (most < 0) break;
++        fprintf( stats_file, " %s %u", get_request_name( most ), stats_counts[most] );
++        stats_counts[most] = 0;
++    }
++    fputc( '\n', stats_file );
++    fflush( stats_file );
++    memset( stats_counts, 0, sizeof(stats_counts) );
++    stats_total = 0;
++    stats_since = monotonic_time;
++}
++
++static void stats_count( enum request req )
++{
++    if (!stats_checked)
++    {
++        const char *path = getenv( "MACRON_SERVER_STATS" );
++        stats_checked = 1;
++        if (path && *path) stats_file = fopen( path, "a" );
++        stats_since = monotonic_time;
++    }
++    if (!stats_file) return;
++    if (monotonic_time - stats_since >= STATS_INTERVAL) stats_report();
++    if (req < REQ_NB_REQUESTS) stats_counts[req]++;
++    stats_total++;
++}
++
+ static void call_req_handler( struct thread *thread )
+ {
+     union generic_reply reply;
+     enum request req = thread->req.request_header.req;
+ 
++    stats_count( req );
++
+     current = thread;
+     current->reply_size = 0;
+     clear_error();
+diff --git a/server/request.h b/server/request.h
+index 68229d1..b92b30b 100644
+--- a/server/request.h
++++ b/server/request.h
+@@ -62,6 +62,7 @@ extern char *server_dir;
+ extern int server_dir_fd, config_dir_fd;
+ 
+ extern void trace_request(void);
++extern const char *get_request_name( enum request req );
+ extern void trace_reply( enum request req, const union generic_reply *reply );
+ 
+ /* get current tick count to return to client */
+diff --git a/server/trace.c b/server/trace.c
+index b6c2f27..e0a82b2 100644
+--- a/server/trace.c
++++ b/server/trace.c
+@@ -1686,6 +1686,11 @@ static void dump_varargs_class_info( const char *prefix, data_size_t size )
+     remove_data( sizeof(*info) );
+ }
+ 
++const char *get_request_name( enum request req )
++{
++    return req < REQ_NB_REQUESTS ? req_names[req] : "unknown";
++}
++
+ void trace_request(void)
+ {
+     enum request req = current->req.request_header.req;
