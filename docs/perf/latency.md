@@ -175,9 +175,22 @@ The table above suggested a rule: when macOS's thermal pressure level reaches 2,
 - **The fall to 14 to 18 frames a second did not come back** in either start. It was seen in the fifth and sixth starts of a session that waited only for level 0 between starts, not three minutes more; these two had the longer wait. What a Mac that has played for half an hour does is not something a test of eight minutes shows.
 - **What the limit did do is make frames younger**: at the same 33 frames a second, 31 ms from a frame's start to the end of its GPU work against 48 ms; at 42 against 48 frames a second, 25.5 ms against 38.5. A game that the GPU holds back starts each frame as early as it can and the frame waits; started later, it does not. That is the open item below about GPU pacing, and the reason for the next test.
 
+### DXMT's two readings of the GPU, in the practice map
+
+`dxmt.latencyGpuModel` unset, `start` and `finish`, five starts of 75 s at thermal level 0 throughout (thread "Deadlock on the M3: DXMT's two GPU pacing models in the practice map"), medians of the lines between 15 and 60 s:
+
+| | frames a second | start to GPU done | in flight | slept | the GPU worked on a frame | started frames apart |
+|---|---|---|---|---|---|---|
+| unset (two starts) | 74.3, 74.4 | 24.2, 24.6 ms | 1 | 0.0 ms | 15.9, 16.3 ms | 13.6, 14.1 ms |
+| `start` (two starts) | 73.5, 73.9 | 24.7, 24.3 ms | 1 | 0.0 ms | 16.4, 16.0 ms | 14.4, 14.1 ms |
+| `finish` | 73.4 | 24.1 ms | 1 | 0.0 ms | 16.1 ms | 14.1 ms |
+
+**Nothing to remove while the Mac is cool.** One frame in flight, no wait for the encoder, and neither reading ever slept: the 24 ms are the game's own 6 to 9 ms, DXMT's 5 to 6 ms of encoding, 3 to 4 ms before the GPU starts and its 16 ms of work, the last two overlapping the next frame's (frames start 14 ms apart). Neither reading costs frames here either, which `finish` did in the test program. So the game's input lag in play on a cool M3 is the time a frame takes, and what shortens it is less work a frame.
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.
 - 0005: a game's DLSS reaches MetalFX. Shown on the M3 with Deadlock.
-- **Open: a game the GPU holds back that does not ask for a limit itself** keeps three frames queued (79 ms at 51 frames a second in the test program). Neither reading of the GPU is safe to turn on. What a fix needs is a way to tell when an Apple GPU can take another frame without waiting, which Metal's command buffer times did not give for a simple program. For a game they did show a wait (Deadlock: 5 to 19 ms between scheduling and start), so `start` may work there; it has not been run on one.
+- **Open: a game the GPU holds back that does not ask for a limit itself** keeps three frames queued (79 ms at 51 frames a second in the test program). Neither reading of the GPU is safe to turn on. What a fix needs is a way to tell when an Apple GPU can take another frame without waiting, which Metal's command buffer times did not give for a simple program. Deadlock asks for a limit of one, and in its practice map neither reading did anything, good or bad (above).
+- **Open: frames on a throttled Mac.** At thermal level 2 Deadlock's frames were 15 ms older than the same frame rate needs (48 ms at 33 frames a second, 31 ms when held to that rate before the frame starts). A limit that only follows what macOS allows, instead of going under it, might keep that gain without the frames the first one lost; it is not built.
 - **Open: vsync on a real display**, and whether the sleep ever makes a frame miss its refresh there.
