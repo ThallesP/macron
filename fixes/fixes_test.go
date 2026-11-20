@@ -1,7 +1,6 @@
 package fixes
 
 import (
-	"slices"
 	"testing"
 
 	"github.com/ThallesP/macron/internal/failure"
@@ -85,7 +84,7 @@ func TestGetUnknownGame(t *testing.T) {
 	}
 }
 
-func TestDeadlockIsShownASmallerScreenOnTheBaseChips(t *testing.T) {
+func TestDeadlockIsShownTheDisplayAsItIs(t *testing.T) {
 	db, err := Load()
 	if err != nil {
 		t.Fatal(err)
@@ -93,10 +92,10 @@ func TestDeadlockIsShownASmallerScreenOnTheBaseChips(t *testing.T) {
 
 	deadlock := db.ForSteamApp(1422450)
 
-	if deadlock.ID != Default("steam-1422450").ID || deadlock.RenderPixels != 780000 {
-		t.Fatalf("app 1422450 got profile %q with renderPixels %d, want the id it had without a profile and 780000", deadlock.ID, deadlock.RenderPixels)
+	if deadlock.ID != Default("steam-1422450").ID {
+		t.Fatalf("app 1422450 got profile %q, want the id it had without a profile", deadlock.ID)
 	}
-	if !slices.Contains(deadlock.RenderPixelsChips, "Apple M3") || slices.Contains(deadlock.RenderPixelsChips, "Apple M3 Max") {
-		t.Errorf("chips %q: want the M3 and not the M3 Max", deadlock.RenderPixelsChips)
+	if deadlock.RenderPixels != 0 || len(deadlock.RenderPixelsChips) != 0 {
+		t.Errorf("renderPixels %d for chips %q: a smaller screen is the player's choice, not the profile's", deadlock.RenderPixels, deadlock.RenderPixelsChips)
 	}
 }
