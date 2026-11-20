@@ -161,6 +161,25 @@ The same two sessions and a third (thread "Deadlock on the M3: does a frame limi
 - **The game's own limit adds a frame of latency by this measure**: 40 to 43 ms from start to GPU done at 45, 49 to 54 ms at 36, 32 ms at 60. It waits after the frame has started.
 - **Sound**: no frame missing in any report of any start (0016). The game's own `Audio device starved` lines come in the first 12 s of a start (0 to 4, while it loads) and when the Mac is throttled: 1 and 5 between 132 and 137 s in the two starts without a limit, 1 at 229 s in one of the two at 45 (its lowest stretch), none after loading at 36, at 60 or in the other at 45.
 
+### How small a screen 100 frames a second would take in play
+
+The published rc8 with `MACRON_RENDER_PIXELS` set by hand, the practice map, 75 s a start at thermal level 0 throughout, medians of 15 to 60 s (thread "Deadlock on the M3: smaller screens in the practice map, lowest quality, and the game's sound mix-ahead"). The game rendered each screen as it is (`mat_viewportscale` 1.0).
+
+| the screen | frames a second (lowest to highest) | start to GPU done | the GPU worked on a frame | frames started apart | the interface's text |
+|---|---|---|---|---|---|
+| 1920x1243, the display's own (three starts, earlier) | 53.3 to 54.6 | 31.9 to 32.7 ms | 22.1 to 22.8 ms | 17.5 to 18.9 ms | sharp |
+| 1098x711 (780,000; eight starts, one here) | 73.4 to 76.7 | 22.8 to 24.7 ms | 15.5 to 16.4 ms | 13.5 to 14.4 ms | soft, readable |
+| 1098x711, the game's settings at their lowest | 79.4 (75.6 to 82.9) | 22.6 ms | 15.2 ms | 12.7 ms | soft, readable |
+| 1024x663 (680,000) | 80.0 (75.4 to 86.1) | 22.7 ms | 14.5 ms | 12.9 ms | soft, readable |
+| 962x623 (600,000) | 82.6 (79.4 to 86.3) | 21.9 ms | 13.8 ms | 12.7 ms | soft, readable |
+| 878x568 (500,000) | 89.1 (77.7 to 94.3) | 20.1 ms | 12.5 ms | 11.6 ms | the clock hard to read |
+| 806x522 (420,000), the game's settings at their lowest | 96.1 (89.0 to 103.5) | 17.9 ms | 11.5 ms | 10.4 ms | the clock hard to read |
+
+- **100 frames a second in play is not on this Mac at a picture one can read.** A fifth of the display's pixels and the lowest settings give 96. From the profile's screen down to that one the GPU's work on a frame falls by 4 ms and the frame rate rises by 20, while the text goes from soft to hard to read. The profile stays at 1098x711: 680,000 pixels would be 4 frames a second more.
+- **The game's quality settings are worth 3 to 5 frames a second** at the profile's screen (shader quality, shadows, motion blur, bloom and texture detail at their lowest: 79.4 against 73.4 to 76.7).
+- One of the two starts at 806x522 never drew a frame: a black window, the console stopping 9.9 s after the window at the game's own server start, the process alive until it was stopped. Not seen at any other size in today's 48 starts; not looked into, since that size is not one to ship.
+- **`+snd_mixahead 0.1` does not take the game's `Audio device starved` lines away**: one while loading (5.8 to 11.3 s) in four of the five starts that had it, as in the starts without it. The console variable exists (`soundsystem.dll`); the game prints nothing about it. The driver reported no frame missing in any start.
+
 ### A frame limit that follows the heat: tried, and not shipped
 
 The table above suggested a rule: when macOS's thermal pressure level reaches 2, hold the game to a rate the Mac can keep, before macOS takes more. It was built (branch `dxmt-0006`: a DXMT patch that takes the limit in the sleep before a frame starts, about two thirds of the rate at level 2, a tenth lower every 20 s while the level stays, higher again at level 1; its rule tested by itself and on a sandbox with the level set by hand) and run on the M3 against the same build with it off (thread "Deadlock on the M3: a frame limit that follows the heat, on and off, in the practice map"; 480 s and 300 s in the practice map, each from a cool start):
