@@ -1,0 +1,51 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Fri, 20 Nov 2026 18:40:00 +0000
+Subject: [PATCH] wined3d: Report the driver versions of today for Windows 10
+ and for NVIDIA's cards.
+
+wined3d makes up the display driver's version from a table: 31.0.x.y on
+Windows 10 and 11, and for every NVIDIA card since the GeForce 600 series
+x.y = 15.3118, driver 531.18 of 2023. Drivers have been 32.0.x.y since
+Windows 11 24H2 (WDDM 3.2), and games compare the number with the oldest
+driver they accept.
+
+Deadlock (Source 2) reads it through Direct3D 9's adapter identifier even
+though it draws with Direct3D 11. With Macron's `dlss` switch DXMT answers
+as an NVIDIA GeForce RTX 4090, and the game then opens on a box,
+"Graphics Driver Out-of-Date" over a black screen, that has to be
+clicked away at every start:
+
+  Graphics driver is out of date.  Vendor 10de, 'NVIDIA GeForce RTX 4090',
+  version 31.0.13.783 < 32.0.15.8108
+
+(13.783 is the table's GeForce 6 driver: wined3d did not know it was
+meant to be an NVIDIA card at all. Macron's launcher now tells it, with
+WINE_D3D_CONFIG's VideoPciVendorID and VideoPciDeviceID, when the switch
+is on.)
+
+The Windows 10 and 11 drivers are 32.0 now, and the NVIDIA entry is
+15.9144, driver 591.44.
+---
+diff --git a/dlls/wined3d/directx.c b/dlls/wined3d/directx.c
+index b8bd2c6..c5db501 100644
+--- a/dlls/wined3d/directx.c
++++ b/dlls/wined3d/directx.c
+@@ -318,7 +318,7 @@ static const struct driver_version_information driver_version_table[] =
+     {DRIVER_NVIDIA_GEFORCE6,    DRIVER_MODEL_NT6X,  "nvd3dum.dll",     13,  783},
+     {DRIVER_NVIDIA_GEFORCE8,    DRIVER_MODEL_NT6X,  "nvd3dum.dll",     13, 4052},
+     {DRIVER_NVIDIA_FERMI,       DRIVER_MODEL_NT6X,  "nvd3dum.dll",     13, 9135},
+-    {DRIVER_NVIDIA_KEPLER,      DRIVER_MODEL_NT6X,  "nvd3dum.dll",     15, 3118}, /* 531.18 */
++    {DRIVER_NVIDIA_KEPLER,      DRIVER_MODEL_NT6X,  "nvd3dum.dll",     15, 9144}, /* 591.44 */
+ 
+     /* Red Hat */
+     {DRIVER_REDHAT_VIRGL,       DRIVER_MODEL_GENERIC, "virgl.dll",      0,    0},
+@@ -812,7 +812,8 @@ bool wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
+                 break;
+ 
+             case 10:
+-                driver_os_version = 31;
++                /* What drivers for Windows 10 and 11 have carried since 2024 (WDDM 3.2). */
++                driver_os_version = 32;
+                 driver_model = DRIVER_MODEL_NT6X;
+                 break;
+ 

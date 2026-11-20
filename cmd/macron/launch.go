@@ -202,6 +202,7 @@ func withDLSS(profile fixes.Profile) fixes.Profile {
 		env = map[string]string{}
 	}
 	env["DXMT_ENABLE_NVEXT"] = "1"
+	env["WINE_D3D_CONFIG"] = strings.TrimPrefix(env["WINE_D3D_CONFIG"]+",VideoPciVendorID=0x10de,VideoPciDeviceID=0x2684", ",")
 	profile.Env = env
 	return profile
 }

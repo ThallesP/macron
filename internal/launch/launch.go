@@ -184,7 +184,26 @@ func Environment(profile fixes.Profile, prefix string, base []string) []string {
 	if both, ok := dxmtConfigOfBoth(profile, base); ok {
 		env = append(env, "DXMT_CONFIG="+both)
 	}
+	if both, ok := wined3dConfigOfBoth(profile, base); ok {
+		env = append(env, "WINE_D3D_CONFIG="+both)
+	}
 	return env
+}
+
+// WINE_D3D_CONFIG is a list of options too, and wined3d takes the first value
+// of each: the user's options go first, so they win, and the profile's others
+// stay.
+func wined3dConfigOfBoth(profile fixes.Profile, base []string) (string, bool) {
+	own, ok := profile.Env["WINE_D3D_CONFIG"]
+	if !ok {
+		return "", false
+	}
+	for _, entry := range slices.Backward(base) {
+		if users, ok := strings.CutPrefix(entry, "WINE_D3D_CONFIG="); ok {
+			return users + "," + own, true
+		}
+	}
+	return "", false
 }
 
 // DXMT_CONFIG is a list of options, and DXMT takes the last value of each.

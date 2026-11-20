@@ -91,6 +91,20 @@ func TestDLSSSwitchTurnsOnDXMTsNVIDIAExtensionWithoutTouchingTheProfile(t *testi
 	if got.Env["DXMT_ENABLE_NVEXT"] != "1" || got.Env["DXMT_LOG_LEVEL"] != "info" {
 		t.Errorf("env = %v, want DXMT_ENABLE_NVEXT=1 and the profile's own", got.Env)
 	}
+	if got.Env["WINE_D3D_CONFIG"] != "VideoPciVendorID=0x10de,VideoPciDeviceID=0x2684" {
+		t.Errorf("WINE_D3D_CONFIG = %q, want the card DXMT answers as, so that wined3d's driver version is that card's", got.Env["WINE_D3D_CONFIG"])
+	}
+}
+
+func TestDLSSSwitchKeepsAProfilesOwnWined3dOptions(t *testing.T) {
+	profile := fixes.Default("steam-1")
+	profile.Env = map[string]string{"WINE_D3D_CONFIG": "csmt=0"}
+
+	got := withDLSS(profile)
+
+	if got.Env["WINE_D3D_CONFIG"] != "csmt=0,VideoPciVendorID=0x10de,VideoPciDeviceID=0x2684" {
+		t.Errorf("WINE_D3D_CONFIG = %q", got.Env["WINE_D3D_CONFIG"])
+	}
 }
 
 func TestFrameCounterLogsTheFrameRateWithoutTouchingTheProfile(t *testing.T) {

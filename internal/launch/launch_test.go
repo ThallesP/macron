@@ -571,6 +571,21 @@ func TestAProgramThatLeavesItsOutputOpenStillExitsWithItsCode(t *testing.T) {
 	}
 }
 
+func TestTheUsersWined3dOptionsWinAndTheProfilesOthersStay(t *testing.T) {
+	profile := fixes.Default("steam-1")
+	profile.Env = map[string]string{"WINE_D3D_CONFIG": "VideoPciVendorID=0x10de,VideoPciDeviceID=0x2684"}
+
+	alone := Environment(profile, "/prefix", []string{"HOME=/Users/me"})
+	both := Environment(profile, "/prefix", []string{"HOME=/Users/me", "WINE_D3D_CONFIG=csmt=0"})
+
+	if got := lastValue(alone, "WINE_D3D_CONFIG"); got != "VideoPciVendorID=0x10de,VideoPciDeviceID=0x2684" {
+		t.Errorf("without the user's: %q", got)
+	}
+	if got := lastValue(both, "WINE_D3D_CONFIG"); got != "csmt=0,VideoPciVendorID=0x10de,VideoPciDeviceID=0x2684" {
+		t.Errorf("with the user's: %q, want the user's options first (wined3d takes the first value of each)", got)
+	}
+}
+
 func TestRenderPixelsIsForTheProfilesChipsUnlessTheUserSetIt(t *testing.T) {
 	profile := fixes.Default("x")
 	profile.RenderPixels = 1342080
