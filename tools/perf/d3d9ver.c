@@ -8,7 +8,13 @@
  * Direct3D 9), so it is where a game that is told it has an NVIDIA card
  * (Macron's `dlss` switch) gets that card's driver version from.
  *
- * Build: x86_64-w64-mingw32-gcc -O2 -o d3d9ver.exe d3d9ver.c -ld3d9 */
+ * The program says it knows Windows 10 (d3d9ver.manifest, linked in through
+ * d3d9ver.rc), as a current game does: without that Windows, and Wine, answer
+ * it as Windows 8, and the driver's version starts with 9.14 instead of the
+ * 31.0 or 32.0 a game sees.
+ *
+ * Build: x86_64-w64-mingw32-windres d3d9ver.rc -O coff -o d3d9ver.res
+ *        x86_64-w64-mingw32-gcc -O2 -o d3d9ver.exe d3d9ver.c d3d9ver.res -ld3d9 */
 #include <d3d9.h>
 #include <stdio.h>
 #include <string.h>
