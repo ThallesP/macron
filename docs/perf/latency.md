@@ -236,6 +236,23 @@ The published rc8, the practice map, 300 s a start from a cool Mac, `dxmt.latenc
 - **macOS slows every thread alike once it throttles: 2.7 times for the ones that had a performance core to themselves** (2.91 ms to 7.80 ms, and 7.80 again and again: a clock held down, not a queue). No policy Wine could give a game's threads escapes it. The same program alone, with every core busy for seven minutes, never took the Mac past level 0: it is the GPU's heat that brings the throttle, and the processor that pays.
 - While cool, a thread at Wine's time-critical priority or with a time constraint did the work in 2.9 ms where an ordinary one took 3.8: with the performance cores 93% busy (the game and this program together), ordinary threads spend part of their time on the efficiency cores. The game alone leaves the performance cores less full than that.
 
+## Deadlock on the M3 at the display's own size (from 2026-11-20, 15:00 UTC)
+
+Thalles: speed is to come from Macron's, Wine's and DXMT's code, not from a smaller picture. The profile shows the game the display as it is again, and what follows is measured there: 1920x1243, the game's own settings (it renders 1112x720 and upscales with FSR2), the practice map, the published rc8 with `MACRON_RENDER_PIXELS=0`, each start from a cool Mac and 75 s long.
+
+| | frames a second | start to GPU done | the GPU's work on a frame | frames started apart |
+|---|---|---|---|---|
+| without Apple's Metal HUD (three starts in two sessions, 10:57 to 12:00 UTC) | 53.3, 54.6, 54.6 | 32.4, 31.9, 32.7 ms | 22.8, 22.1, 22.3 ms | 17.5 to 18.9 ms |
+| with it, `MTL_HUD_ENABLED=1` (three starts in two sessions, 15:18 to 16:08 UTC) | 64.9, 70.3, 71.1 | 26.4, 24.5, 24.2 ms | 18.7, 18.2, 17.8 ms | 14.3, 13.8, 13.4 ms |
+| DXMT's display-synced limit at 60 (`d3d11.preferredMaxFrameRate=60`) | 29.5 | 42.7 ms | 28.3 ms | 35.5 ms |
+| the game's own `mat_vsync` 1 | 71.1 | 24.2 ms | 17.8 ms | 13.4 ms |
+
+- **With the HUD on, the same scene was a quarter faster**, in different sessions hours apart; whether the HUD is the cause is what the next session asks, alternating the two. The HUD said `Direct` (the window's frames go to the display without the window server composing them) in every start that had it.
+- **DXMT's display-synced limit halves the frame rate and loses `Direct`**: 30 frames a second, the HUD's word `Composited`, the GPU's time a frame doubled. It is not a way to hold 60 here. The game's own vertical sync setting changes nothing under DXMT.
+- **The HUD's `FPS` is not a count of frames the panel showed**: it read 55 to 57 in one session and 65 to 68 in the next for the same scene, the second above the panel's 60 Hz. The built-in panel shows 60 frames a second at most, whatever is rendered.
+- **The `dlss` switch opens the game on a warning now**: "Graphics Driver Out-of-Date", a box over a black screen that needs a click (`Vendor 10de, 'NVIDIA GeForce RTX 4090', version 31.0.13.783 < 32.0.15.8108`). The version is wined3d's, which the game asks through Direct3D 9; DXMT's own answer has none. Behind the box the HUD showed MetalFX Temporal from 1112x720 to 1920x1243 and the GPU working 13.1 ms on a frame, of a scene nobody saw.
+- **The frame rate follows the frame's latency, not the GPU's time alone**: the game asks for a frame latency limit of 1, so a frame may start only when the one before the last is done, and frames start a little over half of "start to GPU done" apart in every row of every table above (24.5 ms and 13.8; 32.4 and 17.5; 17.9 and 10.4).
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.
