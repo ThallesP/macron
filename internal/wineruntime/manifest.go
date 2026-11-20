@@ -18,7 +18,7 @@ type Manifest struct {
 }
 
 var Pinned = Manifest{
-	Version: "wine-11.21-macron.15-dxmt-0.80-macron.2-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1",
+	Version: "wine-11.21-macron.16-dxmt-0.80-macron.2-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1",
 	Wine: Archive{
 		Name:      "wine-devel-11.21-osx64.tar.xz",
 		URL:       "https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.21/wine-devel-11.21-osx64.tar.xz",
@@ -26,10 +26,10 @@ var Pinned = Manifest{
 		SizeBytes: 225612636,
 	},
 	WineOverlay: Archive{
-		Name:      "wine-11.21-macron.15-overlay-osx64.tar.xz",
-		URL:       "https://github.com/ThallesP/macron/releases/download/runtime-wine-11.21-macron.15/wine-11.21-macron.15-overlay-osx64.tar.xz",
-		SHA256:    "2d617ed1b85c48aa4ca836dec8283f899a7d9807a844d84d11bd9bc2983b79b5",
-		SizeBytes: 11608208,
+		Name:      "wine-11.21-macron.16-overlay-osx64.tar.xz",
+		URL:       "https://github.com/ThallesP/macron/releases/download/runtime-wine-11.21-macron.16/wine-11.21-macron.16-overlay-osx64.tar.xz",
+		SHA256:    "7ca2b21558a3c4ea039919069131d30759155e931dc505e0adf44f5f48badb02",
+		SizeBytes: 11644032,
 	},
 	DXMT: Archive{
 		Name:      "dxmt-v0.80-builtin.tar.gz",
