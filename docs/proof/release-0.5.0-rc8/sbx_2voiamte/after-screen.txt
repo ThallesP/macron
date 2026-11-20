@@ -1,0 +1,44 @@
+== Install the package again
+installer: The install was successful.
+
+the chip macron reads: Apple M1 (Virtual)
+== screen as-it-is (app 990031, X=1), exit 0
+Mac window: 0,0 1024x768 wine Macron gpuload (Direct3D 11)
+RESULT screen 1024x768, current mode 1024x768 at 60 Hz, 33 modes listed, client 1024x768
+RESULT click at 950,300 in the window, cursor at 950,300 on the screen
+RESULT click at 700,650 in the window, cursor at 700,650 on the screen
+RESULT click at 1000,740 in the window, cursor at 1000,740 on the screen
+RESULT fps 194.70 frames 2726 interval_ms p50 3.557 p95 12.147 p99 23.555
+== screen smaller (app 990031, MACRON_RENDER_PIXELS=442368), exit 0
+Mac window: 0,0 1024x768 wine Macron gpuload (Direct3D 11)
+RESULT screen 768x576, current mode 768x576 at 60 Hz, 3 modes listed, client 768x576
+RESULT click at 712,225 in the window, cursor at 712,225 on the screen
+RESULT click at 525,487 in the window, cursor at 525,487 on the screen
+RESULT click at 750,555 in the window, cursor at 750,555 on the screen
+RESULT fps 251.85 frames 3527 interval_ms p50 2.801 p95 10.598 p99 16.878
+== screen off (app 990031, MACRON_RENDER_PIXELS=0), exit 0
+Mac window: 0,0 1024x768 wine Macron gpuload (Direct3D 11)
+RESULT screen 1024x768, current mode 1024x768 at 60 Hz, 33 modes listed, client 1024x768
+RESULT click at 950,300 in the window, cursor at 950,300 on the screen
+RESULT click at 700,650 in the window, cursor at 700,650 on the screen
+RESULT click at 1000,740 in the window, cursor at 1000,740 on the screen
+RESULT fps 183.31 frames 2568 interval_ms p50 3.838 p95 12.664 p99 21.465
+== screen deadlock-profile (app 1422450, X=1), exit 0
+Mac window: 0,0 1024x768 wine Macron gpuload (Direct3D 11)
+RESULT screen 1024x768, current mode 1024x768 at 60 Hz, 33 modes listed, client 1024x768
+RESULT click at 950,300 in the window, cursor at 950,300 on the screen
+RESULT click at 700,650 in the window, cursor at 700,650 on the screen
+RESULT click at 1000,740 in the window, cursor at 1000,740 on the screen
+RESULT fps 203.54 frames 2851 interval_ms p50 3.687 p95 11.205 p99 22.365
+== screen deadlock-profile-off (app 1422450, MACRON_RENDER_PIXELS=0), exit 0
+Mac window: 0,0 1024x768 wine Macron gpuload (Direct3D 11)
+RESULT screen 1024x768, current mode 1024x768 at 60 Hz, 33 modes listed, client 1024x768
+RESULT click at 950,300 in the window, cursor at 950,300 on the screen
+RESULT click at 700,650 in the window, cursor at 700,650 on the screen
+RESULT click at 1000,740 in the window, cursor at 1000,740 on the screen
+RESULT fps 187.96 frames 2632 interval_ms p50 3.765 p95 11.763 p99 21.258
+== uninstall
+The program itself is still at /usr/local/bin/macron: sudo /usr/local/bin/macron-uninstall removes it.
+removed /usr/local/bin/macron, /usr/local/bin/macron-uninstall, /usr/local/lib/macron and /Library/Logs/Macron-install.log
+Macron's folder is gone
+AFTER-DONE

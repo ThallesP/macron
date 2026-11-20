@@ -1,0 +1,35 @@
+== Install the package again
+installer: The install was successful.
+~/Library/Application Support/Macron/runtimes/wine-11.21-macron.17-dxmt-0.80-macron.2-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1
+macron: unknown command "--version"; run macron help
+wine-dxmt/lib/wine/x86_64-unix/winemac.so 0d0827e0bbc62eb4a7a289232e4d13685518f34ce6ceb1114233b6165b9b2631 1 adhoc-signed
+wine/lib/wine/x86_64-unix/winemac.so bdc9f16281628c5c7440bda49bdf6d4407593069ac5ca981579604fe1f10a9ab 1 adhoc-signed
+wine-dxmt/lib/wine/x86_64-unix/winecoreaudio.so 5d181a3940666354418df6680034df636a5efc1abd1ada0c115095787a41e41f 1 adhoc-signed
+wine/lib/wine/x86_64-unix/winecoreaudio.so 5d181a3940666354418df6680034df636a5efc1abd1ada0c115095787a41e41f 1 adhoc-signed
+== screen as-it-is (X=1), exit 0
+Mac window: 0,31 1024x679 wine Macron gpuload (Direct3D 11)
+RESULT fps 73.81 frames 886 interval_ms p50 11.026 p95 33.628 p99 56.450
+== screen smaller (MACRON_RENDER_PIXELS=442368), exit 0
+Mac window: 0,31 1024x679 wine Macron gpuload (Direct3D 11)
+RESULT fps 76.97 frames 924 interval_ms p50 10.964 p95 31.385 p99 69.920
+== screen off (MACRON_RENDER_PIXELS=0), exit 0
+Mac window: 0,31 1024x679 wine Macron gpuload (Direct3D 11)
+RESULT fps 84.41 frames 1013 interval_ms p50 10.792 p95 28.099 p99 63.700
+== sound shipped (X=1), exit 0
+RESULT wake intervals 3179 ms p50 9.76 p95 19.54 p99 19.72 max 116.55 later_than_two_periods 12 later_than_buffer 1 found_empty 255 timeouts 0
+RESULT written 1323882 frames in 3002 writes over 30.01 s, which plays 1323229 frames
+stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, engine, timer and client in the real-time band: 15.0 s, 662400 frames pulled, 0 missing in 0 gaps (longest 0), 1507 writes, reserve 2350 (470 to 8820, held 1 min), least left 0, 1409 events, 198 more after a write, 1 without a pull, pull to event max 1301.23 ms (
+stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, engine, timer and client in the real-time band: 15.0 s, 661537 frames pulled, 1985 missing in 1 gaps (longest 1985), 1501 writes, reserve 4805 (470 to 8820, held 5 min), least left 0, 1399 events, 194 more after a write, 0 without a pull, pull to event max 99.72 
+stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, engine, timer and client in the real-time band: 2.1 s, 88090 frames pulled, 0 missing in 0 gaps (longest 0), 201 writes, reserve 4805 (470 to 8820, held 5 min), least left 0, 187 events, 23 more after a write, 0 without a pull, pull to event max 0.11 ms (0 over 2
+== sound client-fixed (MACRON_AUDIO_CLIENT=fixed), exit 0
+RESULT wake intervals 3171 ms p50 9.76 p95 19.53 p99 19.74 max 127.29 later_than_two_periods 16 later_than_buffer 1 found_empty 258 timeouts 0
+RESULT written 1323441 frames in 3001 writes over 30.00 s, which plays 1323196 frames
+stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, engine, timer in the real-time band: 15.0 s, 662400 frames pulled, 1250 missing in 3 gaps (longest 423), 1508 writes, reserve 5010 (470 to 8820, held 5 min), least left 0, 1407 events, 211 more after a write, 1 without a pull, pull to event max 1606.92 ms (3 over
+stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, engine, timer in the real-time band: 15.0 s, 661537 frames pulled, 0 missing in 0 gaps (longest 0), 1500 writes, reserve 5010 (470 to 8820, held 5 min), least left 0, 1397 events, 193 more after a write, 0 without a pull, pull to event max 98.00 ms (2 over 2 ms),
+stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, engine, timer in the real-time band: 2.1 s, 88953 frames pulled, 0 missing in 0 gaps (longest 0), 202 writes, reserve 5010 (470 to 8820, held 5 min), least left 0, 189 events, 23 more after a write, 0 without a pull, pull to event max 0.22 ms (0 over 2 ms), event
+== uninstall
+removed /Users/runner/Library/Application Support/Macron
+The program itself is still at /usr/local/bin/macron: sudo /usr/local/bin/macron-uninstall removes it.
+removed /usr/local/bin/macron, /usr/local/bin/macron-uninstall, /usr/local/lib/macron and /Library/Logs/Macron-install.log
+Macron's folder is gone
+AFTER-DONE
