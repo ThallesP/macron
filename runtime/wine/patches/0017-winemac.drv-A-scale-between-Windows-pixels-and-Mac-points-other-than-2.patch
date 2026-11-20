@@ -107,10 +107,10 @@ index 0e339ef..fff2dde 100644
      [offscreen_layer setAnchorPoint:CGPointMake(0, 0)];
  
 diff --git a/dlls/winemac.drv/display.c b/dlls/winemac.drv/display.c
-index d045ff1..ee70de2 100644
+index d045ff1..6e91078 100644
 --- a/dlls/winemac.drv/display.c
 +++ b/dlls/winemac.drv/display.c
-@@ -400,6 +400,19 @@ static int get_default_bpp(void)
+@@ -400,6 +400,17 @@ static int get_default_bpp(void)
  }
  
  
@@ -120,17 +120,15 @@ index d045ff1..ee70de2 100644
 + * frame, so the mode and the monitor's rectangle agree. */
 +static void scale_original_mode(SInt64 *width, SInt64 *height)
 +{
-+    double scale = retina_enabled ? 2.0 : render_scale;
-+
-+    if (scale == 1.0) return;
-+    *width = __builtin_round(*width * scale);
-+    *height = __builtin_round(*height * scale);
++    if (!retina_enabled && render_scale == 1.0) return;
++    *width = __builtin_round(*width * (retina_enabled ? 2.0 : render_scale));
++    *height = __builtin_round(*height * (retina_enabled ? 2.0 : render_scale_y));
 +}
 +
  static CFDictionaryRef create_mode_dict(CGDisplayModeRef display_mode, BOOL is_original)
  {
      CFDictionaryRef ret;
-@@ -410,11 +423,7 @@ static CFDictionaryRef create_mode_dict(CGDisplayModeRef display_mode, BOOL is_o
+@@ -410,11 +421,7 @@ static CFDictionaryRef create_mode_dict(CGDisplayModeRef display_mode, BOOL is_o
      CFStringRef pixel_encoding = CGDisplayModeCopyPixelEncoding(display_mode);
      CFNumberRef cf_io_flags, cf_width, cf_height, cf_refresh;
  
@@ -143,7 +141,7 @@ index d045ff1..ee70de2 100644
  
      io_flags &= kDisplayModeInterlacedFlag | kDisplayModeStretchedFlag | kDisplayModeTelevisionFlag;
      cf_io_flags = CFNumberCreate(NULL, kCFNumberSInt32Type, &io_flags);
-@@ -701,11 +710,14 @@ static CGDisplayModeRef find_best_display_mode(DEVMODEW *devmode, CFArrayRef dis
+@@ -701,11 +708,14 @@ static CGDisplayModeRef find_best_display_mode(DEVMODEW *devmode, CFArrayRef dis
          if (!refresh_rate)
              refresh_rate = 60;
  
@@ -161,7 +159,7 @@ index d045ff1..ee70de2 100644
  
          if (bpp != mode_bpp)
              continue;
-@@ -805,7 +817,7 @@ LONG macdrv_ChangeDisplaySettings(LPDEVMODEW displays, LPCWSTR primary_name, HWN
+@@ -805,7 +815,7 @@ LONG macdrv_ChangeDisplaySettings(LPDEVMODEW displays, LPCWSTR primary_name, HWN
  
  static DEVMODEW *display_get_modes(CGDirectDisplayID display_id, int *modes_count)
  {
@@ -170,7 +168,7 @@ index d045ff1..ee70de2 100644
      BOOL modes_has_8bpp = FALSE, modes_has_16bpp = FALSE;
      struct display_mode_descriptor *desc;
      DEVMODEW *devmodes;
-@@ -833,21 +845,30 @@ static DEVMODEW *display_get_modes(CGDirectDisplayID display_id, int *modes_coun
+@@ -833,21 +843,30 @@ static DEVMODEW *display_get_modes(CGDirectDisplayID display_id, int *modes_coun
      }
  
      desc = create_original_display_mode_descriptor(display_id);
@@ -208,7 +206,7 @@ index d045ff1..ee70de2 100644
      free_display_mode_descriptor(desc);
  
      for (i = 0; !modes_has_16bpp && i < count; i++)
-@@ -886,13 +907,15 @@ static void display_get_current_mode(struct macdrv_monitor *monitor, DEVMODEW *d
+@@ -886,13 +905,15 @@ static void display_get_current_mode(struct macdrv_monitor *monitor, DEVMODEW *d
      devmode->dmFields |= DM_POSITION;
  
      display_mode_to_devmode_fields(display_id, display_mode, devmode);
@@ -228,44 +226,63 @@ index d045ff1..ee70de2 100644
          free_display_mode_descriptor(desc);
      }
 diff --git a/dlls/winemac.drv/gdi.c b/dlls/winemac.drv/gdi.c
-index 69a0aa7..bb1a0bb 100644
+index 69a0aa7..c67601e 100644
 --- a/dlls/winemac.drv/gdi.c
 +++ b/dlls/winemac.drv/gdi.c
 @@ -47,6 +47,7 @@ static int vert_size;           /* vert. size of screen in millimeters */
  static bool device_data_valid;  /* do the above variables have up-to-date values? */
  
  bool retina_on = false;
-+double render_scale = 1.0;
++double render_scale = 1.0, render_scale_y = 1.0;
  
  static pthread_mutex_t device_data_mutex = PTHREAD_MUTEX_INITIALIZER;
  
 diff --git a/dlls/winemac.drv/macdrv_cocoa.h b/dlls/winemac.drv/macdrv_cocoa.h
-index 5157b38..fedf2c3 100644
+index 5157b38..bf7415a 100644
 --- a/dlls/winemac.drv/macdrv_cocoa.h
 +++ b/dlls/winemac.drv/macdrv_cocoa.h
-@@ -117,72 +117,88 @@
+@@ -117,72 +117,84 @@
  extern bool retina_on;       /* Whether Retina mode is currently active (enabled and display is in default mode). */
  extern bool enable_app_nap;
  
 +/* Windows pixels per Mac point when Retina mode is off: 1, or less when a
 + * game is to render a smaller picture than the screen has points and have it
 + * scaled up to fill the same place (MACRON_RENDER_PIXELS). Retina mode is the
-+ * same thing with a factor of 2. */
-+extern double render_scale;
++ * same thing with a factor of 2. One factor for each direction, a hair
++ * apart: both of the main display's sizes are whole numbers on either side,
++ * so a window the size of the Windows screen is exactly the size of the
++ * Mac's. */
++extern double render_scale, render_scale_y;
 +
 +static inline double win_pixels_per_point(void)
 +{
 +    return retina_on ? 2.0 : render_scale;
 +}
 +
-+/* With a factor that is not a whole number, a Windows rectangle is the Mac
-+ * one's edges rounded, so that rectangles that touch on the Mac still touch
-+ * and a screen's size is the same number wherever it is computed. */
-+static inline double win_coord_from_mac(double coord)
++static inline double win_lines_per_point(void)
 +{
-+    double scale = win_pixels_per_point();
-+    if (scale == 1.0 || scale == 2.0) return coord * scale;
++    return retina_on ? 2.0 : render_scale_y;
++}
++
++/* With a factor that is not a whole number, a rectangle is the other side's
++ * edges rounded, so that rectangles that touch still touch and a screen's
++ * size is the same number wherever it is computed. */
++static inline double scaled_coord(double coord, double scale)
++{
++    if (scale == 1.0 || scale == 2.0 || scale == 0.5) return coord * scale;
 +    return __builtin_round(coord * scale);
++}
++
++static inline CGRect scaled_rect(CGRect rect, double scale_x, double scale_y)
++{
++    double left, top, right, bottom;
++
++    if (CGRectIsNull(rect) || CGRectIsInfinite(rect)) return rect;
++    left = scaled_coord(rect.origin.x, scale_x);
++    top = scaled_coord(rect.origin.y, scale_y);
++    right = scaled_coord(rect.origin.x + rect.size.width, scale_x);
++    bottom = scaled_coord(rect.origin.y + rect.size.height, scale_y);
++    return CGRectMake(left, top, right - left, bottom - top);
 +}
 +
  static inline CGRect cgrect_mac_from_win(CGRect rect)
@@ -277,14 +294,9 @@ index 5157b38..fedf2c3 100644
 -        rect.size.width /= 2;
 -        rect.size.height /= 2;
 -    }
-+    double scale = win_pixels_per_point();
-+
-+    rect.origin.x /= scale;
-+    rect.origin.y /= scale;
-+    rect.size.width /= scale;
-+    rect.size.height /= scale;
- 
-     return rect;
+-
+-    return rect;
++    return scaled_rect(rect, 1.0 / win_pixels_per_point(), 1.0 / win_lines_per_point());
  }
  
  static inline CGRect cgrect_win_from_mac(CGRect rect)
@@ -296,17 +308,9 @@ index 5157b38..fedf2c3 100644
 -        rect.size.width *= 2;
 -        rect.size.height *= 2;
 -    }
-+    double left = win_coord_from_mac(rect.origin.x), top = win_coord_from_mac(rect.origin.y);
-+    double right = win_coord_from_mac(rect.origin.x + rect.size.width);
-+    double bottom = win_coord_from_mac(rect.origin.y + rect.size.height);
-+
-+    if (CGRectIsNull(rect)) return rect;
-+    rect.origin.x = left;
-+    rect.origin.y = top;
-+    rect.size.width = right - left;
-+    rect.size.height = bottom - top;
- 
-     return rect;
+-
+-    return rect;
++    return scaled_rect(rect, win_pixels_per_point(), win_lines_per_point());
  }
  
  static inline CGSize cgsize_mac_from_win(CGSize size)
@@ -316,10 +320,8 @@ index 5157b38..fedf2c3 100644
 -        size.width /= 2;
 -        size.height /= 2;
 -    }
-+    double scale = win_pixels_per_point();
-+
-+    size.width /= scale;
-+    size.height /= scale;
++    size.width = scaled_coord(size.width, 1.0 / win_pixels_per_point());
++    size.height = scaled_coord(size.height, 1.0 / win_lines_per_point());
  
      return size;
  }
@@ -331,8 +333,8 @@ index 5157b38..fedf2c3 100644
 -        size.width *= 2;
 -        size.height *= 2;
 -    }
-+    size.width = win_coord_from_mac(size.width);
-+    size.height = win_coord_from_mac(size.height);
++    size.width = scaled_coord(size.width, win_pixels_per_point());
++    size.height = scaled_coord(size.height, win_lines_per_point());
  
      return size;
  }
@@ -344,10 +346,8 @@ index 5157b38..fedf2c3 100644
 -        point.x /= 2;
 -        point.y /= 2;
 -    }
-+    double scale = win_pixels_per_point();
-+
-+    point.x /= scale;
-+    point.y /= scale;
++    point.x /= win_pixels_per_point();
++    point.y /= win_lines_per_point();
  
      return point;
  }
@@ -359,15 +359,13 @@ index 5157b38..fedf2c3 100644
 -        point.x *= 2;
 -        point.y *= 2;
 -    }
-+    double scale = win_pixels_per_point();
-+
-+    point.x *= scale;
-+    point.y *= scale;
++    point.x *= win_pixels_per_point();
++    point.y *= win_lines_per_point();
  
      return point;
  }
 diff --git a/dlls/winemac.drv/macdrv_main.c b/dlls/winemac.drv/macdrv_main.c
-index cc3d3b3..e44e305 100644
+index cc3d3b3..d4559be 100644
 --- a/dlls/winemac.drv/macdrv_main.c
 +++ b/dlls/winemac.drv/macdrv_main.c
 @@ -265,6 +265,25 @@ static inline DWORD get_config_key(HKEY defkey, HKEY appkey, const char *name,
@@ -396,7 +394,7 @@ index cc3d3b3..e44e305 100644
  static void setup_options(void)
  {
      static const WCHAR macdriverW[] = {'\\','M','a','c',' ','D','r','i','v','e','r',0};
-@@ -368,6 +387,30 @@ static void setup_options(void)
+@@ -368,6 +387,36 @@ static void setup_options(void)
  
      retina_on = retina_enabled;
  
@@ -407,8 +405,9 @@ index cc3d3b3..e44e305 100644
 +     * picture, full screen, and the display's mode is not changed. A number
 +     * of pixels and not a size, so that it means the same work on any
 +     * display. Not with Retina mode, never larger than the display, and only
-+     * as low as a third of its width. The width comes out even; the height
-+     * follows from it. */
++     * as low as a third of its width. The width comes out even, the height
++     * is the nearest whole number of lines of the same shape, and each
++     * direction has its own factor so that both are exact. */
 +    if (!retina_enabled)
 +    {
 +        CGRect bounds = CGDisplayBounds(CGMainDisplayID());
@@ -419,8 +418,13 @@ index cc3d3b3..e44e305 100644
 +        {
 +            long width = 2 * (long)(bounds.size.width * __builtin_sqrt(target / points) / 2 + 0.5);
 +            double scale = width / bounds.size.width;
++            long height = (long)(bounds.size.height * scale + 0.5);
 +
-+            if (scale >= 1.0 / 3 && scale < 1.0) render_scale = scale;
++            if (scale >= 1.0 / 3 && scale < 1.0)
++            {
++                render_scale = scale;
++                render_scale_y = height / bounds.size.height;
++            }
 +        }
 +    }
 +
