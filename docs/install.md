@@ -31,6 +31,14 @@ If a game draws garbage, flickers or stutters with this build, these go in its S
 
 A game's first Play after a Macron update no longer waits for a Windows setup step: it starts as quickly as any other start (on the test machines the first start after an update took 7.7 times an ordinary start before this build, and the same as an ordinary start now). A new game starts from a prepared copy instead of building its own Windows environment: about 1.2 to 1.5 times an ordinary start, where it took about 11 times before. The "Wine configuration is being updated" window no longer appears. While a game runs, the Dock, the menu bar and Force Quit still call it `wine`. `docs/startup/README.md` in the source has the measurements.
 
+## Sound
+
+A game's sound crackled when the Mac was busy, because Wine asked the game for sound from a timer of its own while macOS took it whenever the sound device wanted some, and a game that keeps little queued (anything that plays through SDL, Deadlock among them) then ran dry whenever its sound thread woke a few milliseconds late. This build asks the game when macOS has taken some, and keeps a small reserve the game is not told about (Wine patch 0016). On Thalles's M3, in two starts of Deadlock that ran three and a half minutes each through the Mac's thermal throttling, the old driver left 1.4 and 1.6 seconds of sound missing in 56 and 62 gaps and this one none; with every core busy, a quarter of the sound against none.
+
+The reserve is sound heard a little later: about 60 ms when a game starts, about 10 ms once a few minutes have passed without a late wake-up. What it cannot fix is a game whose own mixer falls behind on a throttled Mac: Deadlock then logs `Audio device starved` itself, and that may still be heard as a short hole.
+
+Every game's log (`~/Library/Application Support/Macron/logs/steam-<app id>/`, the newest file) now has a line a minute starting `macron-audio:` that says how much sound macOS asked for and did not get. If a game still crackles, those lines say when. `MACRON_AUDIO=upstream %command%` as a game's launch option gives the old behaviour back, to compare.
+
 ## Before you start
 
 Install Steam from <https://store.steampowered.com/about/> into `/Applications`, start it once so it finishes updating itself, and sign in. Steam may stay open: the installer closes it and opens it again.
