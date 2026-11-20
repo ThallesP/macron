@@ -47,7 +47,14 @@ type Profile struct {
 	Files        []File            `json:"files"`
 	Registry     []RegistryValue   `json:"registry"`
 	Installs     []string          `json:"installs"`
-	Notes        string            `json:"notes"`
+	// RenderPixels is the size of the screen the game is shown, in pixels,
+	// on a Mac whose GPU cannot draw the game at the display's own size; the
+	// picture is scaled up to fill the display (MACRON_RENDER_PIXELS, Wine
+	// patch 0017). RenderPixelsChips names the chips it is for, as
+	// `sysctl machdep.cpu.brand_string` says them; none means every Mac.
+	RenderPixels      int      `json:"renderPixels"`
+	RenderPixelsChips []string `json:"renderPixelsChips"`
+	Notes             string   `json:"notes"`
 }
 
 type Database struct {
@@ -128,6 +135,12 @@ func (p Profile) validate() error {
 		if _, ok := Installers[name]; !ok {
 			return failure.Errorf(failure.CodeBadProfile, "profile %s: unknown extra install %q", p.ID, name)
 		}
+	}
+	if p.RenderPixels < 0 || (p.RenderPixels == 0 && len(p.RenderPixelsChips) > 0) || slices.Contains(p.RenderPixelsChips, "") {
+		return failure.Errorf(failure.CodeBadProfile, "profile %s: renderPixelsChips needs a renderPixels above 0 and chips with a name", p.ID)
+	}
+	if p.RenderPixels > 0 && p.Backend != BackendDXMT {
+		return failure.Errorf(failure.CodeBadProfile, "profile %s: renderPixels is for the dxmt backend, not %s", p.ID, p.Backend)
 	}
 	return nil
 }

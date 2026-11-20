@@ -1,0 +1,123 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Fri, 20 Nov 2026 07:45:00 +0000
+Subject: [PATCH] winecoreaudio: Give the thread that writes an event-driven
+ stream a time constraint.
+
+A game's sound thread waits for the stream's event, mixes a period and
+writes it. Registered for "Pro Audio" it is at the top of the application
+band (0014), where it queues behind the game's other time-critical
+threads and Wine's server whenever every core has one of them computing:
+macOS does not let threads of one fixed priority preempt each other. On
+Windows a registered thread runs above all of those.
+
+The thread that writes a shared, event-driven render stream now gets a
+time constraint of a quarter of the stream's period, as the driver's own
+timer thread has since 0016: it is in the band CoreAudio's threads are in
+and is woken at once. A thread that mixes for longer than the quarter it
+declared keeps a core while it does, as it would on Windows; it is still
+woken on time (tools/perf/wakelat.c: 9 ms of work in every 10 against
+0.5 declared, 99 of 100 wake-ups within 0.06 ms). It is set again every
+64 writes, because the server undoes it whenever it applies a priority
+to the thread.
+
+On Thalles's M3 in Deadlock's practice map, throttled to 14 to 18 frames
+a second: from CoreAudio's request to the game's write took at most
+1.6 ms in each half minute, all of it the setting of the event, against
+17.8 ms (the write 11.5 ms after the event was set) once without this
+(MACRON_AUDIO_CLIENT=fixed). On the title screen 0.1 to 1.1 ms against
+0.1 to 4.0. No frame was missing either way, the reserve covers that;
+and the game's own `Audio device starved` lines are as many as before
+(its mixer, not this thread).
+
+A stream without an event may be written from any thread, a game's main
+one too, and is left alone, as is everything with MACRON_AUDIO=upstream.
+MACRON_AUDIO_CLIENT=fixed leaves the thread where the client put it. The
+stream's report says which it has.
+---
+diff --git a/dlls/winecoreaudio.drv/coreaudio.c b/dlls/winecoreaudio.drv/coreaudio.c
+index b9d140f..d612bf8 100644
+--- a/dlls/winecoreaudio.drv/coreaudio.c
++++ b/dlls/winecoreaudio.drv/coreaudio.c
+@@ -98,6 +98,8 @@ struct coreaudio_stream
+     BOOL playing, please_quit;
+     BOOL started;                /* Start has succeeded at least once */
+     BOOL timer_realtime;         /* the timer thread has its time constraint */
++    BOOL client_realtime;        /* so has the thread that writes the stream */
++    unsigned int client_writes;  /* writes since that thread's constraint was set */
+     REFERENCE_TIME period;
+     UINT32 period_frames;
+     UINT32 bufsize_frames, resamp_bufsize_frames;
+@@ -143,9 +145,11 @@ struct coreaudio_stream
+  * period to 200 ms; "0,0" is the engine's events without a reserve).
+  * MACRON_AUDIO_TIMER=fixed leaves the engine's timer thread at the priority
+  * upstream gives it instead of a time constraint (see timer_time_constraint()).
++ * MACRON_AUDIO_CLIENT=fixed leaves the client's own sound thread where the
++ * client put it (see client_time_constraint()).
+  * MACRON_AUDIO_REPORT=<seconds> is how often a playing stream reports
+  * (default 60; 0 for never). */
+-static BOOL engine_disabled, timer_fixed;
++static BOOL engine_disabled, timer_fixed, client_fixed;
+ static int reserve_min_ms = -1, reserve_max_ms = 200, report_seconds = 60;
+ static mach_timebase_info_data_t timebase;
+ 
+@@ -171,6 +175,7 @@ static void engine_read_settings(void)
+         }
+     }
+     if((setting = getenv("MACRON_AUDIO_TIMER")) && !strcmp(setting, "fixed")) timer_fixed = TRUE;
++    if((setting = getenv("MACRON_AUDIO_CLIENT")) && !strcmp(setting, "fixed")) client_fixed = TRUE;
+     if((setting = getenv("MACRON_AUDIO_REPORT"))) report_seconds = atoi(setting);
+     mach_timebase_info(&timebase);
+ }
+@@ -1976,7 +1981,8 @@ static void audio_report(struct coreaudio_stream *stream, BOOL last)
+             "event to client max %.2f ms (%u over a period)\n",
+             stream->id, (unsigned int)stream->fmt->nSamplesPerSec, stream->period_frames, stream->bufsize_frames,
+             stream->dev_rate, stream->engine ? "engine" : "upstream",
+-            !stream->engine ? "" : stream->timer_realtime ? ", timer in the real-time band" : ", timer in the application band",
++            !stream->engine ? "" : !stream->timer_realtime ? ", timer in the application band" :
++            stream->client_realtime ? ", timer and client in the real-time band" : ", timer in the real-time band",
+             since / 1e9, (unsigned long long)stats.pulled_frames, (unsigned long long)stats.missing_frames,
+             stats.gaps, stats.longest_gap_frames,
+             stats.writes, reserve, stream->reserve_min_frames, stream->reserve_max_frames, stream->hold_minutes,
+@@ -2011,6 +2017,34 @@ static void timer_time_constraint(struct coreaudio_stream *stream)
+                                                (thread_policy_t)&policy, THREAD_TIME_CONSTRAINT_POLICY_COUNT) == KERN_SUCCESS;
+ }
+ 
++/* The thread that writes an event-driven stream is the client's sound
++ * thread: it sleeps until the event, mixes a period and writes it. Windows
++ * runs such a thread, once it has registered with the Multimedia Class
++ * Scheduler, above every ordinary thread of every process. Wine can only put
++ * it at the top of the application band (Macron's avrt does), where it
++ * queues with the game's other time-critical threads and the server. With a
++ * time constraint it is woken at once. It declares a quarter of each period
++ * as its work; one that mixes for longer keeps a core for as long as it does
++ * (tools/perf/wakelat.c with a third number), which is what it has on
++ * Windows. Set again every 64 writes, because the server undoes it whenever
++ * it applies a priority to the thread. A
++ * stream without an event may be written from any thread, a game's main one
++ * too, and is left alone. */
++static void client_time_constraint(struct coreaudio_stream *stream)
++{
++    thread_time_constraint_policy_data_t policy;
++    const UINT64 period_ns = (UINT64)stream->period * 100;
++
++    if(!stream->engine || !stream->event || client_fixed) return;
++    if(stream->client_writes++ % 64) return;
++    policy.period = period_ns * timebase.denom / timebase.numer;
++    policy.computation = policy.period / 4;
++    policy.constraint = policy.period / 2;
++    policy.preemptible = 1;
++    stream->client_realtime = thread_policy_set(pthread_mach_thread_np(pthread_self()), THREAD_TIME_CONSTRAINT_POLICY,
++                                                (thread_policy_t)&policy, THREAD_TIME_CONSTRAINT_POLICY_COUNT) == KERN_SUCCESS;
++}
++
+ /* Sets the stream's event from the timer thread. `pulled` is when CoreAudio
+  * asked for the period this event is for, or 0. */
+ static void timer_set_event(struct coreaudio_stream *stream, UINT64 pulled)
+@@ -2302,6 +2336,7 @@ static NTSTATUS unix_release_render_buffer(void *args)
+     os_unfair_lock_unlock(&stream->lock);
+ 
+     if(event) NtSetEvent(event, NULL);
++    if(params->result == S_OK && params->written_frames) client_time_constraint(stream);
+ 
+     return STATUS_SUCCESS;
+ }

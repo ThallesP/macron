@@ -32,6 +32,8 @@ type Input struct {
 	WaitForWine    bool
 	SoftwareOpenGL bool
 	SteamBridge    bool
+	// Chip is the Mac's chip as `sysctl machdep.cpu.brand_string` says it.
+	Chip string
 }
 
 var backendTrees = map[fixes.Backend]wineruntime.Tree{
@@ -67,6 +69,10 @@ func Run(ctx context.Context, in Input) (int, error) {
 	env := Environment(in.Profile, in.Prefix, os.Environ())
 	if inserted := insertedLibraries(os.Getenv("DYLD_INSERT_LIBRARIES")); inserted != "" {
 		in.Progress("the caller's DYLD_INSERT_LIBRARIES goes on to Wine: " + inserted)
+	}
+	if pixels, ok := renderPixels(in.Profile, env, in.Chip); ok {
+		env = append(env, fmt.Sprintf("MACRON_RENDER_PIXELS=%d", pixels))
+		in.Progress(fmt.Sprintf("on an %s the game is shown a screen of about %d pixels, scaled up to fill the display (MACRON_RENDER_PIXELS=0 turns that off)", in.Chip, pixels))
 	}
 	if in.SoftwareOpenGL {
 		env = append(env, "GALLIUM_DRIVER=llvmpipe", "WINEDLLOVERRIDES="+dllOverrides(in.Profile, map[string]string{"opengl32": "n,b"}))
@@ -153,6 +159,18 @@ func insertedLibraries(value string) string {
 		}
 	}
 	return strings.Join(names, ", ")
+}
+
+// renderPixels is the profile's screen size for this chip, unless whoever
+// starts the game has set MACRON_RENDER_PIXELS, to any value.
+func renderPixels(profile fixes.Profile, env []string, chip string) (int, bool) {
+	if profile.RenderPixels == 0 || envValue(env, "MACRON_RENDER_PIXELS") != "" {
+		return 0, false
+	}
+	if len(profile.RenderPixelsChips) > 0 && !slices.Contains(profile.RenderPixelsChips, chip) {
+		return 0, false
+	}
+	return profile.RenderPixels, true
 }
 
 func Environment(profile fixes.Profile, prefix string, base []string) []string {

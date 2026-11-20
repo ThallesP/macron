@@ -4,7 +4,7 @@
  *
  *   gpuload.exe [--mode fill|draws|mix] [--size WxH] [--seconds S]
  *               [--passes P] [--draws D] [--sync N] [--work MS]
- *               [--latency N] [--out FILE]
+ *               [--latency N] [--borderless 1] [--exclusive 1] [--out FILE]
  *
  * fill:  P full-screen passes a frame into a WxH RGBA16F texture, each
  *        sampling the previous one and doing 16 rounds of multiply-add and
@@ -14,6 +14,20 @@
  *        with its own constants written through Map(WRITE_DISCARD), the
  *        way Direct3D 11 games feed per-object constants.
  * mix:   both.
+ *
+ * --borderless 1 makes the window what a game's "borderless window" is: no
+ * frame, at the top left, the size Windows says the screen has, with a back
+ * buffer of that size. The RESULT screen line then says what Windows sees
+ * (the screen's size, the display's current mode and how many modes it
+ * lists, the window's client size), and every click in the window is a
+ * RESULT click line with its position: together with a screenshot they show
+ * whether a picture smaller than the screen (Wine patch 0017,
+ * MACRON_RENDER_PIXELS) fills it and whether the mouse lands where it points.
+ *
+ * --exclusive 1 (with --borderless 1) then does what a game's "full screen"
+ * setting does: it asks Windows for a 640x480 mode and for the mode the
+ * display is in (RESULT mode lines with ChangeDisplaySettings' answers), and
+ * asks DXGI for exclusive full screen (RESULT exclusive line).
  *
  * It presents with sync interval --sync (default 0, as fast as it can;
  * 1 waits for the display, as gpuload.m's --sync 1 does), warms up for 2
@@ -92,6 +106,12 @@ static ID3DBlob *compile(const char *entry, const char *target)
 
 static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
+    if (msg == WM_LBUTTONDOWN) {
+        POINT cursor = {0, 0};
+        GetCursorPos(&cursor);
+        result("RESULT click at %d,%d in the window, cursor at %ld,%ld on the screen\n", (int)(short)LOWORD(lp), (int)(short)HIWORD(lp),
+               cursor.x, cursor.y);
+    }
     if (msg == WM_CLOSE) {
         PostQuitMessage(0);
         return 0;
@@ -115,7 +135,7 @@ static int compare_double(const void *a, const void *b)
 int main(int argc, char **argv)
 {
     const char *mode = "mix", *out = "gpuload.txt";
-    unsigned width = 1600, height = 900, passes = 8, draws = 4000, sync = 0, latency = 0;
+    unsigned width = 1600, height = 900, passes = 8, draws = 4000, sync = 0, latency = 0, borderless = 0, exclusive = 0;
     double seconds = 20, work_ms = 0;
     for (int i = 1; i + 1 < argc; i += 2) {
         if (!strcmp(argv[i], "--mode")) mode = argv[i + 1];
@@ -126,10 +146,16 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--sync")) sync = atoi(argv[i + 1]);
         else if (!strcmp(argv[i], "--work")) work_ms = atof(argv[i + 1]);
         else if (!strcmp(argv[i], "--latency")) latency = atoi(argv[i + 1]);
+        else if (!strcmp(argv[i], "--borderless")) borderless = atoi(argv[i + 1]);
+        else if (!strcmp(argv[i], "--exclusive")) exclusive = atoi(argv[i + 1]);
         else if (!strcmp(argv[i], "--out")) out = argv[i + 1];
     }
     int fill = strcmp(mode, "draws") != 0, quads = strcmp(mode, "fill") != 0;
     result_file = fopen(out, "w");
+    if (borderless) {
+        width = GetSystemMetrics(SM_CXSCREEN);
+        height = GetSystemMetrics(SM_CYSCREEN);
+    }
     result("RESULT config api d3d11 mode %s size %ux%u passes %u draws %u sync %u work_ms %.1f latency %u\n", mode, width, height,
            fill ? passes : 0, quads ? draws : 0, sync, work_ms, latency);
 
@@ -140,9 +166,34 @@ int main(int argc, char **argv)
     wc.hCursor = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
     RegisterClassA(&wc);
     RECT rect = {0, 0, (LONG)width, (LONG)height};
-    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
-    HWND hwnd = CreateWindowA("gpuload", "Macron gpuload (Direct3D 11)", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 40, 40,
+    DWORD style = borderless ? WS_POPUP | WS_VISIBLE : WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+    AdjustWindowRect(&rect, style, FALSE);
+    HWND hwnd = CreateWindowA("gpuload", "Macron gpuload (Direct3D 11)", style, borderless ? 0 : 40, borderless ? 0 : 40,
                               rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
+    if (borderless) {
+        DEVMODEA current = {0}, listed = {0};
+        RECT client = {0};
+        unsigned modes = 0;
+        current.dmSize = listed.dmSize = sizeof(current);
+        EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &current);
+        while (EnumDisplaySettingsA(NULL, modes, &listed)) modes++;
+        GetClientRect(hwnd, &client);
+        SetForegroundWindow(hwnd);
+        result("RESULT screen %dx%d, current mode %lux%lu at %lu Hz, %u modes listed, client %ldx%ld\n", GetSystemMetrics(SM_CXSCREEN),
+               GetSystemMetrics(SM_CYSCREEN), (unsigned long)current.dmPelsWidth, (unsigned long)current.dmPelsHeight,
+               (unsigned long)current.dmDisplayFrequency, modes, client.right, client.bottom);
+        if (exclusive) {
+            DEVMODEA other = current;
+            other.dmPelsWidth = 640;
+            other.dmPelsHeight = 480;
+            other.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
+            result("RESULT mode 640x480: ChangeDisplaySettings answers %ld\n", ChangeDisplaySettingsA(&other, CDS_FULLSCREEN));
+            current.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY;
+            result("RESULT mode %lux%lu, the display's own: ChangeDisplaySettings answers %ld\n", (unsigned long)current.dmPelsWidth,
+                   (unsigned long)current.dmPelsHeight, ChangeDisplaySettingsA(&current, CDS_FULLSCREEN));
+            result("RESULT screen after: %dx%d\n", GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+        }
+    }
 
     DXGI_SWAP_CHAIN_DESC sd = {0};
     sd.BufferCount = 2;
@@ -162,6 +213,13 @@ int main(int argc, char **argv)
     if (FAILED(hr)) {
         result("RESULT device: FAILED hr=0x%08lx\n", (unsigned long)hr);
         return 1;
+    }
+    if (exclusive) {
+        HRESULT full = IDXGISwapChain_SetFullscreenState(swap, TRUE, NULL);
+        BOOL now = FALSE;
+        IDXGISwapChain_GetFullscreenState(swap, &now, NULL);
+        result("RESULT exclusive: SetFullscreenState hr=0x%08lx, full screen now %d, screen %dx%d\n", (unsigned long)full, now,
+               GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
     }
     if (latency) {
         IDXGIDevice1 *dxgi_dev;

@@ -1,6 +1,7 @@
 package fixes
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/ThallesP/macron/internal/failure"
@@ -28,6 +29,9 @@ func TestParseRejectsBadProfiles(t *testing.T) {
 		"registry outside": `{"id": "a", "backend": "dxmt", "registry": [{"key": "HKEY_USERS\\x", "name": "a", "type": "sz", "value": "b"}]}`,
 		"bad dword":        `{"id": "a", "backend": "dxmt", "registry": [{"key": "HKEY_CURRENT_USER\\x", "name": "a", "type": "dword", "value": "zz"}]}`,
 		"unknown install":  `{"id": "a", "backend": "dxmt", "installs": ["vcrun1999"]}`,
+		"chips, no size":   `{"id": "a", "backend": "dxmt", "renderPixelsChips": ["Apple M3"]}`,
+		"negative size":    `{"id": "a", "backend": "dxmt", "renderPixels": -1}`,
+		"size, not dxmt":   `{"id": "a", "backend": "wined3d", "renderPixels": 1000000}`,
 	}
 	for name, content := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -78,5 +82,21 @@ func TestGetUnknownGame(t *testing.T) {
 
 	if failure.CodeOf(err) != failure.CodeUnknownGame {
 		t.Fatalf("got %v", err)
+	}
+}
+
+func TestDeadlockIsShownASmallerScreenOnTheBaseChips(t *testing.T) {
+	db, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	deadlock := db.ForSteamApp(1422450)
+
+	if deadlock.ID != Default("steam-1422450").ID || deadlock.RenderPixels != 780000 {
+		t.Fatalf("app 1422450 got profile %q with renderPixels %d, want the id it had without a profile and 780000", deadlock.ID, deadlock.RenderPixels)
+	}
+	if !slices.Contains(deadlock.RenderPixelsChips, "Apple M3") || slices.Contains(deadlock.RenderPixelsChips, "Apple M3 Max") {
+		t.Errorf("chips %q: want the M3 and not the M3 Max", deadlock.RenderPixelsChips)
 	}
 }

@@ -1,0 +1,455 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Fri, 20 Nov 2026 06:10:00 +0000
+Subject: [PATCH] winemac.drv: A scale between Windows pixels and Mac points
+ other than 2 (MACRON_RENDER_PIXELS).
+
+Retina mode makes a Windows pixel half a Mac point: every conversion
+between the two multiplies or divides by 2. This makes the factor a
+number. With MACRON_RENDER_PIXELS=<n> in the environment, Windows sees
+the main display with about that many pixels instead of its size in
+points, at the same shape, and everything is scaled up to where it would
+have been: a window the size of that screen covers the real one, a click
+lands where it points, and a Metal layer's drawable is the smaller size
+and is scaled up smoothly.
+
+It is for a game that the GPU cannot draw at the display's size. The game
+finds a smaller desktop, renders a picture of that size as a borderless
+window, and the picture fills the screen. The display's mode is not
+changed, so nothing else on the Mac moves, and what a game does at the
+picture's size (its upscaler, post-processing, its interface) shrinks with
+it, which a lower render scale inside the game does not do.
+
+The mode the display is in is the only one listed while a scale is set:
+the scale belongs to that mode. Relative mouse movement is not scaled, so
+a game's mouse sensitivity is what it is without the setting. Not with
+Retina mode, never larger than the display, at least a third of its
+width. OpenGL surfaces are not scaled: this is for Direct3D through DXMT.
+---
+diff --git a/dlls/winemac.drv/cocoa_window.m b/dlls/winemac.drv/cocoa_window.m
+index 0e339ef..fff2dde 100644
+--- a/dlls/winemac.drv/cocoa_window.m
++++ b/dlls/winemac.drv/cocoa_window.m
+@@ -586,8 +586,8 @@ - (void) addCALayerHostViewWithContextId:(CAContextID)contextId
+ 
+         CALayerHost* host = [CALayerHost layer];
+         [host setContextId:contextId];
+-        host.magnificationFilter = kCAFilterNearest;
+-        host.contentsScale = retina_on ? 2.0 : 1.0;
++        host.magnificationFilter = render_scale == 1.0 ? kCAFilterNearest : kCAFilterLinear;
++        host.contentsScale = win_pixels_per_point();
+         host.frame = self.layer.bounds;
+         host.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
+ 
+@@ -606,9 +606,10 @@ - (void) removeCALayerHostView:(CAContextID)contextId
+ 
+     - (void) setLayerRetinaProperties:(BOOL)mode
+     {
+-        [self layer].contentsScale = mode ? 2.0 : 1.0;
+-        [self layer].minificationFilter = mode ? kCAFilterLinear : kCAFilterNearest;
+-        [self layer].magnificationFilter = mode ? kCAFilterLinear : kCAFilterNearest;
++        BOOL scaled = mode || render_scale != 1.0;
++        [self layer].contentsScale = mode ? 2.0 : render_scale;
++        [self layer].minificationFilter = scaled ? kCAFilterLinear : kCAFilterNearest;
++        [self layer].magnificationFilter = scaled ? kCAFilterLinear : kCAFilterNearest;
+     }
+ 
+     - (void) setRetinaMode:(BOOL)mode
+@@ -628,7 +629,7 @@ - (void) setRetinaMode:(BOOL)mode
+         [self setLayerRetinaProperties:mode];
+ 
+         for (CALayerHost* host in [_caLayerHosts allValues])
+-            host.contentsScale = mode ? 2.0 : 1.0;
++            host.contentsScale = mode ? 2.0 : render_scale;
+ 
+         [super setRetinaMode:mode];
+     }
+@@ -843,7 +844,7 @@ - (void) dealloc
+ 
+     - (void) setRetinaMode:(BOOL)mode
+     {
+-        self.layer.contentsScale = mode ? 2.0 : 1.0;
++        self.layer.contentsScale = mode ? 2.0 : render_scale;
+         [super setRetinaMode:mode];
+     }
+ 
+@@ -852,9 +853,10 @@ - (CALayer*) makeBackingLayer
+         CAMetalLayer *layer = [CAMetalLayer layer];
+         layer.device = _device;
+         layer.framebufferOnly = YES;
+-        layer.magnificationFilter = kCAFilterNearest;
++        /* a picture smaller than its place on screen is scaled up smoothly */
++        layer.magnificationFilter = render_scale == 1.0 ? kCAFilterNearest : kCAFilterLinear;
+         layer.backgroundColor = CGColorGetConstantColor(kCGColorBlack);
+-        layer.contentsScale = retina_on ? 2.0 : 1.0;
++        layer.contentsScale = win_pixels_per_point();
+         return layer;
+     }
+ 
+@@ -2475,7 +2477,7 @@ - (void) setRetinaMode:(BOOL)mode
+ 
+         [transform scaleBy:scale];
+ 
+-        [[self contentView] layer].mask.contentsScale = mode ? 2.0 : 1.0;
++        [[self contentView] layer].mask.contentsScale = mode ? 2.0 : render_scale;
+ 
+         for (WineBaseView* subview in [self.contentView subviews])
+         {
+@@ -3736,9 +3738,9 @@ - (instancetype) initWithHwnd:(void*)newHwnd bounds:(CGRect)bounds
+ 
+     offscreen_layer.device = (id<MTLDevice>)device;
+     offscreen_layer.framebufferOnly = YES;
+-    offscreen_layer.magnificationFilter = kCAFilterNearest;
++    offscreen_layer.magnificationFilter = render_scale == 1.0 ? kCAFilterNearest : kCAFilterLinear;
+     offscreen_layer.backgroundColor = CGColorGetConstantColor(kCGColorBlack);
+-    offscreen_layer.contentsScale = retina_on ? 2.0 : 1.0;
++    offscreen_layer.contentsScale = win_pixels_per_point();
+     [offscreen_layer setBounds:cgrect_mac_from_win(bounds)];
+     [offscreen_layer setAnchorPoint:CGPointMake(0, 0)];
+ 
+diff --git a/dlls/winemac.drv/display.c b/dlls/winemac.drv/display.c
+index d045ff1..6e91078 100644
+--- a/dlls/winemac.drv/display.c
++++ b/dlls/winemac.drv/display.c
+@@ -400,6 +400,17 @@ static int get_default_bpp(void)
+ }
+ 
+ 
++/* The mode a display is in when Wine starts is the one windows are scaled
++ * for: Windows sees it at twice its size in Retina mode, and at
++ * render_scale otherwise. Rounded as cgrect_win_from_mac() rounds a screen's
++ * frame, so the mode and the monitor's rectangle agree. */
++static void scale_original_mode(SInt64 *width, SInt64 *height)
++{
++    if (!retina_enabled && render_scale == 1.0) return;
++    *width = __builtin_round(*width * (retina_enabled ? 2.0 : render_scale));
++    *height = __builtin_round(*height * (retina_enabled ? 2.0 : render_scale_y));
++}
++
+ static CFDictionaryRef create_mode_dict(CGDisplayModeRef display_mode, BOOL is_original)
+ {
+     CFDictionaryRef ret;
+@@ -410,11 +421,7 @@ static CFDictionaryRef create_mode_dict(CGDisplayModeRef display_mode, BOOL is_o
+     CFStringRef pixel_encoding = CGDisplayModeCopyPixelEncoding(display_mode);
+     CFNumberRef cf_io_flags, cf_width, cf_height, cf_refresh;
+ 
+-    if (retina_enabled && is_original)
+-    {
+-        width *= 2;
+-        height *= 2;
+-    }
++    if (is_original) scale_original_mode(&width, &height);
+ 
+     io_flags &= kDisplayModeInterlacedFlag | kDisplayModeStretchedFlag | kDisplayModeTelevisionFlag;
+     cf_io_flags = CFNumberCreate(NULL, kCFNumberSInt32Type, &io_flags);
+@@ -701,11 +708,14 @@ static CGDisplayModeRef find_best_display_mode(DEVMODEW *devmode, CFArrayRef dis
+         if (!refresh_rate)
+             refresh_rate = 60;
+ 
+-        if (is_original && retina_enabled)
++        if (is_original)
+         {
+-            width *= 2;
+-            height *= 2;
++            SInt64 scaled_width = width, scaled_height = height;
++            scale_original_mode(&scaled_width, &scaled_height);
++            width = scaled_width;
++            height = scaled_height;
+         }
++        else if (render_scale != 1.0) continue;
+ 
+         if (bpp != mode_bpp)
+             continue;
+@@ -805,7 +815,7 @@ LONG macdrv_ChangeDisplaySettings(LPDEVMODEW displays, LPCWSTR primary_name, HWN
+ 
+ static DEVMODEW *display_get_modes(CGDirectDisplayID display_id, int *modes_count)
+ {
+-    int default_bpp = get_default_bpp(), synth_count = 0, count, i;
++    int default_bpp = get_default_bpp(), synth_count = 0, count, kept, i;
+     BOOL modes_has_8bpp = FALSE, modes_has_16bpp = FALSE;
+     struct display_mode_descriptor *desc;
+     DEVMODEW *devmodes;
+@@ -833,21 +843,30 @@ static DEVMODEW *display_get_modes(CGDirectDisplayID display_id, int *modes_coun
+     }
+ 
+     desc = create_original_display_mode_descriptor(display_id);
+-    for (i = 0; i < count; i++)
++    for (i = kept = 0; i < count; i++)
+     {
+         CGDisplayModeRef mode = (CGDisplayModeRef)CFArrayGetValueAtIndex(modes, i);
++        BOOL is_original = display_mode_matches_descriptor(mode, desc);
+ 
+-        memset(devmodes + i, 0, sizeof(*devmodes));
+-        devmodes[i].dmSize = sizeof(*devmodes);
++        /* With a render scale the display stays in the mode it is in: the
++         * scale is that mode's, and windows are not rescaled for another. */
++        if (render_scale != 1.0 && !is_original) continue;
+ 
+-        display_mode_to_devmode_fields(display_id, mode, devmodes + i);
++        memset(devmodes + kept, 0, sizeof(*devmodes));
++        devmodes[kept].dmSize = sizeof(*devmodes);
+ 
+-        if (retina_enabled && display_mode_matches_descriptor(mode, desc))
++        display_mode_to_devmode_fields(display_id, mode, devmodes + kept);
++
++        if (is_original)
+         {
+-            devmodes[i].dmPelsWidth *= 2;
+-            devmodes[i].dmPelsHeight *= 2;
++            SInt64 width = devmodes[kept].dmPelsWidth, height = devmodes[kept].dmPelsHeight;
++            scale_original_mode(&width, &height);
++            devmodes[kept].dmPelsWidth = width;
++            devmodes[kept].dmPelsHeight = height;
+         }
++        kept++;
+     }
++    count = kept;
+     free_display_mode_descriptor(desc);
+ 
+     for (i = 0; !modes_has_16bpp && i < count; i++)
+@@ -886,13 +905,15 @@ static void display_get_current_mode(struct macdrv_monitor *monitor, DEVMODEW *d
+     devmode->dmFields |= DM_POSITION;
+ 
+     display_mode_to_devmode_fields(display_id, display_mode, devmode);
+-    if (retina_enabled)
++    if (retina_enabled || render_scale != 1.0)
+     {
+         struct display_mode_descriptor *desc = create_original_display_mode_descriptor(display_id);
+         if (display_mode_matches_descriptor(display_mode, desc))
+         {
+-            devmode->dmPelsWidth *= 2;
+-            devmode->dmPelsHeight *= 2;
++            SInt64 width = devmode->dmPelsWidth, height = devmode->dmPelsHeight;
++            scale_original_mode(&width, &height);
++            devmode->dmPelsWidth = width;
++            devmode->dmPelsHeight = height;
+         }
+         free_display_mode_descriptor(desc);
+     }
+diff --git a/dlls/winemac.drv/gdi.c b/dlls/winemac.drv/gdi.c
+index 69a0aa7..c67601e 100644
+--- a/dlls/winemac.drv/gdi.c
++++ b/dlls/winemac.drv/gdi.c
+@@ -47,6 +47,7 @@ static int vert_size;           /* vert. size of screen in millimeters */
+ static bool device_data_valid;  /* do the above variables have up-to-date values? */
+ 
+ bool retina_on = false;
++double render_scale = 1.0, render_scale_y = 1.0;
+ 
+ static pthread_mutex_t device_data_mutex = PTHREAD_MUTEX_INITIALIZER;
+ 
+diff --git a/dlls/winemac.drv/macdrv_cocoa.h b/dlls/winemac.drv/macdrv_cocoa.h
+index 5157b38..bf7415a 100644
+--- a/dlls/winemac.drv/macdrv_cocoa.h
++++ b/dlls/winemac.drv/macdrv_cocoa.h
+@@ -117,72 +117,84 @@
+ extern bool retina_on;       /* Whether Retina mode is currently active (enabled and display is in default mode). */
+ extern bool enable_app_nap;
+ 
++/* Windows pixels per Mac point when Retina mode is off: 1, or less when a
++ * game is to render a smaller picture than the screen has points and have it
++ * scaled up to fill the same place (MACRON_RENDER_PIXELS). Retina mode is the
++ * same thing with a factor of 2. One factor for each direction, a hair
++ * apart: both of the main display's sizes are whole numbers on either side,
++ * so a window the size of the Windows screen is exactly the size of the
++ * Mac's. */
++extern double render_scale, render_scale_y;
++
++static inline double win_pixels_per_point(void)
++{
++    return retina_on ? 2.0 : render_scale;
++}
++
++static inline double win_lines_per_point(void)
++{
++    return retina_on ? 2.0 : render_scale_y;
++}
++
++/* With a factor that is not a whole number, a rectangle is the other side's
++ * edges rounded, so that rectangles that touch still touch and a screen's
++ * size is the same number wherever it is computed. */
++static inline double scaled_coord(double coord, double scale)
++{
++    if (scale == 1.0 || scale == 2.0 || scale == 0.5) return coord * scale;
++    return __builtin_round(coord * scale);
++}
++
++static inline CGRect scaled_rect(CGRect rect, double scale_x, double scale_y)
++{
++    double left, top, right, bottom;
++
++    if (CGRectIsNull(rect) || CGRectIsInfinite(rect)) return rect;
++    left = scaled_coord(rect.origin.x, scale_x);
++    top = scaled_coord(rect.origin.y, scale_y);
++    right = scaled_coord(rect.origin.x + rect.size.width, scale_x);
++    bottom = scaled_coord(rect.origin.y + rect.size.height, scale_y);
++    return CGRectMake(left, top, right - left, bottom - top);
++}
++
+ static inline CGRect cgrect_mac_from_win(CGRect rect)
+ {
+-    if (retina_on)
+-    {
+-        rect.origin.x /= 2;
+-        rect.origin.y /= 2;
+-        rect.size.width /= 2;
+-        rect.size.height /= 2;
+-    }
+-
+-    return rect;
++    return scaled_rect(rect, 1.0 / win_pixels_per_point(), 1.0 / win_lines_per_point());
+ }
+ 
+ static inline CGRect cgrect_win_from_mac(CGRect rect)
+ {
+-    if (retina_on)
+-    {
+-        rect.origin.x *= 2;
+-        rect.origin.y *= 2;
+-        rect.size.width *= 2;
+-        rect.size.height *= 2;
+-    }
+-
+-    return rect;
++    return scaled_rect(rect, win_pixels_per_point(), win_lines_per_point());
+ }
+ 
+ static inline CGSize cgsize_mac_from_win(CGSize size)
+ {
+-    if (retina_on)
+-    {
+-        size.width /= 2;
+-        size.height /= 2;
+-    }
++    size.width = scaled_coord(size.width, 1.0 / win_pixels_per_point());
++    size.height = scaled_coord(size.height, 1.0 / win_lines_per_point());
+ 
+     return size;
+ }
+ 
+ static inline CGSize cgsize_win_from_mac(CGSize size)
+ {
+-    if (retina_on)
+-    {
+-        size.width *= 2;
+-        size.height *= 2;
+-    }
++    size.width = scaled_coord(size.width, win_pixels_per_point());
++    size.height = scaled_coord(size.height, win_lines_per_point());
+ 
+     return size;
+ }
+ 
+ static inline CGPoint cgpoint_mac_from_win(CGPoint point)
+ {
+-    if (retina_on)
+-    {
+-        point.x /= 2;
+-        point.y /= 2;
+-    }
++    point.x /= win_pixels_per_point();
++    point.y /= win_lines_per_point();
+ 
+     return point;
+ }
+ 
+ static inline CGPoint cgpoint_win_from_mac(CGPoint point)
+ {
+-    if (retina_on)
+-    {
+-        point.x *= 2;
+-        point.y *= 2;
+-    }
++    point.x *= win_pixels_per_point();
++    point.y *= win_lines_per_point();
+ 
+     return point;
+ }
+diff --git a/dlls/winemac.drv/macdrv_main.c b/dlls/winemac.drv/macdrv_main.c
+index cc3d3b3..d4559be 100644
+--- a/dlls/winemac.drv/macdrv_main.c
++++ b/dlls/winemac.drv/macdrv_main.c
+@@ -265,6 +265,25 @@ static inline DWORD get_config_key(HKEY defkey, HKEY appkey, const char *name,
+  *
+  * Set up the Mac driver options.
+  */
++/* The number after MACRON_RENDER_PIXELS= in the process's environment, or 0. */
++static long render_pixels_setting(void)
++{
++    static const WCHAR nameW[] = {'M','A','C','R','O','N','_','R','E','N','D','E','R','_','P','I','X','E','L','S','='};
++    const WCHAR *entry = RtlGetCurrentPeb()->ProcessParameters->Environment;
++    long value = 0;
++    unsigned int i;
++
++    if (!entry) return 0;
++    for (; *entry; entry += lstrlenW(entry) + 1)
++    {
++        for (i = 0; i < ARRAY_SIZE(nameW) && entry[i] == nameW[i]; i++) ;
++        if (i < ARRAY_SIZE(nameW)) continue;
++        for (entry += i; *entry >= '0' && *entry <= '9' && value < 100000000; entry++) value = value * 10 + (*entry - '0');
++        return *entry ? 0 : value;
++    }
++    return 0;
++}
++
+ static void setup_options(void)
+ {
+     static const WCHAR macdriverW[] = {'\\','M','a','c',' ','D','r','i','v','e','r',0};
+@@ -368,6 +387,36 @@ static void setup_options(void)
+ 
+     retina_on = retina_enabled;
+ 
++    /* MACRON_RENDER_PIXELS=<n>: Windows sees the main display with about that
++     * many pixels instead of its size in points, at the same shape, and
++     * everything is scaled up to where it would have been. For a game that
++     * the GPU cannot draw at the display's size: it renders the smaller
++     * picture, full screen, and the display's mode is not changed. A number
++     * of pixels and not a size, so that it means the same work on any
++     * display. Not with Retina mode, never larger than the display, and only
++     * as low as a third of its width. The width comes out even, the height
++     * is the nearest whole number of lines of the same shape, and each
++     * direction has its own factor so that both are exact. */
++    if (!retina_enabled)
++    {
++        CGRect bounds = CGDisplayBounds(CGMainDisplayID());
++        double points = bounds.size.width * bounds.size.height;
++        long target = render_pixels_setting();
++
++        if (target > 0 && points > 0 && target < points)
++        {
++            long width = 2 * (long)(bounds.size.width * __builtin_sqrt(target / points) / 2 + 0.5);
++            double scale = width / bounds.size.width;
++            long height = (long)(bounds.size.height * scale + 0.5);
++
++            if (scale >= 1.0 / 3 && scale < 1.0)
++            {
++                render_scale = scale;
++                render_scale_y = height / bounds.size.height;
++            }
++        }
++    }
++
+     if (appkey) NtClose(appkey);
+     if (hkey) NtClose(hkey);
+ }
+diff --git a/dlls/winemac.drv/surface.c b/dlls/winemac.drv/surface.c
+index 5552b82..fd6b7d0 100644
+--- a/dlls/winemac.drv/surface.c
++++ b/dlls/winemac.drv/surface.c
+@@ -88,7 +88,7 @@ static BOOL macdrv_surface_flush(struct window_surface *window_surface, const RE
+     colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+     image = CGImageCreate(color_info->bmiHeader.biWidth, abs(color_info->bmiHeader.biHeight), 8, 32,
+                           color_info->bmiHeader.biSizeImage / abs(color_info->bmiHeader.biHeight), colorspace,
+-                          alpha_info | kCGBitmapByteOrder32Little, surface->provider, NULL, retina_on, kCGRenderingIntentDefault);
++                          alpha_info | kCGBitmapByteOrder32Little, surface->provider, NULL, win_pixels_per_point() != 1.0, kCGRenderingIntentDefault);
+     CGColorSpaceRelease(colorspace);
+ 
+     macdrv_window_set_color_image(surface->window, image, cgrect_from_rect(*rect), cgrect_from_rect(*dirty));
+@@ -111,7 +111,7 @@ static BOOL macdrv_surface_flush(struct window_surface *window_surface, const RE
+ 
+             image = CGImageMaskCreate(shape_info->bmiHeader.biWidth, abs(shape_info->bmiHeader.biHeight), 1, 1,
+                                       shape_info->bmiHeader.biSizeImage / abs(shape_info->bmiHeader.biHeight),
+-                                      provider, NULL, retina_on);
++                                      provider, NULL, win_pixels_per_point() != 1.0);
+             CGDataProviderRelease(provider);
+ 
+             macdrv_window_set_shape_image(surface->window, image);
