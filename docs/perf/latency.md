@@ -177,7 +177,7 @@ The published rc8 with `MACRON_RENDER_PIXELS` set by hand, the practice map, 75 
 
 - **100 frames a second in play is not on this Mac at a picture one can read.** A fifth of the display's pixels and the lowest settings give 96. From the profile's screen down to that one the GPU's work on a frame falls by 4 ms and the frame rate rises by 20, while the text goes from soft to hard to read. The profile stays at 1098x711: 680,000 pixels would be 4 frames a second more.
 - **The game's quality settings are worth 3 to 5 frames a second** at the profile's screen (shader quality, shadows, motion blur, bloom and texture detail at their lowest: 79.4 against 73.4 to 76.7).
-- One of the two starts at 806x522 never drew a frame: a black window, the console stopping 9.9 s after the window at the game's own server start, the process alive until it was stopped. Not seen at any other size in today's 48 starts; not looked into, since that size is not one to ship.
+- One of the two starts at 806x522 never drew a frame: a black window, the console stopping 9.9 s after the window at the game's own server start, the process alive until it was stopped. Not seen in any other start of the day, at any size, the second one at 806x522 included; not looked into, since that size is not one to ship.
 - **`+snd_mixahead 0.1` does not take the game's `Audio device starved` lines away**: one while loading (5.8 to 11.3 s) in four of the five starts that had it, as in the starts without it. The console variable exists (`soundsystem.dll`); the game prints nothing about it. The driver reported no frame missing in any start.
 
 ### A frame limit that follows the heat: tried, and not shipped
