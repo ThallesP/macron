@@ -1,7 +1,7 @@
 /* How late a thread wakes on a busy Mac, by the scheduling policy it has:
  * the question behind every late sound wake-up under Wine, without Wine.
  *
- *   wakelat <seconds> <busy threads> timeshare|fixed|realtime
+ *   wakelat <seconds> <busy threads> timeshare|fixed|realtime [<spinners> <ms>]
  *
  * A real-time thread, as CoreAudio's I/O thread is, signals a semaphore every
  * 10 ms. A second thread waits for it and takes the time from the signal to
@@ -13,7 +13,11 @@
  *              and the server itself
  *   realtime   a time constraint (0.5 ms of work every 10 ms, done within
  *              2 ms): the real-time band, where CoreAudio's own threads are
- * Meanwhile <busy threads> threads never sleep, at ordinary priority.
+ * Meanwhile <busy threads> threads never sleep, at ordinary priority. With
+ * <spinners> and <ms>, that many more threads at the `fixed` policy each
+ * compute for <ms> milliseconds out of every 10, on their own clocks: what a
+ * game's time-critical threads (its mixer, a busy sound thread) are to
+ * Wine's server and timer threads, which Wine puts at the same priority.
  *
  * Prints one RESULT line. Build it for both architectures and run the Intel
  * one too (`arch -x86_64 ./wakelat ...`), which is what a game is under
@@ -76,6 +80,23 @@ static void *busy(void *unused)
     return NULL;
 }
 
+static double spin_ms;
+
+static void *spinner(void *unused)
+{
+    volatile unsigned sink = 0;
+    uint64_t next = mach_absolute_time();
+    set_fixed();
+    while (!quit) {
+        uint64_t until = now_ns() + (uint64_t)(spin_ms * 1e6);
+        while (now_ns() < until)
+            for (unsigned i = 0; i < 2000; i++) sink += i;
+        next += ticks(PERIOD_NS);
+        mach_wait_until(next);
+    }
+    return NULL;
+}
+
 static void *signaller(void *unused)
 {
     uint64_t next = mach_absolute_time();
@@ -97,13 +118,15 @@ static int compare(const void *a, const void *b)
 
 int main(int argc, char **argv)
 {
-    if (argc != 4) {
-        fprintf(stderr, "usage: wakelat <seconds> <busy threads> timeshare|fixed|realtime\n");
+    if (argc != 4 && argc != 6) {
+        fprintf(stderr, "usage: wakelat <seconds> <busy threads> timeshare|fixed|realtime [<spinners> <ms>]\n");
         return 2;
     }
     seconds = atof(argv[1]);
     int load = atoi(argv[2]);
     const char *mode = argv[3];
+    int spinners = argc == 6 ? atoi(argv[4]) : 0;
+    spin_ms = argc == 6 ? atof(argv[5]) : 0;
     mach_timebase_info(&timebase);
     semaphore_create(mach_task_self(), &wake, SYNC_POLICY_FIFO, 0);
 
@@ -117,6 +140,7 @@ int main(int argc, char **argv)
 
     pthread_t thread;
     for (int i = 0; i < load; i++) pthread_create(&thread, NULL, busy, NULL);
+    for (int i = 0; i < spinners; i++) pthread_create(&thread, NULL, spinner, NULL);
     pthread_create(&thread, NULL, signaller, NULL);
 
     double *late = malloc(MAX_WAKES * sizeof(*late));
@@ -145,8 +169,8 @@ int main(int argc, char **argv)
 #else
     const char *arch = "arm64";
 #endif
-    printf("RESULT %s, %s (policy call %d), %d busy threads: %zu wake-ups in %.0f s, ms from the signal p50 %.3f p95 %.3f p99 %.3f max %.3f, over 1 ms %u, over 2 ms %u, over 10 ms %u, over 35 ms %u\n",
-           mode, arch, policy, load, count, seconds, late[count / 2], late[count * 95 / 100], late[count * 99 / 100], late[count - 1],
-           over_1, over_2, over_10, over_35);
+    printf("RESULT %s, %s (policy call %d), %d busy threads, %d at priority 63 computing %.1f ms of every 10: %zu wake-ups in %.0f s, ms from the signal p50 %.3f p95 %.3f p99 %.3f max %.3f, over 1 ms %u, over 2 ms %u, over 10 ms %u, over 35 ms %u\n",
+           mode, arch, policy, load, spinners, spin_ms, count, seconds, late[count / 2], late[count * 95 / 100], late[count * 99 / 100],
+           late[count - 1], over_1, over_2, over_10, over_35);
     return 0;
 }
