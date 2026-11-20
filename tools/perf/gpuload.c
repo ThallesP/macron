@@ -22,7 +22,7 @@
  * lists, the window's client size), and every click in the window is a
  * RESULT click line with its position: together with a screenshot they show
  * whether a picture smaller than the screen (Wine patch 0017,
- * MACRON_RENDER_HEIGHT) fills it and whether the mouse lands where it points.
+ * MACRON_RENDER_PIXELS) fills it and whether the mouse lands where it points.
  *
  * It presents with sync interval --sync (default 0, as fast as it can;
  * 1 waits for the display, as gpuload.m's --sync 1 does), warms up for 2
