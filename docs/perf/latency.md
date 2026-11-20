@@ -160,6 +160,21 @@ The same two sessions and a third (thread "Deadlock on the M3: does a frame limi
 - **The game's own limit adds a frame of latency by this measure**: 40 to 43 ms from start to GPU done at 45, 49 to 54 ms at 36, 32 ms at 60. It waits after the frame has started.
 - **Sound**: no frame missing in any report of any start (0016). The game's own `Audio device starved` lines come in the first 12 s of a start (0 to 4, while it loads) and when the Mac is throttled: 1 and 5 between 132 and 137 s in the two starts without a limit, 1 at 229 s in one of the two at 45 (its lowest stretch), none after loading at 36, at 60 or in the other at 45.
 
+### A frame limit that follows the heat: tried, and not shipped
+
+The table above suggested a rule: when macOS's thermal pressure level reaches 2, hold the game to a rate the Mac can keep, before macOS takes more. It was built (branch `dxmt-0006`: a DXMT patch that takes the limit in the sleep before a frame starts, about two thirds of the rate at level 2, a tenth lower every 20 s while the level stays, higher again at level 1; its rule tested by itself and on a sandbox with the level set by hand) and run on the M3 against the same build with it off (thread "Deadlock on the M3: a frame limit that follows the heat, on and off, in the practice map"; 480 s and 300 s in the practice map, each from a cool start):
+
+| | 0-90 s | 90-120 | 120-150 | 150-180 | 180-210 | 210-240 | 240-270 | 270-300 | level 2 |
+|---|---|---|---|---|---|---|---|---|---|
+| the limit on: frames a second | 74, 73, 71 | 64.2 | 42.5 | 36.5 | 29.5 | 26.6 | 24.1 | 25.4 | 125 to 255 s, and from 416 s |
+| start to GPU done | 24 to 25 ms | 28.0 | 25.5 | 31.1 | 35.2 | 39.8 | 41.6 | 39.1 | |
+| the limit off: frames a second | 73, 72, 70 | 61.3 | 48.2 | 32.9 | 33.5 | 43.9 | 51.0 | 52.3 | 100 to 211 s, and from 302 s |
+| start to GPU done | 23 to 26 ms | 28.6 | 38.5 | 47.6 | 48.9 | 40.0 | 37.3 | 34.1 | |
+
+- **It lost frames and kept the Mac no cooler.** From 120 s on the game averaged 30 frames a second with the limit (to 480 s) and 44 without (to 300 s), and the Mac was at level 2 for a little over half of that time either way: about two minutes each time, whatever the game did meanwhile. Climbing back at level 1 from 24 it was at level 2 again at 35 frames a second. Once the Mac is warm through, no rate worth playing at keeps it under level 2, and macOS's own throttling (33 frames a second at level 2 in this start, 44 to 52 at level 1) is no worse than a limit.
+- **The fall to 14 to 18 frames a second did not come back** in either start. It was seen in the fifth and sixth starts of a session that waited only for level 0 between starts, not three minutes more; these two had the longer wait. What a Mac that has played for half an hour does is not something a test of eight minutes shows.
+- **What the limit did do is make frames younger**: at the same 33 frames a second, 31 ms from a frame's start to the end of its GPU work against 48 ms; at 42 against 48 frames a second, 25.5 ms against 38.5. A game that the GPU holds back starts each frame as early as it can and the frame waits; started later, it does not. That is the open item below about GPU pacing, and the reason for the next test.
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.
