@@ -103,6 +103,9 @@ else
     echo "applying $(basename "$patch")"
     git -C dxmt apply --whitespace=nowarn "$patch"
   done
+  # Patch 0006's rule for the frame rate of a hot Mac, by itself, before anything is built with it
+  c++ -std=c++20 -I dxmt/src/dxmt -o thermal_pacer "$here/tests/thermal_pacer.cpp"
+  ./thermal_pacer
 fi
 # The 32-bit build makes no winemetal.so, so nothing in it links LLVM.
 mkdir -p no-llvm/include no-llvm/lib

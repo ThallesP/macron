@@ -1,0 +1,392 @@
+From: Macron <noreply@github.com>
+Subject: [PATCH] dxmt: hold a game to the frame rate a hot Mac can keep
+ (dxmt.thermalPacing)
+
+A Mac without a fan that a game keeps at full power is at thermal pressure
+level 2 ("heavy") within a minute or two, and some tens of seconds later
+macOS takes the power away itself. On a MacBook Air M3, Deadlock's practice
+map ran at 70 frames a second while the Mac was cool, reached level 2 after
+65 s and then ran at 14 to 30, with 70 to 90 ms from a frame's start to the
+end of its GPU work and the game's sound mixer starved. Held to 45 frames a
+second from the start (the game's own fps_max) it reached level 2 after
+181 s and kept 45 for the minute that was left; held to 36 it did not
+reach level 2 in four minutes; held to 60 it fell to 26.
+
+So a game is given a limit when the level reaches 2, before macOS takes
+more: about two thirds of what it was doing, a tenth lower every 20 s for
+as long as the level stays, not below 24. At level 1 the limit goes up by
+a twentieth every 20 s, but for five minutes not past nine tenths of the
+rate the Mac last went to level 2 at; at level 0 by a tenth every 10 s. A
+limit that is back at what the game ran at without one is removed. Nothing
+is limited before level 2, so a Mac whose fan keeps it under that is never
+held. ThermalPacer (dxmt_thermal.hpp) is that rule and nothing else;
+Macron's repository runs it against scripted seconds and a model fitted
+to the four starts above (runtime/dxmt/tests/thermal_pacer.cpp).
+
+The limit is taken in the sleep of dxmt.latencySleep, at the end of
+Present and before the next frame starts, so the game reads its input
+after it and a held frame is no older when it is shown than a free one.
+DXMT's own d3d11.preferredMaxFrameRate cannot do this: it waits for the
+display, so on a 60 Hz panel 45 became 30.
+
+winemetal.so reads the level (WMTGetThermalPressureLevel, unix call 133:
+what `notifyutil -g com.apple.system.thermalpressurelevel` prints), once a
+second. An info line says when a limit is set, changed or removed, and
+dxmt.logLatency's line ends with the limit while there is one.
+
+- dxmt.thermalPacing (default True).
+---
+diff --git a/src/dxmt/dxmt_latency.cpp b/src/dxmt/dxmt_latency.cpp
+index e1c98e4..d85c98c 100644
+--- a/src/dxmt/dxmt_latency.cpp
++++ b/src/dxmt/dxmt_latency.cpp
+@@ -1,6 +1,7 @@
+ #include "dxmt_latency.hpp"
+ #include "config/config.hpp"
+ #include "log/log.hpp"
++#include "winemetal.h"
+ #include <algorithm>
+ #include <cstdio>
+ #include <mutex>
+@@ -72,7 +73,9 @@ FrameLatencyTracker::FrameLatencyTracker() {
+   gpu_overlaps_frames_ = gpu_model == "start";
+   log_enabled_ = config.getOption<bool>("dxmt.logLatency", false);
+   log_frames_ = config.getOption<bool>("dxmt.logLatencyFrames", false);
++  thermal_enabled_ = config.getOption<bool>("dxmt.thermalPacing", true);
+   created_ = clock::now();
++  thermal_second_ = created_;
+   tolerance_ = std::chrono::microseconds(std::clamp(config.getOption<int>("dxmt.latencyTolerance", 1000), 0, 50000));
+   beginFrame(1, clock::now(), {});
+ }
+@@ -250,6 +253,38 @@ FrameLatencyTracker::computeStart(uint64_t frame, const Estimate &est, time_poin
+   return target - est.cpu - tolerance_;
+ }
+ 
++FrameLatencyTracker::time_point
++FrameLatencyTracker::thermalStart(time_point now) {
++  if (!thermal_enabled_)
++    return {};
++  thermal_frames_++;
++  auto elapsed = now - thermal_second_;
++  if (elapsed >= std::chrono::seconds(1)) {
++    double before = thermal_.limit();
++    double limit = thermal_.update(
++        (unsigned)WMTGetThermalPressureLevel(), thermal_frames_ / std::chrono::duration<double>(elapsed).count()
++    );
++    thermal_frames_ = 0;
++    thermal_second_ = now;
++    if (limit != before) {
++      char line[160];
++      if (limit > 0)
++        snprintf(
++            line, sizeof(line), "Thermal: pressure level %u at %.1f fps, frames held to %.1f a second", thermal_.level(),
++            thermal_.rate(), limit
++        );
++      else
++        snprintf(line, sizeof(line), "Thermal: pressure level %u, frames no longer held", thermal_.level());
++      Logger::info(line);
++    }
++  }
++  if (thermal_.limit() == 0)
++    return {};
++  auto interval = std::chrono::duration_cast<duration>(std::chrono::duration<double>(1.0 / thermal_.limit()));
++  thermal_start_ = std::max(thermal_start_ + interval, now);
++  return thermal_start_;
++}
++
+ void
+ FrameLatencyTracker::sleepAndBeginFrame(uint64_t frame) {
+   Estimate est;
+@@ -266,6 +301,7 @@ FrameLatencyTracker::sleepAndBeginFrame(uint64_t frame) {
+   }
+ 
+   auto before = clock::now();
++  target = std::max(target, thermalStart(before));
+   if (target > before)
+     sleepUntil(std::min(target, before + kMaxSleep));
+   auto start = clock::now();
+@@ -319,7 +355,7 @@ FrameLatencyTracker::log(uint64_t frame, const Estimate &est, bool estimated) {
+   std::sort(gpu_time.begin(), gpu_time.begin() + timed);
+   std::sort(gpu_interval.begin(), gpu_interval.begin() + spaced);
+ 
+-  char line[512];
++  char line[560];
+   int length = snprintf(
+       line, sizeof(line),
+       "Latency: frame %llu, %.1f fps, start to GPU done %.1f ms (max %.1f), %llu in flight, slept %.1f ms (max %.1f)",
+@@ -336,13 +372,15 @@ FrameLatencyTracker::log(uint64_t frame, const Estimate &est, bool estimated) {
+   if (estimated && est.gpu_holds && length > 0 && (size_t)length < sizeof(line))
+     length += snprintf(line + length, sizeof(line) - length, " %.1f ms", milliseconds(est.gpu_interval));
+   if (timed && spaced && length > 0 && (size_t)length < sizeof(line))
+-    snprintf(
++    length += snprintf(
+         line + length, sizeof(line) - length,
+         "; Metal: the GPU started a frame %.1f ms after it was scheduled (min %.1f), worked on it %.1f ms and "
+         "started frames %.1f ms apart (min %.1f)",
+         gpu_wait[timed / 2] / 1e6, gpu_wait[0] / 1e6, gpu_time[timed / 2] / 1e6, gpu_interval[spaced / 2] / 1e6,
+         gpu_interval[0] / 1e6
+     );
++  if (thermal_.limit() > 0 && length > 0 && (size_t)length < sizeof(line))
++    snprintf(line + length, sizeof(line) - length, "; held to %.1f fps for heat", thermal_.limit());
+   Logger::info(line);
+ }
+ 
+diff --git a/src/dxmt/dxmt_latency.hpp b/src/dxmt/dxmt_latency.hpp
+index d23e3c7..aa4c152 100644
+--- a/src/dxmt/dxmt_latency.hpp
++++ b/src/dxmt/dxmt_latency.hpp
+@@ -1,6 +1,7 @@
+ #pragma once
+ 
+ #include "dxmt_statistics.hpp"
++#include "dxmt_thermal.hpp"
+ #include "thread.hpp"
+ #include <array>
+ #include <cstdint>
+@@ -32,6 +33,10 @@ back lost up to half its frame rate there. "start" asks Metal when the GPU
+ started the frame's first command buffer and how long that waited; for a
+ simple program Metal reports no wait at all, so it does nothing, and for a
+ game it has not been measured.
++
++The same sleep holds a game to the frame rate a hot Mac can keep
++(dxmt_thermal.hpp), since a limit taken here is taken before the frame
++starts: the game reads its input after it.
+ */
+ class FrameLatencyTracker {
+ public:
+@@ -98,6 +103,8 @@ private:
+   void beginFrame(uint64_t frame, time_point start, duration slept);
+   bool estimate(Estimate &result);
+   time_point computeStart(uint64_t frame, const Estimate &est, time_point now);
++  /** Application thread: counts this frame, and says when the heat lets the next one start. */
++  time_point thermalStart(time_point now);
+   void log(uint64_t frame, const Estimate &est, bool estimated);
+ 
+   dxmt::mutex mutex_;
+@@ -112,6 +119,11 @@ private:
+   bool log_enabled_;
+   bool log_frames_;
+   time_point created_;
++  bool thermal_enabled_;
++  ThermalPacer thermal_;
++  time_point thermal_second_;
++  unsigned thermal_frames_ = 0;
++  time_point thermal_start_;
+ };
+ 
+ } // namespace dxmt
+diff --git a/src/dxmt/dxmt_thermal.hpp b/src/dxmt/dxmt_thermal.hpp
+new file mode 100644
+index 0000000..9facc5e
+--- /dev/null
++++ b/src/dxmt/dxmt_thermal.hpp
+@@ -0,0 +1,127 @@
++#pragma once
++
++#include <algorithm>
++
++namespace dxmt {
++
++/**
++Decides how fast a game may start frames while the Mac is hot.
++
++macOS reports how hard it is holding the machine back as a thermal pressure
++level: 0 nominal, 1 moderate, 2 heavy, 3 and 4 beyond. A Mac without a fan
++that a game keeps at full power reaches level 2 within a minute or two, and
++some tens of seconds later macOS takes the power away itself: on a MacBook
++Air M3 a game that ran at 70 frames a second fell to 14 to 30, with 70 to
++90 ms from a frame's start to the end of its GPU work and the game's sound
++mixer starved. Held to 45 frames a second the same game kept 45 for a
++minute at level 2, and held to 36 it did not reach level 2 in four minutes.
++
++So at level 2 the game is given a limit before macOS takes more. Fed once a
++second with the level and the frame rate of that second:
++- no limit until the level is 2. A Mac that never gets there is never held.
++- level 2 or more: at once a limit well below what the game was doing, and
++  a step lower for as long as the level stays, down to a floor.
++- level 1 with a limit: a step higher now and then, but for some minutes not
++  up to the rate the Mac last went to level 2 at.
++- level 0 with a limit: larger steps.
++- a limit that has come back to what the game ran at without one is removed.
++Each return to level 2 remembers a lower rate as too hot, so the limit
++settles under the highest rate the Mac holds.
++
++Nothing here knows about frames or clocks, so it runs in a test by itself.
++*/
++class ThermalPacer {
++public:
++  static constexpr unsigned kHeavy = 2;
++  static constexpr double kFloor = 24.0;
++
++  /** The limit in frames a second after this second, 0 for none. */
++  double
++  update(unsigned level, double frames_per_second) {
++    if (frames_per_second >= 1.0)
++      rate_ = rate_ > 0 ? rate_ + (frames_per_second - rate_) * kRateWeight : frames_per_second;
++    last_second_ = frames_per_second;
++    if (limit_ == 0)
++      free_rate_ = rate_;
++
++    bool rose = level > level_;
++    seconds_at_level_ = level == level_ ? seconds_at_level_ + 1 : 0;
++    level_ = level;
++    seconds_since_step_++;
++    seconds_since_heavy_++;
++
++    if (level_ >= kHeavy) {
++      seconds_since_heavy_ = 0;
++      // A game already slower than the floor (it is loading, or macOS has taken the power) is not helped by a limit
++      if (pacedRate() <= kFloor)
++        return limit_;
++      if (rose || limit_ == 0) {
++        too_hot_ = pacedRate();
++        step(pacedRate() * (limit_ > 0 ? kHeavyAgain : kHeavyFirst));
++      } else if (seconds_since_step_ >= kHeavyStepSeconds) {
++        step(pacedRate() * kHeavyStep);
++      }
++      return limit_;
++    }
++    if (limit_ == 0)
++      return 0;
++    if (level_ == 0) {
++      if (seconds_at_level_ >= kCoolSeconds && seconds_since_step_ >= kCoolStepSeconds)
++        step(limit_ * kCoolStep);
++    } else {
++      bool remembers = seconds_since_heavy_ < kTooHotSeconds;
++      double next = limit_ * kModerateStep;
++      if (seconds_since_step_ >= kModerateStepSeconds && (!remembers || next <= too_hot_ * kBelowTooHot))
++        step(next);
++    }
++    if (limit_ >= free_rate_)
++      limit_ = 0;
++    return limit_;
++  }
++
++  double limit() const { return limit_; }
++  unsigned level() const { return level_; }
++  double rate() const { return rate_; }
++
++private:
++  static constexpr double kRateWeight = 0.5;
++  static constexpr double kHeavyFirst = 0.65;
++  static constexpr double kHeavyAgain = 0.8;
++  static constexpr double kHeavyStep = 0.9;
++  static constexpr unsigned kHeavyStepSeconds = 20;
++  static constexpr double kModerateStep = 1.05;
++  static constexpr unsigned kModerateStepSeconds = 20;
++  static constexpr double kBelowTooHot = 0.9;
++  static constexpr unsigned kTooHotSeconds = 300;
++  static constexpr double kCoolStep = 1.1;
++  static constexpr unsigned kCoolSeconds = 20;
++  static constexpr unsigned kCoolStepSeconds = 10;
++
++  /**
++  What the game is doing: its rate, or the limit when that is what holds it. The rate is the higher of the
++  smoothed one and the last second's, so that a game that has just finished loading is not taken for a slow one.
++  */
++  double
++  pacedRate() const {
++    double rate = std::max(rate_, last_second_);
++    return limit_ > 0 ? std::min(limit_, rate) : rate;
++  }
++
++  void
++  step(double limit) {
++    limit_ = std::max(limit, kFloor);
++    seconds_since_step_ = 0;
++  }
++
++  unsigned level_ = 0;
++  unsigned seconds_at_level_ = 0;
++  unsigned seconds_since_step_ = 0;
++  unsigned seconds_since_heavy_ = 0;
++  double rate_ = 0;
++  double last_second_ = 0;
++  double free_rate_ = 0;
++  double too_hot_ = 0;
++  double limit_ = 0;
++};
++
++} // namespace dxmt
+diff --git a/src/winemetal/unix/winemetal_unix.c b/src/winemetal/unix/winemetal_unix.c
+index eb15647..7e35f87 100644
+--- a/src/winemetal/unix/winemetal_unix.c
++++ b/src/winemetal/unix/winemetal_unix.c
+@@ -9,6 +9,7 @@
+ #include "objc/objc-runtime.h"
+ #include <bootstrap.h>
+ #include <mach/mach_port.h>
++#include <notify.h>
+ #define WINEMETAL_API
+ #include "../winemetal_thunks.h"
+ #include "../airconv_thunks.h"
+@@ -2531,6 +2532,24 @@ _MTLBuffer_updateContents(void *obj) {
+   return STATUS_SUCCESS;
+ }
+ 
++// What `notifyutil -g com.apple.system.thermalpressurelevel` prints: the kernel's own level, which
++// NSProcessInfo's thermalState folds into fewer.
++static NTSTATUS
++_WMTGetThermalPressureLevel(void *obj) {
++  struct unixcall_generic_obj_ret *params = obj;
++  static dispatch_once_t once;
++  static int token = NOTIFY_TOKEN_INVALID;
++  uint64_t level = 0;
++  dispatch_once(&once, ^{
++    if (notify_register_check("com.apple.system.thermalpressurelevel", &token) != NOTIFY_STATUS_OK)
++      token = NOTIFY_TOKEN_INVALID;
++  });
++  if (token == NOTIFY_TOKEN_INVALID || notify_get_state(token, &level) != NOTIFY_STATUS_OK)
++    level = 0;
++  params->ret = level;
++  return STATUS_SUCCESS;
++}
++
+ static NTSTATUS
+ _WMTGetOSVersion(void *obj) {
+   struct unixcall_get_os_version *params = obj;
+@@ -2976,6 +2995,7 @@ const void *__wine_unix_call_funcs[] = {
+     &_MTLCommandBuffer_property,
+     &_MTLDevice_newTileRenderPipelineState,
+     &_MetalDrawable_signalEventWhenPresented,
++    &_WMTGetThermalPressureLevel,
+ };
+ 
+ #ifndef DXMT_NATIVE
+@@ -3113,5 +3133,6 @@ const void *__wine_unix_call_wow64_funcs[] = {
+     &_MTLCommandBuffer_property,
+     &_MTLDevice_newTileRenderPipelineState,
+     &_MetalDrawable_signalEventWhenPresented,
++    &_WMTGetThermalPressureLevel,
+ };
+ #endif
+diff --git a/src/winemetal/winemetal.h b/src/winemetal/winemetal.h
+index 5091781..331ba2e 100644
+--- a/src/winemetal/winemetal.h
++++ b/src/winemetal/winemetal.h
+@@ -1848,6 +1848,9 @@ WINEMETAL_API void SharedEventListener_destroy(obj_handle_t shared_event_listene
+ 
+ WINEMETAL_API void WMTGetOSVersion(uint64_t *major, uint64_t *minor, uint64_t *patch);
+ 
++/** macOS's thermal pressure level: 0 nominal, 1 moderate, 2 heavy, 3 trapping, 4 sleeping. */
++WINEMETAL_API uint64_t WMTGetThermalPressureLevel();
++
+ enum WMTMetalVersion : uint32_t {
+   WMTMetal310 = 310,
+   WMTMetal320 = 320,
+diff --git a/src/winemetal/winemetal_thunks.c b/src/winemetal/winemetal_thunks.c
+index eabd3c4..c6f0a9d 100644
+--- a/src/winemetal/winemetal_thunks.c
++++ b/src/winemetal/winemetal_thunks.c
+@@ -1188,3 +1188,11 @@ MetalDrawable_signalEventWhenPresented(obj_handle_t drawable, obj_handle_t share
+   params.arg1 = value;
+   UNIX_CALL(132, &params);
+ }
++
++WINEMETAL_API uint64_t
++WMTGetThermalPressureLevel() {
++  struct unixcall_generic_obj_ret params;
++  params.ret = 0;
++  UNIX_CALL(133, &params);
++  return params.ret;
++}
