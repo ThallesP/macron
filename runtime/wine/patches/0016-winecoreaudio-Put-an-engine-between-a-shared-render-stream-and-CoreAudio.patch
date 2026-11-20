@@ -1,0 +1,697 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Fri, 20 Nov 2026 02:50:00 +0000
+Subject: [PATCH] winecoreaudio: Put an engine between a shared render stream
+ and CoreAudio.
+
+A shared render stream's event is set by a timer of the driver's own, once
+a period, while CoreAudio takes the sound straight out of the client's
+buffer whenever the device wants some. The two run on different clocks,
+and at different intervals when the stream's sample rate is not the
+device's: the driver sets the device's buffer to the stream's period in
+frames, so a 44100 Hz stream with a 470-frame period on a 48000 Hz device
+is pulled every 9.8 ms and asked for more every 10.7 ms.
+
+A client that keeps a period or two queued, as SDL's WASAPI code does
+(one chunk written at a wake-up, and only when at most one is queued),
+then runs dry whenever a wake-up is a few milliseconds late, and by
+itself when the timer is slower than the pulls.
+
+Now the event follows the device: it is set when CoreAudio's callback has
+asked for a period's worth of frames, as Windows sets it when its engine
+has taken one, and again after a write that leaves less than a period
+beyond the reserve. While the device is not asking, the old timer stands
+in unchanged. No event is set before the first Start. The thread that
+sets it has a time constraint, so it is in the band CoreAudio's own
+threads are in and not behind the game's.
+
+And the stream keeps a reserve the client is not told about, as Windows'
+engine has downstream of the client's buffer: GetCurrentPadding counts
+only what is queued beyond it, GetPosition counts frames as they enter it
+(so the position is still what was written less the padding, and stands
+still after Stop, while the reserve plays out), and GetStreamLatency
+includes one period of it. The reserve starts at five periods, grows by
+what was missing whenever CoreAudio found the buffer short while the
+client was feeding it (up to 200 ms), and after a while without a gap
+gives back, a minute at a time, half of what it did not use.
+
+Every render stream that played prints one line a minute on stderr with
+the frames CoreAudio asked for and did not get, in either mode.
+
+MACRON_AUDIO=upstream leaves streams as they were.
+MACRON_AUDIO_RESERVE=<min ms>[,<max ms>] bounds the reserve.
+MACRON_AUDIO_TIMER=fixed leaves the timer thread in the application band.
+MACRON_AUDIO_REPORT=<seconds> changes how often a stream reports (0: never).
+---
+diff --git a/dlls/winecoreaudio.drv/coreaudio.c b/dlls/winecoreaudio.drv/coreaudio.c
+index 163faff..b9d140f 100644
+--- a/dlls/winecoreaudio.drv/coreaudio.c
++++ b/dlls/winecoreaudio.drv/coreaudio.c
+@@ -48,6 +48,10 @@
+ #include <AudioToolbox/AudioConverter.h>
+ #include <AudioUnit/AudioUnit.h>
+ #include <os/lock.h>
++#include <mach/mach.h>
++#include <mach/mach_time.h>
++#include <mach/thread_policy.h>
++#include <pthread.h>
+ 
+ #undef LoadResource
+ #undef CompareString
+@@ -92,6 +96,8 @@ struct coreaudio_stream
+     HANDLE timer_thread;
+ 
+     BOOL playing, please_quit;
++    BOOL started;                /* Start has succeeded at least once */
++    BOOL timer_realtime;         /* the timer thread has its time constraint */
+     REFERENCE_TIME period;
+     UINT32 period_frames;
+     UINT32 bufsize_frames, resamp_bufsize_frames;
+@@ -102,8 +108,78 @@ struct coreaudio_stream
+     INT32 getbuf_last;
+     WAVEFORMATEX *fmt;
+     BYTE *local_buffer, *cap_buffer, *wrap_buffer, *resamp_buffer, *tmp_buffer;
++
++    /* The engine between a shared render client and CoreAudio (see engine_pulled()). */
++    BOOL engine;
++    semaphore_t wake;            /* the timer thread waits here for CoreAudio to pull */
++    UINT32 ring_frames;          /* size of local_buffer; bufsize_frames is what the client sees */
++    UINT32 reserve_frames;       /* frames kept queued beyond what the client is told about */
++    UINT32 reserve_min_frames, reserve_max_frames;
++    UINT32 event_debt_frames;    /* pulled since the last event */
++    UINT32 drain_frames;         /* of the reserve, still to play after Stop */
++    UINT32 gap_frames;           /* missing so far in the gap CoreAudio is in */
++    UINT32 gap_grown_frames;     /* what that gap has added to the reserve */
++    UINT32 low_water_frames;     /* least left after a pull in this minute */
++    UINT64 review_frames;        /* pulled in this minute */
++    UINT32 quiet_minutes;        /* whole minutes since the last gap */
++    UINT32 hold_minutes;         /* minutes without a gap before the reserve may shrink */
++    BOOL gave_back;              /* the reserve has shrunk since the last gap */
++    UINT64 since_write_frames;   /* pulled since the client last wrote */
++    UINT64 position_floor;       /* the last position reported */
++    UINT64 pull_time, event_time; /* when a period was pulled, when its event was set */
++    unsigned int dev_rate, id;
++    UINT64 report_time;
++    struct audio_stats
++    {
++        UINT64 pulled_frames, missing_frames;
++        UINT32 gaps, longest_gap_frames, writes, events, kicks, timeouts;
++        UINT32 slow_signals, slow_wakes;
++        UINT64 signal_max, set_max, wake_max;
++    } stats;
+ };
+ 
++/* MACRON_AUDIO=upstream leaves every stream as upstream Wine has it.
++ * MACRON_AUDIO_RESERVE=<min ms>[,<max ms>] bounds the reserve (default: one
++ * period to 200 ms; "0,0" is the engine's events without a reserve).
++ * MACRON_AUDIO_TIMER=fixed leaves the engine's timer thread at the priority
++ * upstream gives it instead of a time constraint (see timer_time_constraint()).
++ * MACRON_AUDIO_REPORT=<seconds> is how often a playing stream reports
++ * (default 60; 0 for never). */
++static BOOL engine_disabled, timer_fixed;
++static int reserve_min_ms = -1, reserve_max_ms = 200, report_seconds = 60;
++static mach_timebase_info_data_t timebase;
++
++static void audio_report(struct coreaudio_stream *stream, BOOL last);
++
++static void engine_read_settings(void)
++{
++    const char *setting;
++
++    if(timebase.denom) return;
++    if((setting = getenv("MACRON_AUDIO")) && !strcmp(setting, "upstream")) engine_disabled = TRUE;
++    if((setting = getenv("MACRON_AUDIO_RESERVE"))){
++        char *end;
++        long ms = strtol(setting, &end, 10);
++        if(end != setting && ms >= 0 && ms <= 1000){
++            reserve_min_ms = ms;
++            if(reserve_max_ms < ms) reserve_max_ms = ms;
++            if(*end == ','){
++                setting = end + 1;
++                ms = strtol(setting, &end, 10);
++                if(end != setting && ms >= reserve_min_ms && ms <= 1000) reserve_max_ms = ms;
++            }
++        }
++    }
++    if((setting = getenv("MACRON_AUDIO_TIMER")) && !strcmp(setting, "fixed")) timer_fixed = TRUE;
++    if((setting = getenv("MACRON_AUDIO_REPORT"))) report_seconds = atoi(setting);
++    mach_timebase_info(&timebase);
++}
++
++static UINT64 now_ns(void)
++{
++    return mach_absolute_time() * timebase.numer / timebase.denom;
++}
++
+ static ULONG_PTR zero_bits = 0;
+ 
+ static NTSTATUS unix_not_implemented(void *args)
+@@ -437,6 +513,107 @@ static void convert_to_canonical(const struct coreaudio_stream *stream, const BY
+     }
+ }
+ 
++/* What Windows' audio engine is to a shared stream, between the client's
++ * buffer and CoreAudio.
++ *
++ * Upstream sets a stream's event from a timer of its own, once a period, and
++ * CoreAudio takes the sound straight out of the client's buffer whenever the
++ * device wants some. The two run on different clocks, and at different
++ * intervals when the stream's sample rate is not the device's, so a client
++ * that keeps only a period or two queued (SDL's WASAPI code, which most
++ * engines use) is asked for sound at moments that have nothing to do with
++ * when it is needed, and every wake-up that comes a few milliseconds late
++ * is a gap in the sound.
++ *
++ * Here the event is set when CoreAudio has asked for a period's worth of
++ * frames, as Windows sets it when its engine has taken one, so the client
++ * always has until the next pull. And the stream keeps a reserve the client is not told about:
++ * GetCurrentPadding counts only what is queued beyond it, so a client that
++ * tops its buffer up to some level tops it up to that level plus the
++ * reserve, and a wake-up that is late by less than the reserve costs
++ * nothing. The reserve is what Windows' engine has downstream of the client
++ * buffer: the stream's position counts frames as they enter it, so the
++ * position is still what was written less the padding, and the reserve a
++ * stream starts with is part of the latency GetStreamLatency reports.
++ *
++ * The reserve finds its own size. It starts at five periods, which covers
++ * the stall a game's sound thread has while the game loads. It grows by what
++ * was missing, and a period, whenever CoreAudio found the buffer short while
++ * the client was feeding it, up to reserve_max_frames. And it shrinks: after
++ * a minute without a gap (five, once there has been one), each further such
++ * minute gives back half of what it never used, down to reserve_min_frames;
++ * a gap that comes after the reserve has shrunk doubles that wait, up to 40
++ * minutes, so a stall that recurs every few minutes is not paid for again
++ * and again. After Stop, what the client was not told about still plays, as
++ * what Windows' engine holds does.
++ *
++ * Called with the stream's lock held, on CoreAudio's thread, after it took
++ * `got` of the `wanted` frames of a playing stream. */
++static void engine_pulled(struct coreaudio_stream *stream, UINT32 wanted, UINT32 got)
++{
++    const UINT32 rate = stream->fmt->nSamplesPerSec;
++    BOOL fed = stream->since_write_frames < rate / 2;
++    UINT32 missing = wanted - got;
++
++    stream->stats.pulled_frames += wanted;
++    stream->since_write_frames += wanted;
++
++    if(missing && fed){
++        if(!stream->gap_frames) stream->stats.gaps++;
++        stream->gap_frames += missing;
++        stream->stats.missing_frames += missing;
++        if(stream->gap_frames > stream->stats.longest_gap_frames)
++            stream->stats.longest_gap_frames = stream->gap_frames;
++        stream->review_frames = 0;
++        stream->low_water_frames = ~0u;
++        if(stream->engine && !stream->gap_grown_frames && stream->gap_frames == missing){
++            /* a gap begins: it came too soon after the reserve shrank if it
++             * shrank at all, so the next time it waits twice as long */
++            stream->hold_minutes = stream->gave_back ? min(40, max(5, stream->hold_minutes) * 2)
++                                                     : max(5, stream->hold_minutes);
++            stream->gave_back = FALSE;
++            stream->quiet_minutes = 0;
++        }
++        if(stream->engine){
++            if(stream->gap_frames > stream->reserve_max_frames){
++                /* the client stopped for longer than any reserve covers (it
++                 * is loading, or paused): not what the reserve is for */
++                stream->reserve_frames -= stream->gap_grown_frames;
++                stream->gap_grown_frames = 0;
++            }else{
++                /* by what was missing, and a period more when the gap begins:
++                 * the next wake-up that late is then covered with room */
++                UINT32 want = missing + (stream->gap_frames == missing ? stream->period_frames : 0);
++                UINT32 grown = min(stream->reserve_max_frames, stream->reserve_frames + want) - stream->reserve_frames;
++                stream->reserve_frames += grown;
++                stream->gap_grown_frames += grown;
++            }
++        }
++    }else if(!missing)
++        stream->gap_frames = stream->gap_grown_frames = 0;
++
++    if(!stream->engine) return;
++
++    if(stream->held_frames < stream->low_water_frames) stream->low_water_frames = stream->held_frames;
++    stream->review_frames += wanted;
++    if(stream->review_frames >= (UINT64)rate * 60){
++        stream->quiet_minutes++;
++        if(stream->quiet_minutes > stream->hold_minutes && stream->low_water_frames > stream->reserve_min_frames &&
++           stream->reserve_frames > stream->reserve_min_frames){
++            UINT32 unused = (stream->low_water_frames - stream->reserve_min_frames) / 2;
++            if(unused){
++                if(stream->reserve_frames > stream->reserve_min_frames + unused)
++                    stream->reserve_frames -= unused;
++                else
++                    stream->reserve_frames = stream->reserve_min_frames;
++                stream->gave_back = TRUE;
++            }
++        }
++        stream->review_frames = 0;
++        stream->low_water_frames = ~0u;
++    }
++}
++
+ /* CA is pulling data from us */
+ static OSStatus ca_render_cb(void *user, AudioUnitRenderActionFlags *flags,
+         const AudioTimeStamp *ts, UInt32 bus, UInt32 nframes,
+@@ -444,15 +621,16 @@ static OSStatus ca_render_cb(void *user, AudioUnitRenderActionFlags *flags,
+ {
+     struct coreaudio_stream *stream = user;
+     UINT32 to_copy_bytes, to_copy_frames, chunk_bytes, chunk_frames, lcl_offs_bytes;
++    BOOL signal = FALSE;
+ 
+     os_unfair_lock_lock(&stream->lock);
+ 
+-    if(stream->playing){
++    if(stream->playing || stream->drain_frames){
+         lcl_offs_bytes = stream->lcl_offs_frames * stream->fmt->nBlockAlign;
+-        to_copy_frames = min(nframes, stream->held_frames);
++        to_copy_frames = min(nframes, stream->playing ? stream->held_frames : stream->drain_frames);
+         to_copy_bytes = to_copy_frames * stream->fmt->nBlockAlign;
+ 
+-        chunk_frames = stream->bufsize_frames - stream->lcl_offs_frames;
++        chunk_frames = stream->ring_frames - stream->lcl_offs_frames;
+         chunk_bytes = chunk_frames * stream->fmt->nBlockAlign;
+ 
+         if(stream->mixer_unit){
+@@ -470,16 +648,31 @@ static OSStatus ca_render_cb(void *user, AudioUnitRenderActionFlags *flags,
+         }
+ 
+         stream->lcl_offs_frames += to_copy_frames;
+-        stream->lcl_offs_frames %= stream->bufsize_frames;
++        stream->lcl_offs_frames %= stream->ring_frames;
+         stream->held_frames -= to_copy_frames;
++        if(stream->playing) engine_pulled(stream, nframes, to_copy_frames);
++        else stream->drain_frames -= to_copy_frames;
+     }else
+         to_copy_bytes = to_copy_frames = 0;
+ 
+     if(nframes > to_copy_frames)
+         ca_silence_buffer(data, stream, to_copy_frames, nframes - to_copy_frames);
+ 
++    /* The event follows the device, playing or stopped (the unit always
++     * runs): once for every period's worth of frames it asked for. */
++    if(stream->engine){
++        stream->event_debt_frames += nframes;
++        if(stream->event_debt_frames >= stream->period_frames){
++            stream->event_debt_frames %= stream->period_frames;
++            if(!stream->pull_time) stream->pull_time = now_ns();
++            signal = TRUE;
++        }
++    }
++
+     os_unfair_lock_unlock(&stream->lock);
+ 
++    if(signal) semaphore_signal(stream->wake);
++
+     return noErr;
+ }
+ 
+@@ -1239,6 +1432,8 @@ static HRESULT get_device_sample_rate(AudioDeviceID dev_id, EDataFlow flow,
+     return S_OK;
+ }
+ 
++static unsigned int stream_count;
++
+ static NTSTATUS unix_create_stream(void *args)
+ {
+     struct create_stream_params *params = args;
+@@ -1286,6 +1481,25 @@ static NTSTATUS unix_create_stream(void *args)
+     stream->bufsize_frames = muldiv(params->duration, stream->fmt->nSamplesPerSec, 10000000);
+     if(params->share == AUDCLNT_SHAREMODE_EXCLUSIVE)
+         stream->bufsize_frames -= stream->bufsize_frames % stream->period_frames;
++    stream->ring_frames = stream->bufsize_frames;
++
++    engine_read_settings();
++    stream->id = __sync_add_and_fetch(&stream_count, 1);
++    get_device_sample_rate(stream->dev_id, stream->flow, &stream->dev_rate);
++    stream->low_water_frames = ~0u;
++    stream->since_write_frames = ~(UINT64)0 / 2;
++    if(!engine_disabled && stream->flow == eRender && params->share == AUDCLNT_SHAREMODE_SHARED &&
++       semaphore_create(mach_task_self(), &stream->wake, SYNC_POLICY_FIFO, 0) == KERN_SUCCESS){
++        stream->engine = TRUE;
++        stream->reserve_min_frames = reserve_min_ms < 0 ? stream->period_frames :
++                                     muldiv(reserve_min_ms, stream->fmt->nSamplesPerSec, 1000);
++        stream->reserve_max_frames = max(stream->reserve_min_frames,
++                                         muldiv(reserve_max_ms, stream->fmt->nSamplesPerSec, 1000));
++        stream->reserve_frames = reserve_min_ms < 0 ? min(stream->reserve_max_frames, 5 * stream->period_frames)
++                                                    : stream->reserve_min_frames;
++        stream->hold_minutes = 1;
++        stream->ring_frames += stream->reserve_max_frames;
++    }
+ 
+     if(!(stream->unit = get_audiounit(stream->flow, stream->dev_id))){
+         params->result = AUDCLNT_E_DEVICE_INVALIDATED;
+@@ -1330,13 +1544,13 @@ static NTSTATUS unix_create_stream(void *args)
+         goto end;
+     }
+ 
+-    size = stream->bufsize_frames * stream->fmt->nBlockAlign;
++    size = stream->ring_frames * stream->fmt->nBlockAlign;
+     if(NtAllocateVirtualMemory(GetCurrentProcess(), (void **)&stream->local_buffer, zero_bits,
+                                &size, MEM_COMMIT, PAGE_READWRITE)){
+         params->result = E_OUTOFMEMORY;
+         goto end;
+     }
+-    silence_buffer(stream, stream->local_buffer, stream->bufsize_frames);
++    silence_buffer(stream, stream->local_buffer, stream->ring_frames);
+ 
+     if(stream->flow == eCapture){
+         stream->cap_bufsize_frames = muldiv(params->duration, stream->dev_desc.mSampleRate, 10000000);
+@@ -1349,6 +1563,7 @@ end:
+         if(stream->converter) AudioConverterDispose(stream->converter);
+         if(stream->unit) AudioComponentInstanceDispose(stream->unit);
+         if(stream->mixer_unit) AudioComponentInstanceDispose(stream->mixer_unit);
++        if(stream->engine) semaphore_destroy(mach_task_self(), stream->wake);
+         free(stream->fmt);
+         free(stream);
+     } else {
+@@ -1367,6 +1582,7 @@ static NTSTATUS unix_release_stream( void *args )
+ 
+     if(stream->timer_thread){
+         stream->please_quit = TRUE;
++        if(stream->engine) semaphore_signal(stream->wake);
+         NtWaitForSingleObject(stream->timer_thread, FALSE, NULL);
+         NtClose(stream->timer_thread);
+     }
+@@ -1375,8 +1591,10 @@ static NTSTATUS unix_release_stream( void *args )
+         AudioOutputUnitStop(stream->unit);
+         AudioComponentInstanceDispose(stream->unit);
+     }
++    audio_report(stream, TRUE);
+ 
+     if(stream->mixer_unit) AudioComponentInstanceDispose(stream->mixer_unit);
++    if(stream->engine) semaphore_destroy(mach_task_self(), stream->wake);
+     if(stream->converter) AudioConverterDispose(stream->converter);
+     free(stream->resamp_buffer);
+     free(stream->wrap_buffer);
+@@ -1678,17 +1896,42 @@ static NTSTATUS unix_get_latency(void *args)
+     latency += stream_latency;
+     /* pretend we process audio in Period chunks, so max latency includes
+      * the period time */
+-    *params->latency = muldiv(latency, 10000000, stream->fmt->nSamplesPerSec) + stream->period;
++    /* the reserve the stream starts with is part of it; what it grows by is
++     * not, a stream's latency does not change while it lives */
++    *params->latency = muldiv(latency + stream->reserve_min_frames, 10000000, stream->fmt->nSamplesPerSec) + stream->period;
+ 
+     os_unfair_lock_unlock(&stream->lock);
+     params->result = S_OK;
+     return STATUS_SUCCESS;
+ }
+ 
++/* What is queued that the client is not told about: the reserve, or after
++ * Stop what is left of it to play. See engine_pulled(). */
++static UINT32 hidden_frames(const struct coreaudio_stream *stream)
++{
++    UINT32 hidden = stream->playing ? stream->reserve_frames : stream->drain_frames;
++    return min(hidden, stream->held_frames);
++}
++
++/* A client's call after its event was set: how long the wake-up took. */
++static void engine_client_woke(struct coreaudio_stream *stream)
++{
++    UINT64 took;
++
++    if(!stream->event_time) return;
++    took = now_ns() - stream->event_time;
++    stream->event_time = 0;
++    if(took > (UINT64)2000000000) return; /* it was not waiting for the event */
++    if(took > stream->stats.wake_max) stream->stats.wake_max = took;
++    if(took > (UINT64)stream->period * 100) stream->stats.slow_wakes++;
++}
++
+ static UINT32 get_current_padding_nolock(struct coreaudio_stream *stream)
+ {
+     if(stream->flow == eCapture) capture_resample(stream);
+-    return stream->held_frames;
++    engine_client_woke(stream);
++    /* what is queued beyond the reserve; see engine_pulled() */
++    return min(stream->held_frames - hidden_frames(stream), stream->bufsize_frames);
+ }
+ 
+ static NTSTATUS unix_get_current_padding(void *args)
+@@ -1703,18 +1946,157 @@ static NTSTATUS unix_get_current_padding(void *args)
+     return STATUS_SUCCESS;
+ }
+ 
++/* One line a minute on stderr for each render stream that played: what
++ * CoreAudio asked for and did not get is what was heard as a gap. */
++static void audio_report(struct coreaudio_stream *stream, BOOL last)
++{
++    struct audio_stats stats;
++    UINT32 reserve, low_water;
++    UINT64 now, since;
++
++    if(stream->flow != eRender || !timebase.denom || report_seconds <= 0) return;
++    now = now_ns();
++    if(!stream->report_time) stream->report_time = now;
++    since = now - stream->report_time;
++    if(!last && since < (UINT64)report_seconds * 1000000000) return;
++
++    os_unfair_lock_lock(&stream->lock);
++    stats = stream->stats;
++    memset(&stream->stats, 0, sizeof(stream->stats));
++    reserve = stream->reserve_frames;
++    low_water = stream->low_water_frames;
++    os_unfair_lock_unlock(&stream->lock);
++    stream->report_time = now;
++    if(!stats.pulled_frames) return;
++
++    fprintf(stderr, "macron-audio: stream %u, %u Hz (period %u, buffer %u) on a %u Hz device, %s%s: "
++            "%.1f s, %llu frames pulled, %llu missing in %u gaps (longest %u), %u writes, "
++            "reserve %u (%u to %u, held %u min), least left %d, %u events, %u more after a write, %u without a pull, "
++            "pull to event max %.2f ms (%u over 2 ms), event set max %.2f ms, "
++            "event to client max %.2f ms (%u over a period)\n",
++            stream->id, (unsigned int)stream->fmt->nSamplesPerSec, stream->period_frames, stream->bufsize_frames,
++            stream->dev_rate, stream->engine ? "engine" : "upstream",
++            !stream->engine ? "" : stream->timer_realtime ? ", timer in the real-time band" : ", timer in the application band",
++            since / 1e9, (unsigned long long)stats.pulled_frames, (unsigned long long)stats.missing_frames,
++            stats.gaps, stats.longest_gap_frames,
++            stats.writes, reserve, stream->reserve_min_frames, stream->reserve_max_frames, stream->hold_minutes,
++            low_water == ~0u ? -1 : (int)low_water, stats.events, stats.kicks, stats.timeouts,
++            stats.signal_max / 1e6, stats.slow_signals, stats.set_max / 1e6,
++            stats.wake_max / 1e6, stats.slow_wakes);
++}
++
++/* The engine's timer thread hands CoreAudio's request on to the client: it
++ * sleeps until the device has asked, sets one event and sleeps again, a few
++ * microseconds of work a period. Upstream runs it as Wine runs any
++ * time-critical thread of a normal process, at the top of the application
++ * band, where it queues with the game's own time-critical threads and the
++ * server: on a busy or throttled Mac it then set the event tens of
++ * milliseconds after the device had asked. With a time constraint it is in
++ * the band CoreAudio's own threads are in, which is where the thread that
++ * does this on Windows is too. The server puts a thread back in the
++ * application band whenever it applies a priority (the creator of this
++ * thread sets one just after starting it), so the constraint is set again
++ * now and then. */
++static void timer_time_constraint(struct coreaudio_stream *stream)
++{
++    thread_time_constraint_policy_data_t policy;
++    const UINT64 period_ns = (UINT64)stream->period * 100;
++
++    if(!stream->engine || timer_fixed) return;
++    policy.period = period_ns * timebase.denom / timebase.numer;
++    policy.computation = (UINT64)100000 * timebase.denom / timebase.numer;   /* 0.1 ms */
++    policy.constraint = (UINT64)1000000 * timebase.denom / timebase.numer;   /* within 1 ms */
++    policy.preemptible = 1;
++    stream->timer_realtime = thread_policy_set(pthread_mach_thread_np(pthread_self()), THREAD_TIME_CONSTRAINT_POLICY,
++                                               (thread_policy_t)&policy, THREAD_TIME_CONSTRAINT_POLICY_COUNT) == KERN_SUCCESS;
++}
++
++/* Sets the stream's event from the timer thread. `pulled` is when CoreAudio
++ * asked for the period this event is for, or 0. */
++static void timer_set_event(struct coreaudio_stream *stream, UINT64 pulled)
++{
++    UINT64 before = now_ns(), after;
++
++    /* Windows sets no event before the first Start; upstream does, and
++     * calls the server once a period for a stream that has no event. */
++    if(stream->engine && (!stream->started || !stream->event)){
++        audio_report(stream, FALSE);
++        return;
++    }
++
++    os_unfair_lock_lock(&stream->lock);
++    if(!stream->event_time) stream->event_time = before;
++    os_unfair_lock_unlock(&stream->lock);
++
++    NtSetEvent(stream->event, NULL);
++    after = now_ns();
++
++    os_unfair_lock_lock(&stream->lock);
++    stream->stats.events++;
++    if(pulled){
++        if(before - pulled > stream->stats.signal_max) stream->stats.signal_max = before - pulled;
++        if(before - pulled > 2000000) stream->stats.slow_signals++;
++    }else if(stream->engine)
++        stream->stats.timeouts++;
++    if(after - before > stream->stats.set_max) stream->stats.set_max = after - before;
++    os_unfair_lock_unlock(&stream->lock);
++
++    audio_report(stream, FALSE);
++}
++
++/* The timer thread sets the stream's event once a period.
++ *
++ * Upstream does it from a timer of its own. With the engine the event
++ * follows CoreAudio instead, playing or stopped (the unit always runs):
++ * whenever its callback has asked for a period's worth of frames. While the
++ * device is not asking (it has not started yet, it stalls, it went away)
++ * the timer below stands in, exactly as upstream has it, so a stream gets
++ * its events no later than it did. */
+ static void unix_timer_loop(void *args)
+ {
+     struct coreaudio_stream *stream = args;
++    const UINT64 period_ns = (UINT64)stream->period * 100;
++    mach_timespec_t none = {0, 0}, two_periods;
+     LARGE_INTEGER delay, next, last;
++    BOOL asking = FALSE, asked = FALSE;
++    unsigned int events = 0;
+     int adjust;
+ 
++    two_periods.tv_sec = period_ns * 2 / 1000000000;
++    two_periods.tv_nsec = period_ns * 2 % 1000000000;
++
+     delay.QuadPart = -stream->period;
+     NtQueryPerformanceCounter(&last, NULL);
+     next.QuadPart = last.QuadPart + stream->period;
+ 
+     while(!stream->please_quit){
+-        NtSetEvent(stream->event, NULL);
++        UINT64 pulled = 0;
++
++        if(!(events++ % 64)) timer_time_constraint(stream);
++
++        if(asking){
++            if(!asked && semaphore_timedwait(stream->wake, two_periods) != KERN_SUCCESS){
++                /* back to the timer until it asks again */
++                asking = FALSE;
++                delay.QuadPart = -stream->period;
++                NtQueryPerformanceCounter(&last, NULL);
++                next.QuadPart = last.QuadPart + stream->period;
++            }
++            if(stream->please_quit) break;
++            asked = FALSE;
++            /* several requests the thread slept through are one event */
++            while(asking && semaphore_timedwait(stream->wake, none) == KERN_SUCCESS) ;
++
++            os_unfair_lock_lock(&stream->lock);
++            pulled = stream->pull_time;
++            stream->pull_time = 0;
++            os_unfair_lock_unlock(&stream->lock);
++            if(!asking) pulled = 0;
++        }
++
++        timer_set_event(stream, pulled);
++        if(asking) continue;
++
+         NtDelayExecution(FALSE, &delay);
+         NtQueryPerformanceCounter(&last, NULL);
+ 
+@@ -1726,6 +2108,10 @@ static void unix_timer_loop(void *args)
+ 
+         delay.QuadPart = -(stream->period + adjust);
+         next.QuadPart += stream->period;
++
++        /* the device asked meanwhile: follow it from here on */
++        if(stream->engine && semaphore_timedwait(stream->wake, none) == KERN_SUCCESS)
++            asking = asked = TRUE;
+     }
+ }
+ 
+@@ -1743,6 +2129,10 @@ static NTSTATUS unix_start(void *args)
+         params->result = AUDCLNT_E_NOT_STOPPED;
+     else{
+         stream->playing = TRUE;
++        stream->started = TRUE;
++        stream->drain_frames = 0;
++        /* what CoreAudio misses before the client's first write is no gap */
++        stream->since_write_frames = ~(UINT64)0 / 2;
+         params->result = S_OK;
+     }
+ 
+@@ -1763,6 +2153,7 @@ static NTSTATUS unix_stop(void *args)
+         params->result = S_FALSE;
+     else{
+         stream->playing = FALSE;
++        stream->drain_frames = min(stream->held_frames, stream->reserve_frames);
+         params->result = S_OK;
+     }
+ 
+@@ -1788,6 +2179,8 @@ static NTSTATUS unix_reset(void *args)
+         else
+             stream->written_frames += stream->held_frames;
+         stream->held_frames = 0;
++        stream->drain_frames = 0;
++        stream->position_floor = 0;
+         stream->lcl_offs_frames = 0;
+         stream->wri_offs_frames = 0;
+         stream->cap_offs_frames = 0;
+@@ -1823,7 +2216,7 @@ static NTSTATUS unix_get_render_buffer(void *args)
+         goto end;
+     }
+ 
+-    if(stream->wri_offs_frames + params->frames > stream->bufsize_frames){
++    if(stream->wri_offs_frames + params->frames > stream->ring_frames){
+         if(stream->tmp_buffer_frames < params->frames){
+             if(stream->tmp_buffer){
+                 size = 0;
+@@ -1860,6 +2253,7 @@ static NTSTATUS unix_release_render_buffer(void *args)
+ {
+     struct release_render_buffer_params *params = args;
+     struct coreaudio_stream *stream = handle_get_stream(params->stream);
++    HANDLE event = NULL;
+     BYTE *buffer;
+ 
+     os_unfair_lock_lock(&stream->lock);
+@@ -1883,20 +2277,32 @@ static NTSTATUS unix_release_render_buffer(void *args)
+         if(stream->getbuf_last < 0)
+             ca_wrap_buffer(stream->local_buffer,
+                            stream->wri_offs_frames * stream->fmt->nBlockAlign,
+-                           stream->bufsize_frames * stream->fmt->nBlockAlign,
++                           stream->ring_frames * stream->fmt->nBlockAlign,
+                            buffer, params->written_frames * stream->fmt->nBlockAlign);
+ 
+         stream->wri_offs_frames += params->written_frames;
+-        stream->wri_offs_frames %= stream->bufsize_frames;
++        stream->wri_offs_frames %= stream->ring_frames;
+         stream->held_frames += params->written_frames;
+         stream->written_frames += params->written_frames;
+         stream->getbuf_last = 0;
++        stream->since_write_frames = 0;
++        stream->stats.writes++;
++        /* the next pull would leave less than the reserve, and the client
++         * has room for another period: ask for it now, not after the pull */
++        if(stream->engine && stream->playing && stream->event &&
++           stream->held_frames < stream->reserve_frames + stream->period_frames &&
++           get_current_padding_nolock(stream) + stream->period_frames <= stream->bufsize_frames){
++            event = stream->event;
++            stream->stats.kicks++;
++        }
+ 
+         params->result = S_OK;
+     }
+ 
+     os_unfair_lock_unlock(&stream->lock);
+ 
++    if(event) NtSetEvent(event, NULL);
++
+     return STATUS_SUCCESS;
+ }
+ 
+@@ -2019,6 +2425,15 @@ static NTSTATUS unix_get_position(void *args)
+     os_unfair_lock_lock(&stream->lock);
+ 
+     *params->pos = stream->written_frames - stream->held_frames;
++    if(stream->engine){
++        /* What has left the client's buffer, as on Windows: frames in the
++         * reserve are the engine's, so the position is always what was
++         * written less the padding, and stands still after Stop while the
++         * reserve plays out. It never goes back when the reserve shrinks. */
++        *params->pos += hidden_frames(stream);
++        if(*params->pos < stream->position_floor) *params->pos = stream->position_floor;
++        stream->position_floor = *params->pos;
++    }
+ 
+     if(stream->share == AUDCLNT_SHAREMODE_SHARED)
+         *params->pos *= stream->fmt->nBlockAlign;

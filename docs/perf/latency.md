@@ -73,6 +73,56 @@ Test build 2 (the patches as published, with its own certificate), `DXMT_ENABLE_
 - The screen behind the dialog is black in every screenshot, with FSR2 and DLSS and with the runtime of rc4 alike, so the picture under DLSS is not judged.
 - With the pinned overlays and nothing but the `dlss` switch file (`runtime-wine-11.21-macron.14`, `runtime-dxmt-0.80-macron.2`): the same NGX lines and HUD, 54.5 frames a second and 15.16 ms of GPU time over the first 60 s; two starts without DLSS in the same hour ran at a median 57.7 and 58.75 with 27.3 and 27.75 ms from a frame's start to the end of its GPU work. At the same input size DLSS on MetalFX is no faster here than the game's FSR2.
 
+## The mouse's path
+
+2026-11-20. What was left unmeasured above: the way from a mouse movement to the game. `tools/perf/inputlag.c` is a Windows program that registers for raw mouse input as a game does and takes, for every `WM_INPUT`, the time since the message's own time stamp, which Wine's Mac driver sets from the macOS event's. `tools/perf/mouselag.m` takes the same for a native Cocoa app, and `tools/perf/mousegen.c` moves the pointer 125 times a second. Only on sandboxes (sbx_yvtm7nsq, sbx_l6pifmpi): moving the pointer of a Mac somebody is using is not something a test may do, so **nothing here is from the M3**. 15 s a run.
+
+| | events a second | ms since the event, median | 95th percentile | longest |
+|---|---|---|---|---|
+| native Cocoa app (4 runs) | 57 | 4.2 to 5.4 | 15.3 to 15.8 | 18.8 to 19.8 |
+| native, five busy processes | 58 | 6.6 | 15.3 | 16.9 |
+| Macron, each message handled as it arrives (6 runs) | 30 to 34 | 4 to 6 | 17 to 19 | 21 to 23 |
+| Macron, the same with three ordinary and two high-priority busy threads (4 runs) | 29 to 31 | 3 to 5 | 17 to 18 | 19 to 23 |
+| Macron, messages read once every 8 ms | 26 to 27 | 10 | 20 to 22 | 27 to 42 |
+| Macron, messages read once every 16 ms | 21 to 22 | 12 to 16 | 25 to 30 | 36 to 39 |
+
+- **Wine's part of the path is not measurable against the window server's.** From the macOS event through Cocoa's thread, Wine's event queue, `wineserver` and the message, a program that handles each message as it arrives has it as soon as a native app has its event, with every core busy too. `MACRON_WINESERVER_PRIORITY=normal` made no difference to it there (two runs each way).
+- **A program that reads its messages once a frame waits for the read**: half a frame on average, as on Windows.
+- **Fewer events than the native app is the generator's doing, most likely.** It steps two points right and left; the virtual machine's window server hands on 57 of the 125 steps a second, with coalescing on or off; a merged pair ends where it began, and Wine's server drops a movement to where the pointer already is.
+- **Raw input needs the game's window to be the foreground window.** One run whose window was not (0 of 678 reads) got no `WM_INPUT` at all.
+
+**A game that reads raw input on a thread of its own** (SDL 3 does: a time-critical thread with a message-only window, `dwFlags` 0; `--thread 1` does the same). Under Wine's Mac driver a movement enters the Windows side only while the thread that owns the window under the pointer reads its messages, where on Windows the raw thread has it when the mouse makes it. In every run 0 or 1 of about 350 movements reached the raw thread between two reads. What that costs depends on the registration:
+
+| raw input thread, 12 ms frame | when a frame's read had the movement, median | 95th percentile | reached the raw thread after the read was over |
+|---|---|---|---|
+| with legacy mouse messages, as SDL registers (2 runs) | 14 ms | 25 to 26 ms | 0 and 1 of about 370 |
+| with `RIDEV_NOLEGACY` (2 runs) | 18 to 19 ms | 36 ms | 235 of 394, 243 of 414 |
+
+With legacy messages the main thread is still fetching its `WM_MOUSEMOVE` when the raw thread has its message, so the frame sees the movement in the same read. Without them the read is over first, and six movements in ten are seen a frame late. Deadlock plays through SDL 3, so it is in the first row. **Not built: a way to bring movements in when they happen** (a thread of the driver's that sends them to the server as Cocoa gets them). It would help a game that registers with `RIDEV_NOLEGACY` and reads on another thread; none is known to be affected.
+
+So on the sandboxes the mouse's path is not where a player's lag is. On the M3 the measured part is the frame: 26 ms from a frame's start to the end of its GPU work at 67 frames a second, and 43 to 86 ms once the Mac is at thermal level 2 (below). Deadlock itself has no raw input thread there (78 threads, none named `SDLRawInput`).
+
+## Deadlock on the M3: the size of the picture, and heat
+
+2026-11-19 and 20, thirteen starts in two sessions (threads "Deadlock on the M3: what limits the frame rate" and "Deadlock on the M3: sound with the new driver against the old, and a lighter load against the heat"; the files are in `~/macron-perf/fps/` and `~/macron-perf/audio/` on that Mac). All on the game's first screen: every screenshot is the "Early Development Build" dialog over black, `+map hero_testing` crashed the game (an access violation 17 s after its window) and `+map dl_hideout` showed the same dialog. **So these are that screen's numbers, not a match's.** Runtime `macron.14` with `macron.15`'s server, no Wine traces, DXMT's `Latency:` lines; the Mac had 15 of its 16 GB in use and 9 to 10 GB of swap throughout. "Start to GPU done" is the time from a frame's start, when its input is read, to the end of its GPU work.
+
+| start | frames a second, cool (10 to 40 s) | start to GPU done | later |
+|---|---|---|---|
+| the game's own settings: 1920x1243, FSR2 from a 0.58 scale (5 starts) | 66.7 to 67.8 | 25.5 to 26.4 ms | 40, 24, 21 and 19 at 120 to 150 s, with 43 to 86 ms |
+| half the rendered pixels (`mat_viewportscale` 0.41) | 83.3 | 20.6 ms | 64 at 70 to 100 s |
+| that and every quality setting at its lowest | 84.0 | 20.4 ms | 47 at 70 to 100 s |
+| **a 1280x829 picture**, the same 0.58 scale | **118.0** (0 to 30 s), 112 (30 to 60 s) | **14.8 ms** | 102.5 at 60 to 90 s, 71 after |
+| 1920x1243, capped at 60 | 59.5 | 33.3 ms | 21, 12 and 21 from 90 s on (thermal level 2 from 60 s) |
+| 1920x1243, half the rendered pixels, capped at 60 | 60.0 | 31 to 33 ms | 58 until 150 s, then 40, 40, 47 |
+| **1280x829, capped at 60** | **60.0** | 31 to 32 ms | **60.0 for all 240 s**, level 2 from 162 s on |
+
+- **The picture's size is what costs, not the scale it is rendered at.** Half the rendered pixels at the same picture took the GPU's time a frame from 15.5 ms to 11.7 ms; lowest quality on top, to 11.0 ms. A picture of 44% the size took it to 8.6 ms and the frame rate from 67 to 118. What the game does at the picture's size (its FSR2 pass, what follows it, the interface) is the larger part of a frame here.
+- **100 frames a second is there at 1280x829**, for about a minute and a half from a cool start.
+- **The fanless Mac decides the rest.** Every uncapped start reached thermal level 2 between 61 and 97 s after its window and then fell to a third of its frame rate; `pmset -g therm` named no CPU limit in any sample. Capped at 60, the full-size picture still reached level 2 at 60 s and fell to 12 to 21. The small picture capped at 60 is the one start that held: 60.0 in every 30 s of four minutes.
+- **The lag follows the frame rate**: 14.8 ms at 118, 26 ms at 67, 78 to 86 ms at 19 to 24. A cap adds to it (31 to 33 ms at 60, where the uncapped 67 has 26): the game waits between frames after it has read its input.
+- The game's CPU side is not the limit: its busiest thread took 38 to 71% of a core, `wineserver` 5 to 8%.
+- 1280x829 was a window in the middle of a 1920x1243 desktop. Whether the game's own full-screen mode at such a size runs the same was not tried: it changes the display's mode, which a test on somebody's desktop may not do.
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.

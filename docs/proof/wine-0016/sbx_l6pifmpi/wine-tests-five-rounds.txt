@@ -1,0 +1,21 @@
+gcenx-1 dsound dsound8: exit 0; dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+gcenx-1 mmdevapi render: exit 1; render: 5220 tests executed (48 marked as todo, 3 as flaky, 1 failure), 2 skipped.; failed:  1 render.c:1288,
+patched-1 dsound dsound8: exit 0; dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+patched-1 mmdevapi render: exit 0; render: 5220 tests executed (48 marked as todo, 2 as flaky, 0 failures), 2 skipped.; failed: 
+gcenx-2 dsound dsound8: exit 0; dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+gcenx-2 mmdevapi render: exit 1; render: 5216 tests executed (48 marked as todo, 3 as flaky, 1 failure), 2 skipped.; failed:  1 render.c:1288,
+patched-2 dsound dsound8: exit 0; dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+patched-2 mmdevapi render: exit 2; render: 5220 tests executed (48 marked as todo, 2 as flaky, 2 failures), 2 skipped.; failed:  1 render.c:1288, 1 render.c:1297,
+gcenx-3 dsound dsound8: exit 0; dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+gcenx-3 mmdevapi render: exit 0; render: 5218 tests executed (48 marked as todo, 3 as flaky, 0 failures), 2 skipped.; failed: 
+patched-3 dsound dsound8: exit 0; dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+patched-3 mmdevapi render: exit 2; render: 5220 tests executed (48 marked as todo, 2 as flaky, 2 failures), 2 skipped.; failed:  1 render.c:1288, 1 render.c:1297,
+gcenx-4 dsound dsound8: exit 1; dsound8: 8186 tests executed (5 marked as todo, 0 as flaky, 1 failure), 0 skipped.; failed:  1 dsound8.c:1800,
+gcenx-4 mmdevapi render: exit 0; render: 5218 tests executed (48 marked as todo, 3 as flaky, 0 failures), 2 skipped.; failed: 
+patched-4 dsound dsound8: exit 0; dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+patched-4 mmdevapi render: exit 1; render: 5220 tests executed (48 marked as todo, 3 as flaky, 1 failure), 2 skipped.; failed:  1 render.c:1297,
+gcenx-5 dsound dsound8: exit 0; dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+gcenx-5 mmdevapi render: exit 1; render: 5220 tests executed (48 marked as todo, 3 as flaky, 1 failure), 2 skipped.; failed:  1 render.c:1288,
+patched-5 dsound dsound8: exit 0; dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+patched-5 mmdevapi render: exit 1; render: 5220 tests executed (48 marked as todo, 1 as flaky, 1 failure), 2 skipped.; failed:  1 render.c:1288,
+REPEAT-DONE

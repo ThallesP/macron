@@ -3,14 +3,23 @@
  *
  *   sndload.exe [--task NAME|none] [--seconds S] [--load N] [--high N]
  *               [--mix MS] [--stream 0|1] [--wake event|address]
- *               [--timer sleep|address] [--out FILE]
+ *               [--timer sleep|address] [--policy fill|sdl] [--rate HZ]
+ *               [--out FILE]
  *
  * The sound thread does what a game's does: it opens a shared, event-driven
  * WASAPI stream on the default output with a 512-frame period (as Deadlock
  * does), registers with AvSetMmThreadCharacteristicsW(NAME) unless NAME is
  * `none` (default "Pro Audio"), and at every wake-up fills the free part of
  * the buffer with silence after spinning for MS milliseconds (default 2: a
- * game mixes). Nothing is heard. Without an output device, or with
+ * game mixes). Nothing is heard. With --policy sdl it opens and feeds the
+ * stream as SDL's WASAPI code does, which is how Deadlock and most engines
+ * play: the device's default period as the chunk, and one chunk written at a
+ * wake-up when at most one is still queued, so never more than two periods
+ * are queued. --rate opens the stream at that sample rate instead of the
+ * device's (Deadlock mixes at 44100 whatever the device runs at). What was
+ * heard is not something the program can see: Wine's driver reports the
+ * frames CoreAudio asked for and did not get (the `macron-audio:` lines of
+ * Wine patch 0016, on stderr). Without an output device, or with
  * --stream 0, a time-critical thread sets the event every 10 ms instead, as
  * Wine's own audio timer thread does, against a 35 ms buffer on paper. That
  * thread notes when each tick was due and when it signalled, so RESULT tick
@@ -55,7 +64,8 @@ static FILE *result_file;
 static volatile LONG quit;
 static LARGE_INTEGER frequency;
 static HANDLE wake_event;
-static BOOL wake_by_address, timer_waits_on_address;
+static BOOL wake_by_address, timer_waits_on_address, sdl_policy;
+static unsigned long stream_rate;
 static volatile LONG tick_count;
 static volatile double tick_due_ms[TICK_RING], tick_signalled_ms[TICK_RING];
 
@@ -147,6 +157,10 @@ struct stream {
     IAudioClient *client;
     IAudioRenderClient *render;
     UINT32 buffer_frames;
+    UINT32 chunk_frames;
+    unsigned long rate;
+    unsigned long long written_frames;
+    unsigned writes;
     double period_ms;
     double buffer_ms;
 };
@@ -168,12 +182,37 @@ static BOOL open_stream(struct stream *stream)
     hr = IAudioClient_GetMixFormat(stream->client, &format);
     if (FAILED(hr)) { result("RESULT stream: GetMixFormat hr=0x%08lx\n", (unsigned long)hr); return FALSE; }
 
-    hr = IAudioClient_QueryInterface(stream->client, &IID_IAudioClient3, (void **)&client3);
-    if (SUCCEEDED(hr))
-        hr = IAudioClient3_InitializeSharedAudioStream(client3, AUDCLNT_STREAMFLAGS_EVENTCALLBACK, PERIOD_FRAMES, format, NULL);
-    if (FAILED(hr))
-        hr = IAudioClient_Initialize(stream->client, AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
-                                     (REFERENCE_TIME)(3.0 * PERIOD_FRAMES * 10000000.0 / format->nSamplesPerSec + 0.5), 0, format, NULL);
+    unsigned long device_rate = format->nSamplesPerSec;
+    DWORD flags = AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
+    if (stream_rate && stream_rate != device_rate) {
+        format->nSamplesPerSec = stream_rate;
+        format->nAvgBytesPerSec = stream_rate * format->nBlockAlign;
+        flags |= AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM | AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY;
+    }
+    stream->chunk_frames = PERIOD_FRAMES;
+    if (sdl_policy) {
+        /* SDL: the default buffer, and the device's default period as the chunk */
+        REFERENCE_TIME default_period = 0;
+        hr = IAudioClient_Initialize(stream->client, AUDCLNT_SHAREMODE_SHARED,
+                                     flags | AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM | AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY, 0, 0,
+                                     format, NULL);
+        if (SUCCEEDED(hr)) hr = IAudioClient_GetDevicePeriod(stream->client, &default_period, NULL);
+        if (SUCCEEDED(hr)) {
+            double frames = default_period * (double)format->nSamplesPerSec / 10000000.0;
+            stream->chunk_frames = (UINT32)frames;
+            if (stream->chunk_frames < frames) stream->chunk_frames++;
+        }
+    } else {
+        hr = IAudioClient_QueryInterface(stream->client, &IID_IAudioClient3, (void **)&client3);
+        if (SUCCEEDED(hr)) {
+            hr = IAudioClient3_InitializeSharedAudioStream(client3, flags, PERIOD_FRAMES, format, NULL);
+            IAudioClient3_Release(client3);
+        }
+        if (FAILED(hr))
+            hr = IAudioClient_Initialize(stream->client, AUDCLNT_SHAREMODE_SHARED, flags,
+                                         (REFERENCE_TIME)(3.0 * PERIOD_FRAMES * 10000000.0 / format->nSamplesPerSec + 0.5), 0, format,
+                                         NULL);
+    }
     if (FAILED(hr)) { result("RESULT stream: Initialize hr=0x%08lx\n", (unsigned long)hr); return FALSE; }
 
     IAudioClient_GetBufferSize(stream->client, &stream->buffer_frames);
@@ -181,13 +220,18 @@ static BOOL open_stream(struct stream *stream)
     hr = IAudioClient_GetService(stream->client, &IID_IAudioRenderClient, (void **)&stream->render);
     if (FAILED(hr)) { result("RESULT stream: GetService hr=0x%08lx\n", (unsigned long)hr); return FALSE; }
 
-    stream->period_ms = PERIOD_FRAMES * 1000.0 / format->nSamplesPerSec;
+    REFERENCE_TIME latency = 0;
+    IAudioClient_GetStreamLatency(stream->client, &latency);
+    stream->rate = format->nSamplesPerSec;
+    stream->period_ms = stream->chunk_frames * 1000.0 / format->nSamplesPerSec;
     stream->buffer_ms = stream->buffer_frames * 1000.0 / format->nSamplesPerSec;
-    result("RESULT stream: %lu Hz, %u channels, buffer %u frames (%.2f ms), period %.2f ms\n", (unsigned long)format->nSamplesPerSec,
-           format->nChannels, stream->buffer_frames, stream->buffer_ms, stream->period_ms);
+    result("RESULT stream: %lu Hz on a %lu Hz device, %u channels, buffer %u frames (%.2f ms), period %u frames (%.2f ms), latency %.2f ms, policy %s\n",
+           stream->rate, device_rate, format->nChannels, stream->buffer_frames, stream->buffer_ms, stream->chunk_frames,
+           stream->period_ms, latency / 10000.0, sdl_policy ? "sdl" : "fill");
     return TRUE;
 }
 
+/* Returns what was queued before the write. */
 static UINT32 fill(struct stream *stream)
 {
     UINT32 padding = 0;
@@ -195,8 +239,12 @@ static UINT32 fill(struct stream *stream)
 
     IAudioClient_GetCurrentPadding(stream->client, &padding);
     UINT32 frames = stream->buffer_frames - padding;
-    if (frames && SUCCEEDED(IAudioRenderClient_GetBuffer(stream->render, frames, &data)))
-        IAudioRenderClient_ReleaseBuffer(stream->render, frames, AUDCLNT_BUFFERFLAGS_SILENT);
+    if (sdl_policy) frames = padding <= stream->chunk_frames ? stream->chunk_frames : 0;
+    if (frames && SUCCEEDED(IAudioRenderClient_GetBuffer(stream->render, frames, &data)) &&
+        SUCCEEDED(IAudioRenderClient_ReleaseBuffer(stream->render, frames, AUDCLNT_BUFFERFLAGS_SILENT))) {
+        stream->written_frames += frames;
+        stream->writes++;
+    }
     return padding;
 }
 
@@ -217,6 +265,8 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--stream")) want_stream = atoi(argv[i + 1]);
         else if (!strcmp(argv[i], "--wake")) wake_by_address = !strcmp(argv[i + 1], "address");
         else if (!strcmp(argv[i], "--timer")) timer_waits_on_address = !strcmp(argv[i + 1], "address");
+        else if (!strcmp(argv[i], "--policy")) sdl_policy = !strcmp(argv[i + 1], "sdl");
+        else if (!strcmp(argv[i], "--rate")) stream_rate = strtoul(argv[i + 1], NULL, 10);
         else if (!strcmp(argv[i], "--out")) out = argv[i + 1];
     }
     result_file = fopen(out, "w");
@@ -261,10 +311,18 @@ int main(int argc, char **argv)
     LONG consumed = 0;
     unsigned empty = 0, timeouts = 0;
     double start = now_ms(), last = 0, warm_until = start + 2000, end = start + 2000 + seconds * 1000;
+    unsigned long long written_before = 0;
+    unsigned writes_before = 0;
+    double measured_from = 0;
     while (now_ms() < end && wakes < MAX_WAKES) {
         if (!wait_for_tick(consumed)) { timeouts++; continue; }
         double woke = now_ms();
         BOOL measuring = woke >= warm_until;
+        if (measuring && !measured_from) {
+            measured_from = woke;
+            written_before = stream.written_frames;
+            writes_before = stream.writes;
+        }
         if (measuring && last) intervals[wakes++] = woke - last;
         LONG newest = tick_count, oldest = consumed + 1;
         if (measuring && !streaming && newest >= oldest && newest - oldest < TICK_RING) {
@@ -276,11 +334,15 @@ int main(int argc, char **argv)
         spin_ms(mix_ms);
         if (streaming && fill(&stream) == 0 && measuring) empty++;
     }
+    double measured_ms = now_ms() - measured_from;
     InterlockedExchange(&quit, 1);
     if (streaming) IAudioClient_Stop(stream.client);
     int at_end = GetThreadPriority(GetCurrentThread());
     if (registration) AvRevertMmThreadCharacteristics(registration);
     int reverted = GetThreadPriority(GetCurrentThread());
+    /* releasing the stream makes Wine's driver print its last report */
+    if (stream.render) IAudioRenderClient_Release(stream.render);
+    if (stream.client) IAudioClient_Release(stream.client);
 
     if (!wakes) {
         result("RESULT wake: FAILED no wake-ups, %u timeouts\n", timeouts);
@@ -295,6 +357,9 @@ int main(int argc, char **argv)
     result("RESULT wake intervals %zu ms p50 %.2f p95 %.2f p99 %.2f max %.2f later_than_two_periods %u later_than_buffer %u found_empty %u timeouts %u\n",
            wakes, intervals[wakes / 2], intervals[wakes * 95 / 100], intervals[wakes * 99 / 100], intervals[wakes - 1], late_periods,
            late_buffer, empty, timeouts);
+    if (streaming)
+        result("RESULT written %llu frames in %u writes over %.2f s, which plays %llu frames\n", stream.written_frames - written_before,
+               stream.writes - writes_before, measured_ms / 1000.0, (unsigned long long)(measured_ms * stream.rate / 1000.0));
     if (ticks) {
         result_spread("timer_late", timer_late, ticks);
         result_spread("signal_to_wake", signal_to_wake, ticks);
