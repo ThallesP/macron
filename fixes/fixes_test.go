@@ -93,8 +93,8 @@ func TestDeadlockIsShownASmallerScreenOnTheBaseChips(t *testing.T) {
 
 	deadlock := db.ForSteamApp(1422450)
 
-	if deadlock.ID != Default("steam-1422450").ID || deadlock.RenderPixels != 1440*932 {
-		t.Fatalf("app 1422450 got profile %q with renderPixels %d, want the id it had without a profile and 1440x932", deadlock.ID, deadlock.RenderPixels)
+	if deadlock.ID != Default("steam-1422450").ID || deadlock.RenderPixels != 780000 {
+		t.Fatalf("app 1422450 got profile %q with renderPixels %d, want the id it had without a profile and 780000", deadlock.ID, deadlock.RenderPixels)
 	}
 	if !slices.Contains(deadlock.RenderPixelsChips, "Apple M3") || slices.Contains(deadlock.RenderPixelsChips, "Apple M3 Max") {
 		t.Errorf("chips %q: want the M3 and not the M3 Max", deadlock.RenderPixelsChips)

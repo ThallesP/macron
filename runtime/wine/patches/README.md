@@ -237,11 +237,34 @@ It is for a game that the GPU cannot draw at the display's size. On Thalles's M3
 - OpenGL surfaces are not scaled: this is for Direct3D through DXMT, and a profile may only ask for it with that backend.
 - The setting is read from the process's environment block, so `winemac.so` imports nothing new.
 
-`macron` sets the variable for a game whose profile names a size (`renderPixels`) on the chips the profile names (`renderPixelsChips`), unless whoever starts the game has set it; `MACRON_RENDER_PIXELS=0` turns it off. `fixes/games/steam-1422450.json` (Deadlock) is the first: 1440x932 pixels' worth on the chips with the base GPU.
+`macron` sets the variable for a game whose profile names a size (`renderPixels`) on the chips the profile names (`renderPixelsChips`), unless whoever starts the game has set it; `MACRON_RENDER_PIXELS=0` turns it off. `fixes/games/steam-1422450.json` (Deadlock) is the first: 780,000 pixels (1098x711 on that display) on the chips with the base GPU.
 
 On a sandbox (sbx_dzv7m2rb, a 1024x768-point display) with `tools/perf/gpuload.c --borderless 1` and `MACRON_RENDER_PIXELS=442368`: Windows sees a 768x576 screen and that one mode (33 modes without the setting); the Direct3D 11 window is at 0,0 and 1024x768 points on the Mac; clicks at five places on the Mac arrive at three quarters of their coordinates (950,300 at 712,225; 1000,740 at 750,555); the picture and a console window beside it are drawn a third larger and smoothed. A request for 640x480 is refused, one for the display's own mode accepted, and DXGI's exclusive full screen succeeds with the screen's size unchanged, exactly as without the setting. 900,000 (more than the display has) and 20,000 (below a third of its width) change nothing.
 
+**On Thalles's M3** (1920x1243 points on a 2880x1864 panel; two sessions of 2026-11-20, eleven starts of Deadlock with its own choice of settings, no `video.txt`; `docs/perf/latency.md` has the frame times). The game's window is at 0,0 and 1920x1243 points in every start of the second build, the display's mode is the same before and after, the picture fills the screen edge to edge with nothing cut off, shifted or doubled, and its text is soft. Frames a second on the title screen (a drawn city) while the Mac is cool:
+
+| the screen the game is shown | what the game chose | frames a second | start to GPU done |
+|---|---|---|---|
+| the display's own, 1920x1243 (the setting off) | renders 1112x720, upscales | 75.0 and 74.5 | 22.9 to 23.9 ms |
+| 1440x932 (1,342,080) | renders 1112x720, upscales | 90.3 and 89.0 | 18.9 to 19.5 ms |
+| 1280x829 (1,061,120) | renders 1112x720, upscales | 92.6 and 93.6; 93.4 and 92.7 | 18.6 to 19.1 ms |
+| 1098x711 (780,000), two starts | renders 1098x711, no upscaling | 97.3, 100.1, 100.1; 100.2, 99.2 | 16.5 to 18.1 ms |
+| 1024x663 (680,000) | renders 1024x663, no upscaling | 107.2, 104.0 | 15.9 to 16.2 ms |
+
+The game renders 720 lines whatever it is shown and upscales to the screen's size, so a smaller screen takes away the work at the screen's size and no more until the screen is itself below 720 lines. `+mat_viewportscale` on the command line does not change that (the game wrote its own 0.87 over a 0.58). With the `video.txt` of a player who already ran the game at the display's size (a 0.58 scale), a 1440x932 screen ran at 102.0 and 100.9. The first build, with one factor for both directions, made the 1280x829 screen a window of 1920x1244 points; the second is exact for all four sizes.
+
 Like 0001, 0002 and 0005 it changes only `winemac.so`, which `../check-abi.sh` checks.
+
+## 0018: the thread that writes an event-driven stream gets a time constraint
+
+A game's sound thread waits for the stream's event, mixes a period and writes it. Registered for "Pro Audio" it is at the top of the application band (0014), where it queues behind the game's other time-critical threads and Wine's server whenever every core has one of them computing: macOS does not let threads of one fixed priority preempt each other (`docs/proof/wine-0016/m3/README.md`). On Windows a registered thread runs above all of those.
+
+The thread that writes a shared, event-driven render stream now gets a time constraint with a quarter of the stream's period declared as its work, as the driver's own timer thread has since 0016. It is set from `ReleaseBuffer`, again every 64 writes because the server undoes it whenever it applies a priority to the thread. A stream without an event may be written from any thread, a game's main one too, and is left alone, as is everything with `MACRON_AUDIO=upstream`. `MACRON_AUDIO_CLIENT=fixed` leaves the thread where the client put it; a stream's report line says "timer and client in the real-time band" or "timer in the real-time band".
+
+- **A thread that mixes for longer than it declared is not put back.** `tools/perf/wakelat.c <s> <busy> realtime 0 0 <work ms>` on a sandbox: a real-time thread that declared 0.5 ms and computed 2, 6 and 9 ms of every 10 was woken within 0.03, 0.03 and 0.06 ms 99 times of 100 (a thread at priority 63 computing 9 ms: 2.8 ms).
+- **On Thalles's M3**, six starts of Deadlock, three each way (`MACRON_AUDIO_CLIENT=fixed` for the other). No frame was missing in any report of either. From CoreAudio's request to the game's write, the longest in each half minute after the first: 0.09 to 1.6 ms with the constraint, and the event's setting was all of it; 0.09 to 4.0 ms without on the title screen, and 17.8 ms once in the practice map with the Mac throttled to 14 frames a second (the write came 11.5 ms after the event was set, and the reserve went down to 1,024 frames). The first half minute of every start has one wait of 28 to 52 ms with either: the game loading holds the call that sets the event.
+- **What it does not change:** the game's own `Audio device starved 512 samples`. 3, 0, 1 and 4 lines with the constraint, 3 and 6 without; all but six of them in the first 12 s, while the game loads, and those six between 132 and 137 s in the two practice-map starts, when the Mac was at thermal level 2 and the game at 14 to 18 frames a second. That is the game's mixer having nothing ready, not the thread that writes.
+- Wine's own sound tests, three rounds against 0016's driver on a sandbox: see `docs/proof/wine-0018/`.
 
 ## Building
 
