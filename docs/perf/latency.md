@@ -265,6 +265,21 @@ Thalles: speed is to come from Macron's, Wine's and DXMT's code, not from a smal
 - The pass before the interface is where a game's temporal upscaler runs: Deadlock's FSR2, from 1112x720 to 1920x1243, as a Direct3D compute shader that DXMT translates. It fits the reading of the same day's start with the `dlss` switch, where MetalFX's temporal upscaler did that step instead and the GPU's work on a frame was 13.1 ms against 18.2 ms (behind a warning box, so of a scene nobody saw).
 - Encoders, command buffers and textures carry no names (DXMT labels nothing), so a pass is known by its place in the frame only. The display's tables were empty: the display was asleep.
 
+### What a frame asks of Wine's server
+
+On macOS every wait on an event or a semaphore, every handle, every socket call is a request to Wine's server: a round trip for the calling thread and a turn of the one thread the server has. Nothing had counted them without `WINEDEBUG=+server`, which slows the server to a crawl. A test build of the server counts them by name when `MACRON_SERVER_STATS` names a file (Wine patch 0020, on branch `wine-0020`, not shipped). The published rc9 with that server, the display's own size, thermal level 0 (thread "how many requests to Wine's server a frame costs, and which"):
+
+| | frames a second | requests a second | requests a frame | the server's share of a core |
+|---|---|---|---|---|
+| the practice map | 75.9 | 14,000 to 16,600 | 211 (204 to 223) | 9% |
+| the title screen | 92 | 14,700 to 15,100 | 160 | |
+
+Of the practice map's 945,363 requests in a minute: `socket_get_events` 47.6%, `select` 18.0%, `event_op` 17.1%, `close_handle` 5.6%, `create_event` 3.5%, `set_async_direct_result` 2.4%, `create_semaphore` 2.1%, `recv_socket` 1.6%, `release_semaphore` 1.3%, `send_socket` 0.8%.
+
+- **Half of everything the server is asked is one question about sockets**: `socket_get_events` (what `WSAEnumNetworkEvents` asks), 7,000 to 7,900 times a second on the title screen and in the map alike, whatever the frame rate, against 256 packets received a second and 128 sent. On Windows that call costs a microsecond; here each is a round trip. Which thread and which module asks is the next session's question.
+- **Waits and wake-ups are 80 a frame** (`select`, `event_op`, the semaphores, and the events and semaphores made and closed again: about 6,000 a second). An in-process path for them, as Linux has in ntsync, would take those round trips away: at something like 20 microseconds each for the caller, a millisecond and a half of a frame's 13, spread over the game's threads.
+- So Wine's server is not where a frame's time goes on a cool Mac. It is where the processor's time goes that a throttled one has least of, and the socket question is the larger and stranger part of it.
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.
