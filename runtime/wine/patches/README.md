@@ -194,30 +194,33 @@ Upstream's driver has no engine: CoreAudio takes a stream's sound straight out o
 SDL's WASAPI code, which Deadlock and most engines play through, writes one chunk at a wake-up and only when at most one chunk is still queued. So it never has more than two periods queued, relies on being asked at the right moments, and under upstream's driver is not: every wake-up a few milliseconds late is a gap, and when the timer's interval is longer than the pulls' it runs dry by itself.
 
 The patch:
-- **The event is set when CoreAudio has taken a period's worth of frames**, as Windows sets it when its engine has, by the stream's timer thread, which waits on a Mach semaphore that CoreAudio's thread signals. A stopped stream, and a device that stops pulling, get the event once a period as before.
-- **A reserve the client is not told about.** `GetCurrentPadding` counts only what is queued beyond the reserve, so a client that tops its buffer up to some level tops it up to that level plus the reserve, and a wake-up late by less than the reserve costs nothing. The reserve is what Windows' engine has downstream of the client's buffer. It starts at one period. It grows by what was missing whenever CoreAudio found the buffer short while the client was feeding it, up to 100 ms, and gives back half of what five minutes without a gap never used. A gap longer than 100 ms is a client that stopped (loading, a breakpoint) and changes nothing. `GetStreamLatency` includes the reserve; the stream's position was always what CoreAudio has taken, and still is.
+- **The event follows the device.** It is set when CoreAudio's callback has asked for a period's worth of frames, as Windows sets it when its engine has taken one, by the stream's timer thread, which waits on a Mach semaphore the callback signals. While the device is not asking (it has not started, it stalls, it went away) upstream's own timer stands in, unchanged, so a stream gets its events no later than it did.
+- **A reserve the client is not told about.** `GetCurrentPadding` counts only what is queued beyond the reserve, so a client that tops its buffer up to some level tops it up to that level plus the reserve, and a wake-up late by less than the reserve costs nothing. The reserve is what Windows' engine has downstream of the client's buffer, and it is accounted the same way: `GetPosition` counts frames as they enter the reserve, so the position is still what was written less the padding, and stands still after `Stop`; `GetStreamLatency` includes the reserve a stream starts with, and does not change while the stream lives.
+- **The reserve finds its own size.** It starts at one period. It grows by what was missing whenever CoreAudio found the buffer short while the client was feeding it, up to 100 ms, and gives back half of what five minutes without a gap never used. A gap longer than 100 ms is a client that stopped (loading, a breakpoint) and changes nothing. **This is sound heard later**: by one period (about 10 ms) on a stream that never had a gap, by up to 100 ms on one that had long ones.
 - **An event after a write that leaves less than a period beyond the reserve**, if the client has room for another period: that is how the reserve fills at the start and refills after a late wake-up, and how a client whose chunk is smaller than what CoreAudio pulls keeps up.
 - **After `Stop` the reserve still plays**, as what Windows' engine holds does, so a sound that a client stops when its padding reaches zero is not cut short.
+- **No event before the first `Start`.** Windows sets none; upstream sets it as soon as a `Start` was tried (Wine's test `render.c:1282` fails whenever upstream's timer is on time).
 - **One line a minute on stderr for every render stream that played** (so in a game's `macron` log), with the old driver's behaviour too: the frames CoreAudio pulled, how many were missing and in how many gaps, the reserve, and the longest times from a pull to its event, inside `NtSetEvent`, and from the event to the client's next call.
 
 What it does not change: exclusive streams, capture streams, and how late a client's thread is woken (0014 and 0015 are about that; with a reserve it matters less).
 
 `MACRON_AUDIO=upstream` leaves streams as upstream has them (the report stays), `MACRON_AUDIO_RESERVE=<min ms>[,<max ms>]` bounds the reserve, `MACRON_AUDIO_REPORT=<seconds>` changes how often a stream reports (0: never). They are for tests, like `MACRON_WINESERVER_PRIORITY`.
 
-What a client can notice: `GetCurrentPadding` under-reports by the reserve, so a program that computes what was played from its padding (winmm's `WOM_DONE`) is early by the reserve, one period unless the stream had gaps.
+**On a sandbox** (sbx_l6pifmpi, three cores, a 48000 Hz virtual output device) with `tools/perf/sndload.c --policy sdl`, which opens and feeds a stream as SDL does, 30 s a run, one run each. A sandbox's timers are worse than a Mac's (upstream's timer woke the client a median 23 ms apart instead of 10.7), so the left column is worse than a real Mac's; what the runs show is that the engine does not depend on it. The frames are what CoreAudio asked for and how many of them it did not get.
 
-On a sandbox (sbx_l6pifmpi, three cores, a 48000 Hz virtual output device) with `tools/perf/sndload.c --policy sdl`, which opens and feeds a stream as SDL does, 22 s a run, nothing else running. A sandbox's own timer is worse than a Mac's (upstream's timer thread woke the client a median 22 to 24 ms apart instead of 10.7), so the left column is worse than a real Mac's; what the runs show is that the engine does not depend on it.
-
-| stream | upstream: frames missing of those pulled, gaps | engine |
+| stream | upstream | engine |
 |---|---|---|
-| 44100 Hz, SDL's policy | 676,016 of 1,058,804 (64%), 686 gaps | 0 of 1,048,873 |
-| 48000 Hz, SDL's policy | 690,812 of 1,153,024 (60%), 660 gaps | 0 of 1,149,440 |
-| 44100 Hz, a client that fills its buffer | 131,428 of 882,941 (15%), 236 gaps | 0 of 883,411 |
-| 48000 Hz, a client that fills its buffer | 145,408 of 961,024 (15%), 238 gaps | 0 of 961,024 |
+| 44100 Hz, SDL's policy | 828,924 of 1,313,142 missing (63%), 837 gaps | 3,399 of 1,322,642 (0.26%), 2 gaps |
+| 48000 Hz, SDL's policy | 880,056 of 1,442,304 (61%), 799 gaps | 3,284 of 1,437,184 (0.23%), 2 gaps |
+| 44100 Hz, a client that fills its buffer | 195,039 of 1,324,176 (15%), 353 gaps | 2,656 of 1,323,235, 2 gaps |
+| 48000 Hz, a client that fills its buffer | 198,144 of 1,441,280 (14%), 330 gaps | 3,072 of 1,440,256, 1 gap |
+| 48000 Hz, SDL's policy, every core busy | 96,714 of 1,440,768 (6.7%), 127 gaps | 2,155 of 1,441,280, 2 gaps |
 
-With every core busy (three ordinary and one high-priority thread, 32 s): upstream 112,287 of 1,633,280 frames missing in 140 gaps; the engine 3,331 in one gap (a 70 ms stall of the virtual machine, after which the reserve was 3,843 frames and the last 4 s had none).
+The engine's one or two gaps a run are the virtual machine stopping for about 100 ms (the client's longest wait for its wake-up was 74 to 108 ms in those runs, 81 to 151 ms with upstream), longer than the reserve had grown to; after them it stood at 2,667 to 3,869 frames (56 to 88 ms). The event itself, on a stream nobody feeds: every 10.66 ms (95th percentile 14.5 ms) with the engine, playing or stopped, and every 20.5 ms (47 ms) with upstream.
 
-`winecoreaudio.so` is a Unix library. `../check-unix-lib.sh` checks that an unpatched build imports, exports and links what Gcenx's does and that the patch adds only the imports named in `build-overlay.sh` (the Mach semaphore calls, `mach_absolute_time`, `getenv`, `fprintf`).
+**Wine's own tests** (`mmdevapi:render`, `winmm:wave`, `dsound:dsound`, `dsound:dsound8`, built from the same source, on the same sandbox). They are what found the first version's mistakes: its position did not count the reserve (`render.c:3024`), moved after `Stop` (`1719`), its latency changed with the reserve (`1881`, `1945`), and a stopped stream's event came from a timed wait on the semaphore, a median 41 to 47 ms apart there. With the patch as it is: `render` ran three times with 0, 2 and 0 failures (the two are 20 ms waits for an event, `1288` and `1297`); with Gcenx's driver it never ran clean (1 to 3 failures in four runs, the same 20 to 40 ms waits). `wave` fails the same two `waveOutOpen(WAVE_MAPPER)` checks with both (Gcenx's 2 and 7 failures in two runs, patched 2 and 2). `dsound` passes with both.
+
+`winecoreaudio.so` is a Unix library. `../check-unix-lib.sh` checks that an unpatched build imports, exports and links what Gcenx's does and that the patch adds only the imports named in `build-overlay.sh` (the Mach semaphore calls, `getenv`, `fprintf`).
 
 ## Building
 

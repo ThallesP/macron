@@ -1,5 +1,5 @@
 From: Macron <macron@users.noreply.github.com>
-Date: Thu, 19 Nov 2026 23:40:00 +0000
+Date: Fri, 20 Nov 2026 01:20:00 +0000
 Subject: [PATCH] winecoreaudio: Put an engine between a shared render stream
  and CoreAudio.
 
@@ -13,20 +13,24 @@ is pulled every 9.8 ms and asked for more every 10.7 ms.
 
 A client that keeps a period or two queued, as SDL's WASAPI code does
 (one chunk written at a wake-up, and only when at most one is queued),
-then runs dry by itself. In a model of that client with wake-ups 2 ms late
-at most nine times in ten and up to 12 ms otherwise, a 44100 Hz stream on
-a 48000 Hz device is short about 450 times a minute, and streams at the
-device's rate 2 to 28 times a minute.
+then runs dry whenever a wake-up is a few milliseconds late, and by
+itself when the timer is slower than the pulls.
 
-Now the event is set when CoreAudio has taken a period's worth of frames,
-as Windows sets it when its engine has, and again after a write that
-leaves less than a period beyond the reserve. And the stream keeps a
-reserve the client is not told about: GetCurrentPadding counts only what
-is queued beyond it. The reserve starts at one period, grows by what was
-missing whenever CoreAudio found the buffer short while the client was
-feeding it (up to 100 ms), and gives back half of what five minutes
-without a gap never used. GetStreamLatency includes it. After Stop the
-reserve still plays.
+Now the event follows the device: it is set when CoreAudio's callback has
+asked for a period's worth of frames, as Windows sets it when its engine
+has taken one, and again after a write that leaves less than a period
+beyond the reserve. While the device is not asking, the old timer stands
+in unchanged. No event is set before the first Start.
+
+And the stream keeps a reserve the client is not told about, as Windows'
+engine has downstream of the client's buffer: GetCurrentPadding counts
+only what is queued beyond it, GetPosition counts frames as they enter it
+(so the position is still what was written less the padding, and stands
+still after Stop, while the reserve plays out), and GetStreamLatency
+includes the reserve a stream starts with. The reserve starts at one
+period, grows by what was missing whenever CoreAudio found the buffer
+short while the client was feeding it (up to 100 ms), and gives back half
+of what five minutes without a gap never used.
 
 Every render stream that played prints one line a minute on stderr with
 the frames CoreAudio asked for and did not get, in either mode.
@@ -36,7 +40,7 @@ MACRON_AUDIO_RESERVE=<min ms>[,<max ms>] bounds the reserve.
 MACRON_AUDIO_REPORT=<seconds> changes how often a stream reports (0: never).
 ---
 diff --git a/dlls/winecoreaudio.drv/coreaudio.c b/dlls/winecoreaudio.drv/coreaudio.c
-index 163faff..3b559cc 100644
+index 163faff..76f68f1 100644
 --- a/dlls/winecoreaudio.drv/coreaudio.c
 +++ b/dlls/winecoreaudio.drv/coreaudio.c
 @@ -48,6 +48,8 @@
@@ -48,7 +52,15 @@ index 163faff..3b559cc 100644
  
  #undef LoadResource
  #undef CompareString
-@@ -102,8 +104,72 @@ struct coreaudio_stream
+@@ -92,6 +94,7 @@ struct coreaudio_stream
+     HANDLE timer_thread;
+ 
+     BOOL playing, please_quit;
++    BOOL started;                /* Start has succeeded at least once */
+     REFERENCE_TIME period;
+     UINT32 period_frames;
+     UINT32 bufsize_frames, resamp_bufsize_frames;
+@@ -102,8 +105,72 @@ struct coreaudio_stream
      INT32 getbuf_last;
      WAVEFORMATEX *fmt;
      BYTE *local_buffer, *cap_buffer, *wrap_buffer, *resamp_buffer, *tmp_buffer;
@@ -121,7 +133,7 @@ index 163faff..3b559cc 100644
  static ULONG_PTR zero_bits = 0;
  
  static NTSTATUS unix_not_implemented(void *args)
-@@ -437,6 +503,87 @@ static void convert_to_canonical(const struct coreaudio_stream *stream, const BY
+@@ -437,6 +504,87 @@ static void convert_to_canonical(const struct coreaudio_stream *stream, const BY
      }
  }
  
@@ -209,7 +221,7 @@ index 163faff..3b559cc 100644
  /* CA is pulling data from us */
  static OSStatus ca_render_cb(void *user, AudioUnitRenderActionFlags *flags,
          const AudioTimeStamp *ts, UInt32 bus, UInt32 nframes,
-@@ -444,15 +591,16 @@ static OSStatus ca_render_cb(void *user, AudioUnitRenderActionFlags *flags,
+@@ -444,15 +592,16 @@ static OSStatus ca_render_cb(void *user, AudioUnitRenderActionFlags *flags,
  {
      struct coreaudio_stream *stream = user;
      UINT32 to_copy_bytes, to_copy_frames, chunk_bytes, chunk_frames, lcl_offs_bytes;
@@ -229,7 +241,7 @@ index 163faff..3b559cc 100644
          chunk_bytes = chunk_frames * stream->fmt->nBlockAlign;
  
          if(stream->mixer_unit){
-@@ -470,16 +618,31 @@ static OSStatus ca_render_cb(void *user, AudioUnitRenderActionFlags *flags,
+@@ -470,16 +619,31 @@ static OSStatus ca_render_cb(void *user, AudioUnitRenderActionFlags *flags,
          }
  
          stream->lcl_offs_frames += to_copy_frames;
@@ -262,7 +274,7 @@ index 163faff..3b559cc 100644
      return noErr;
  }
  
-@@ -1239,6 +1402,8 @@ static HRESULT get_device_sample_rate(AudioDeviceID dev_id, EDataFlow flow,
+@@ -1239,6 +1403,8 @@ static HRESULT get_device_sample_rate(AudioDeviceID dev_id, EDataFlow flow,
      return S_OK;
  }
  
@@ -271,7 +283,7 @@ index 163faff..3b559cc 100644
  static NTSTATUS unix_create_stream(void *args)
  {
      struct create_stream_params *params = args;
-@@ -1286,6 +1451,23 @@ static NTSTATUS unix_create_stream(void *args)
+@@ -1286,6 +1452,23 @@ static NTSTATUS unix_create_stream(void *args)
      stream->bufsize_frames = muldiv(params->duration, stream->fmt->nSamplesPerSec, 10000000);
      if(params->share == AUDCLNT_SHAREMODE_EXCLUSIVE)
          stream->bufsize_frames -= stream->bufsize_frames % stream->period_frames;
@@ -295,7 +307,7 @@ index 163faff..3b559cc 100644
  
      if(!(stream->unit = get_audiounit(stream->flow, stream->dev_id))){
          params->result = AUDCLNT_E_DEVICE_INVALIDATED;
-@@ -1330,13 +1512,13 @@ static NTSTATUS unix_create_stream(void *args)
+@@ -1330,13 +1513,13 @@ static NTSTATUS unix_create_stream(void *args)
          goto end;
      }
  
@@ -311,7 +323,7 @@ index 163faff..3b559cc 100644
  
      if(stream->flow == eCapture){
          stream->cap_bufsize_frames = muldiv(params->duration, stream->dev_desc.mSampleRate, 10000000);
-@@ -1349,6 +1531,7 @@ end:
+@@ -1349,6 +1532,7 @@ end:
          if(stream->converter) AudioConverterDispose(stream->converter);
          if(stream->unit) AudioComponentInstanceDispose(stream->unit);
          if(stream->mixer_unit) AudioComponentInstanceDispose(stream->mixer_unit);
@@ -319,7 +331,7 @@ index 163faff..3b559cc 100644
          free(stream->fmt);
          free(stream);
      } else {
-@@ -1367,6 +1550,7 @@ static NTSTATUS unix_release_stream( void *args )
+@@ -1367,6 +1551,7 @@ static NTSTATUS unix_release_stream( void *args )
  
      if(stream->timer_thread){
          stream->please_quit = TRUE;
@@ -327,7 +339,7 @@ index 163faff..3b559cc 100644
          NtWaitForSingleObject(stream->timer_thread, FALSE, NULL);
          NtClose(stream->timer_thread);
      }
-@@ -1375,8 +1559,10 @@ static NTSTATUS unix_release_stream( void *args )
+@@ -1375,8 +1560,10 @@ static NTSTATUS unix_release_stream( void *args )
          AudioOutputUnitStop(stream->unit);
          AudioComponentInstanceDispose(stream->unit);
      }
@@ -338,7 +350,7 @@ index 163faff..3b559cc 100644
      if(stream->converter) AudioConverterDispose(stream->converter);
      free(stream->resamp_buffer);
      free(stream->wrap_buffer);
-@@ -1678,17 +1864,42 @@ static NTSTATUS unix_get_latency(void *args)
+@@ -1678,17 +1865,42 @@ static NTSTATUS unix_get_latency(void *args)
      latency += stream_latency;
      /* pretend we process audio in Period chunks, so max latency includes
       * the period time */
@@ -383,7 +395,7 @@ index 163faff..3b559cc 100644
  }
  
  static NTSTATUS unix_get_current_padding(void *args)
-@@ -1703,18 +1914,117 @@ static NTSTATUS unix_get_current_padding(void *args)
+@@ -1703,18 +1915,127 @@ static NTSTATUS unix_get_current_padding(void *args)
      return STATUS_SUCCESS;
  }
  
@@ -425,93 +437,116 @@ index 163faff..3b559cc 100644
 +            stats.wake_max / 1e6, stats.slow_wakes);
 +}
 +
-+/* The engine's side of the timer thread: set the event when CoreAudio has
-+ * asked for a period, playing or stopped (upstream sets it in both too), and
-+ * every two periods if the device stops asking. */
-+static void engine_timer_loop(struct coreaudio_stream *stream)
++/* Sets the stream's event from the timer thread. `pulled` is when CoreAudio
++ * asked for the period this event is for, or 0. */
++static void timer_set_event(struct coreaudio_stream *stream, UINT64 pulled)
 +{
-+    const UINT64 period_ns = (UINT64)stream->period * 100;
-+    mach_timespec_t wait, none = {0, 0};
-+    UINT64 pulled, before, after;
-+    kern_return_t ret;
++    UINT64 before = now_ns(), after;
 +
-+    while(!stream->please_quit){
-+        UINT64 timeout = period_ns * 2;
-+
-+        wait.tv_sec = timeout / 1000000000;
-+        wait.tv_nsec = timeout % 1000000000;
-+        ret = semaphore_timedwait(stream->wake, wait);
-+        if(stream->please_quit) break;
-+        /* several pulls the thread slept through are one event */
-+        while(semaphore_timedwait(stream->wake, none) == KERN_SUCCESS) ;
-+
-+        before = now_ns();
-+        os_unfair_lock_lock(&stream->lock);
-+        pulled = stream->pull_time;
-+        stream->pull_time = 0;
-+        if(!stream->event_time) stream->event_time = before;
-+        os_unfair_lock_unlock(&stream->lock);
-+
-+        if(stream->event) NtSetEvent(stream->event, NULL);
-+        after = now_ns();
-+
-+        os_unfair_lock_lock(&stream->lock);
-+        stream->stats.events++;
-+        if(ret != KERN_SUCCESS) stream->stats.timeouts++;
-+        else if(pulled){
-+            if(before - pulled > stream->stats.signal_max) stream->stats.signal_max = before - pulled;
-+            if(before - pulled > 2000000) stream->stats.slow_signals++;
-+        }
-+        if(after - before > stream->stats.set_max) stream->stats.set_max = after - before;
-+        os_unfair_lock_unlock(&stream->lock);
-+
++    /* Windows sets no event before the first Start; upstream does, and
++     * calls the server once a period for a stream that has no event. */
++    if(stream->engine && (!stream->started || !stream->event)){
 +        audio_report(stream, FALSE);
++        return;
 +    }
++
++    os_unfair_lock_lock(&stream->lock);
++    if(!stream->event_time) stream->event_time = before;
++    os_unfair_lock_unlock(&stream->lock);
++
++    NtSetEvent(stream->event, NULL);
++    after = now_ns();
++
++    os_unfair_lock_lock(&stream->lock);
++    stream->stats.events++;
++    if(pulled){
++        if(before - pulled > stream->stats.signal_max) stream->stats.signal_max = before - pulled;
++        if(before - pulled > 2000000) stream->stats.slow_signals++;
++    }else if(stream->engine)
++        stream->stats.timeouts++;
++    if(after - before > stream->stats.set_max) stream->stats.set_max = after - before;
++    os_unfair_lock_unlock(&stream->lock);
++
++    audio_report(stream, FALSE);
 +}
 +
++/* The timer thread sets the stream's event once a period.
++ *
++ * Upstream does it from a timer of its own. With the engine the event
++ * follows CoreAudio instead, playing or stopped (the unit always runs):
++ * whenever its callback has asked for a period's worth of frames. While the
++ * device is not asking (it has not started yet, it stalls, it went away)
++ * the timer below stands in, exactly as upstream has it, so a stream gets
++ * its events no later than it did. */
  static void unix_timer_loop(void *args)
  {
      struct coreaudio_stream *stream = args;
++    const UINT64 period_ns = (UINT64)stream->period * 100;
++    mach_timespec_t none = {0, 0}, two_periods;
      LARGE_INTEGER delay, next, last;
++    BOOL asking = FALSE, asked = FALSE;
      int adjust;
  
-+    if(stream->engine){
-+        engine_timer_loop(stream);
-+        return;
-+    }
++    two_periods.tv_sec = period_ns * 2 / 1000000000;
++    two_periods.tv_nsec = period_ns * 2 % 1000000000;
 +
      delay.QuadPart = -stream->period;
      NtQueryPerformanceCounter(&last, NULL);
      next.QuadPart = last.QuadPart + stream->period;
  
      while(!stream->please_quit){
-+        UINT64 before = now_ns(), after;
+-        NtSetEvent(stream->event, NULL);
++        UINT64 pulled = 0;
 +
-+        os_unfair_lock_lock(&stream->lock);
-+        if(!stream->event_time) stream->event_time = before;
-+        os_unfair_lock_unlock(&stream->lock);
-         NtSetEvent(stream->event, NULL);
-+        after = now_ns();
-+        os_unfair_lock_lock(&stream->lock);
-+        stream->stats.events++;
-+        if(after - before > stream->stats.set_max) stream->stats.set_max = after - before;
-+        os_unfair_lock_unlock(&stream->lock);
-+        audio_report(stream, FALSE);
++        if(asking){
++            if(!asked && semaphore_timedwait(stream->wake, two_periods) != KERN_SUCCESS){
++                /* back to the timer until it asks again */
++                asking = FALSE;
++                delay.QuadPart = -stream->period;
++                NtQueryPerformanceCounter(&last, NULL);
++                next.QuadPart = last.QuadPart + stream->period;
++            }
++            if(stream->please_quit) break;
++            asked = FALSE;
++            /* several requests the thread slept through are one event */
++            while(asking && semaphore_timedwait(stream->wake, none) == KERN_SUCCESS) ;
++
++            os_unfair_lock_lock(&stream->lock);
++            pulled = stream->pull_time;
++            stream->pull_time = 0;
++            os_unfair_lock_unlock(&stream->lock);
++            if(!asking) pulled = 0;
++        }
++
++        timer_set_event(stream, pulled);
++        if(asking) continue;
 +
          NtDelayExecution(FALSE, &delay);
          NtQueryPerformanceCounter(&last, NULL);
  
-@@ -1743,6 +2053,9 @@ static NTSTATUS unix_start(void *args)
+@@ -1726,6 +2047,10 @@ static void unix_timer_loop(void *args)
+ 
+         delay.QuadPart = -(stream->period + adjust);
+         next.QuadPart += stream->period;
++
++        /* the device asked meanwhile: follow it from here on */
++        if(stream->engine && semaphore_timedwait(stream->wake, none) == KERN_SUCCESS)
++            asking = asked = TRUE;
+     }
+ }
+ 
+@@ -1743,6 +2068,10 @@ static NTSTATUS unix_start(void *args)
          params->result = AUDCLNT_E_NOT_STOPPED;
      else{
          stream->playing = TRUE;
++        stream->started = TRUE;
 +        stream->drain_frames = 0;
 +        /* what CoreAudio misses before the client's first write is no gap */
 +        stream->since_write_frames = ~(UINT64)0 / 2;
          params->result = S_OK;
      }
  
-@@ -1763,6 +2076,7 @@ static NTSTATUS unix_stop(void *args)
+@@ -1763,6 +2092,7 @@ static NTSTATUS unix_stop(void *args)
          params->result = S_FALSE;
      else{
          stream->playing = FALSE;
@@ -519,7 +554,7 @@ index 163faff..3b559cc 100644
          params->result = S_OK;
      }
  
-@@ -1788,6 +2102,8 @@ static NTSTATUS unix_reset(void *args)
+@@ -1788,6 +2118,8 @@ static NTSTATUS unix_reset(void *args)
          else
              stream->written_frames += stream->held_frames;
          stream->held_frames = 0;
@@ -528,7 +563,7 @@ index 163faff..3b559cc 100644
          stream->lcl_offs_frames = 0;
          stream->wri_offs_frames = 0;
          stream->cap_offs_frames = 0;
-@@ -1823,7 +2139,7 @@ static NTSTATUS unix_get_render_buffer(void *args)
+@@ -1823,7 +2155,7 @@ static NTSTATUS unix_get_render_buffer(void *args)
          goto end;
      }
  
@@ -537,7 +572,7 @@ index 163faff..3b559cc 100644
          if(stream->tmp_buffer_frames < params->frames){
              if(stream->tmp_buffer){
                  size = 0;
-@@ -1860,6 +2176,7 @@ static NTSTATUS unix_release_render_buffer(void *args)
+@@ -1860,6 +2192,7 @@ static NTSTATUS unix_release_render_buffer(void *args)
  {
      struct release_render_buffer_params *params = args;
      struct coreaudio_stream *stream = handle_get_stream(params->stream);
@@ -545,7 +580,7 @@ index 163faff..3b559cc 100644
      BYTE *buffer;
  
      os_unfair_lock_lock(&stream->lock);
-@@ -1883,20 +2200,32 @@ static NTSTATUS unix_release_render_buffer(void *args)
+@@ -1883,20 +2216,32 @@ static NTSTATUS unix_release_render_buffer(void *args)
          if(stream->getbuf_last < 0)
              ca_wrap_buffer(stream->local_buffer,
                             stream->wri_offs_frames * stream->fmt->nBlockAlign,
@@ -580,7 +615,7 @@ index 163faff..3b559cc 100644
      return STATUS_SUCCESS;
  }
  
-@@ -2019,6 +2348,15 @@ static NTSTATUS unix_get_position(void *args)
+@@ -2019,6 +2364,15 @@ static NTSTATUS unix_get_position(void *args)
      os_unfair_lock_lock(&stream->lock);
  
      *params->pos = stream->written_frames - stream->held_frames;
