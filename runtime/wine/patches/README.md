@@ -237,7 +237,7 @@ It is for a game that the GPU cannot draw at the display's size. On Thalles's M3
 - OpenGL surfaces are not scaled: this is for Direct3D through DXMT, and a profile may only ask for it with that backend.
 - The setting is read from the process's environment block, so `winemac.so` imports nothing new.
 
-`macron` sets the variable for a game whose profile names a size (`renderPixels`) on the chips the profile names (`renderPixelsChips`), unless whoever starts the game has set it; `MACRON_RENDER_PIXELS=0` turns it off. `fixes/games/deadlock.json` is the first: 1440x932 pixels' worth on the chips with the base GPU.
+`macron` sets the variable for a game whose profile names a size (`renderPixels`) on the chips the profile names (`renderPixelsChips`), unless whoever starts the game has set it; `MACRON_RENDER_PIXELS=0` turns it off. `fixes/games/steam-1422450.json` (Deadlock) is the first: 1440x932 pixels' worth on the chips with the base GPU.
 
 On a sandbox (sbx_dzv7m2rb, a 1024x768-point display) with `tools/perf/gpuload.c --borderless 1` and `MACRON_RENDER_PIXELS=442368`: Windows sees a 768x576 screen and that one mode (33 modes without the setting); the Direct3D 11 window is at 0,0 and 1024x768 points on the Mac; clicks at five places on the Mac arrive at three quarters of their coordinates (950,300 at 712,225; 1000,740 at 750,555); the picture and a console window beside it are drawn a third larger and smoothed. A request for 640x480 is refused, one for the display's own mode accepted, and DXGI's exclusive full screen succeeds with the screen's size unchanged, exactly as without the setting. 900,000 (more than the display has) and 20,000 (below a third of its width) change nothing.
 
