@@ -570,3 +570,35 @@ func TestAProgramThatLeavesItsOutputOpenStillExitsWithItsCode(t *testing.T) {
 		t.Fatalf("exit code %d, error %v; want 0 and no error when only a background program kept the output open", exitCode, err)
 	}
 }
+
+func TestRenderPixelsIsForTheProfilesChipsUnlessTheUserSetIt(t *testing.T) {
+	profile := fixes.Default("x")
+	profile.RenderPixels = 1342080
+	profile.RenderPixelsChips = []string{"Apple M3"}
+	everyMac := fixes.Default("y")
+	everyMac.RenderPixels = 1000000
+
+	cases := map[string]struct {
+		profile fixes.Profile
+		env     []string
+		chip    string
+		want    int
+	}{
+		"the profile's chip":         {profile, nil, "Apple M3", 1342080},
+		"another chip":               {profile, nil, "Apple M3 Max", 0},
+		"no chip known":              {profile, nil, "", 0},
+		"the user turned it off":     {profile, []string{"MACRON_RENDER_PIXELS=0"}, "Apple M3", 0},
+		"the user chose a size":      {profile, []string{"MACRON_RENDER_PIXELS=900000"}, "Apple M3", 0},
+		"a profile without chips":    {everyMac, nil, "Apple M2 Pro", 1000000},
+		"a profile without the size": {fixes.Default("z"), nil, "Apple M3", 0},
+	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			got, ok := renderPixels(c.profile, c.env, c.chip)
+
+			if got != c.want || ok != (c.want != 0) {
+				t.Errorf("renderPixels = %d, %v; want %d", got, ok, c.want)
+			}
+		})
+	}
+}

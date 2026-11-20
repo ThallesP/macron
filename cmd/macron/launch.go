@@ -138,6 +138,7 @@ func startGame(ctx context.Context, in gameStart, stderr io.Writer) int {
 		WaitForWine:    in.WaitForWine,
 		SoftwareOpenGL: openGL == "llvmpipe",
 		SteamBridge:    in.SteamBridge,
+		Chip:           hostChip(ctx),
 	})
 	if err != nil {
 		return failTo(progress, err)
@@ -242,4 +243,15 @@ func failTo(progress func(string), err error) int {
 	}
 	progress(fmt.Sprintf("%s: %s", code, err))
 	return exitFailed
+}
+
+// hostChip is the Mac's chip ("Apple M3"), or nothing on a Mac that is not
+// Apple silicon. Asked through the arm64 sysctl: an Intel one under Rosetta
+// names a virtual CPU.
+func hostChip(ctx context.Context) string {
+	chip, err := wineruntime.HostCommand(ctx, "arch", "-arm64", "sysctl", "-n", "machdep.cpu.brand_string").Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(chip))
 }
