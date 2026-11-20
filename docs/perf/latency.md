@@ -255,6 +255,16 @@ Thalles: speed is to come from Macron's, Wine's and DXMT's code, not from a smal
 - **The `dlss` switch opens the game on a warning now**: "Graphics Driver Out-of-Date", a box over a black screen that needs a click (`Vendor 10de, 'NVIDIA GeForce RTX 4090', version 31.0.13.783 < 32.0.15.8108`). The version is wined3d's, which the game asks through Direct3D 9; DXMT's own answer has none. Behind the box the HUD showed MetalFX Temporal from 1112x720 to 1920x1243 and the GPU working 13.1 ms on a frame, of a scene nobody saw.
 - **The frame rate follows the frame's latency, not the GPU's time alone**: the game asks for a frame latency limit of 1, so a frame may start only when the one before the last is done, and frames start a little over half of "start to GPU done" apart in every row of every table above (24.5 ms and 13.8; 32.4 and 17.5; 17.9 and 10.4).
 
+### What a frame is made of: a Metal System Trace
+
+`xcrun xctrace record --template 'Metal System Trace' --attach <the game's process>`, 3 s asked for and 6.9 s recorded, exported with `xctrace export` and read by a script (thread "a Metal System Trace of a frame, saved this time"; the trace and the scripts are in `~/macron-perf/rc15/` on that Mac). **The Mac was at thermal level 3 with its screen locked while it was taken** (61 frames in 6.9 s), so the times are a throttled Mac's and only their proportions are worth reading. A first attempt was lost because the recorder was stopped while it saved: saving 6 s of this game took over a minute and a half, and the recorder slowed the game to 45 frames a second while it ran.
+
+- **A frame is 98 encoders in one large command buffer**: 75 render passes, 13 compute passes, 8 blits and 2 clears on the median, encoded by DXMT's encode thread, plus the HUD's own two.
+- **The GPU's time a frame by kind of work: compute 40%, fragment 38%, vertex 22%** (14.1, 13.2 and 7.6 ms of 35.0 summed, the three overlapping in time).
+- **Two compute passes are a third of the frame.** One near the end, just before the passes that draw the interface, takes a fifth to a quarter of all the GPU's time (7.2 to 8.8 ms on this throttled Mac); one in the middle about an eighth (3.6 to 4.4 ms). No other pass is over a tenth: the next are four render passes of 1.7 to 3.7 ms each, half vertex and half fragment (geometry-heavy: shadows or a depth pass), and the rest is small.
+- The pass before the interface is where a game's temporal upscaler runs: Deadlock's FSR2, from 1112x720 to 1920x1243, as a Direct3D compute shader that DXMT translates. It fits the reading of the same day's start with the `dlss` switch, where MetalFX's temporal upscaler did that step instead and the GPU's work on a frame was 13.1 ms against 18.2 ms (behind a warning box, so of a scene nobody saw).
+- Encoders, command buffers and textures carry no names (DXMT labels nothing), so a pass is known by its place in the frame only. The display's tables were empty: the display was asleep.
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.
