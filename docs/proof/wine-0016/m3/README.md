@@ -34,7 +34,14 @@ The timer thread, third build: with a time constraint it set the event more than
 | time constraint, native and under Rosetta | 0.007 and 0.011 ms | 0.007 and 0.005 ms |
 | timeshare, native and under Rosetta | median 0.5 and 0.6 ms, longest 9.8 ms, 494 of 1,201 over 1 ms | longest 0.16 and 1.09 ms |
 
-So a thread that sets itself to priority 63 with Mach's own calls is woken at once on this Mac, under Rosetta too. Wine's sound timer thread, which the server puts at that priority from outside, was not. Why the two differ is not known.
+So a thread at priority 63 is woken at once on this Mac, under Rosetta too, as long as nothing else at that priority is computing. Then, with other threads at priority 63 that each compute part of every 10 ms (`wakelat <s> <busy> <policy> <spinners> <ms>`, twelve runs, thermal level 0 throughout):
+
+| the woken thread | 12 busy threads, 1 to 4 at priority 63 computing 2 to 6 ms | 12 busy threads, 8 at priority 63 computing 6 ms | no busy threads, 8 at priority 63 computing 6 ms |
+|---|---|---|---|
+| fixed, priority 63 | longest 0.005 to 0.014 ms | median 0.77 ms, longest 0.86 ms | **median 5.09 ms, longest 5.47 ms, 1,147 of 1,201 over 2 ms** |
+| time constraint | longest 0.005 to 0.010 ms | longest 0.006 ms | longest 0.004 ms |
+
+**Threads at the same fixed priority do not preempt each other**: when every core has one that is computing, the next one waits until one of them stops, and a thread with a time constraint does not wait. Wine puts everything time-critical at that one priority: its server (0015), its sound timer thread (until 0016), a game's registered sound thread (0014) and the game's own time-critical threads, its mixer among them. That is part of why the timer thread was late in Deadlock on a throttled Mac, where fewer and slower cores are shared by the same threads. It is not all of it: in `sndload` only the sound thread computes at that priority, 2 ms a period, and the timer thread was still late for a third of the events.
 
 ## Deadlock
 
