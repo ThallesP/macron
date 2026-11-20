@@ -207,10 +207,27 @@ The table above suggested a rule: when macOS's thermal pressure level reaches 2,
 
 **Nothing to remove while the Mac is cool.** One frame in flight, no wait for the encoder, and neither reading ever slept: the 24 ms are the game's own 6 to 9 ms, DXMT's 5 to 6 ms of encoding, 3 to 4 ms before the GPU starts and its 16 ms of work, the last two overlapping the next frame's (frames start 14 ms apart). Neither reading costs frames here either, which `finish` did in the test program. So the game's input lag in play on a cool M3 is the time a frame takes, and what shortens it is less work a frame.
 
+### Where a frame's time goes once the Mac is throttled
+
+The published rc8, the practice map, 300 s a start from a cool Mac, `dxmt.latencyGpuModel` unset, `finish` and `start` (thread "Deadlock on the M3: where a frame's time goes once the Mac is throttled, with DXMT's GPU pacing off, start and finish"). Medians of each 30 s of the first start, unset; thermal level 1 from 96 s, 2 from 116 s, 1 again from 232 s:
+
+| | 0-60 s | 90-120 | 120-150 | 150-180 | 180-210 | 210-240 | 240-270 | 270-300 |
+|---|---|---|---|---|---|---|---|---|
+| frames a second | 76.9, 76.4 | 67.9 | 64.4 | 41.8 | 33.2 | 37.7 | 45.2 | 47.8 |
+| start to GPU done | 23.0, 23.7 ms | 26.5 | 29.6 | 38.2 | 49.0 | 48.2 | 41.6 | 35.9 |
+| the game's own time a frame ("CPU") | 8.2, 7.3 ms | 11.7 | 11.8 | 25.6 | 33.7 | 30.6 | 24.8 | 22.8 |
+| DXMT's encoding | 5.4, 5.9 ms | 7.0 | 7.5 | 9.4 | 10.6 | 10.1 | 9.2 | 9.6 |
+| before the GPU starts a frame | 3.3, 3.2 ms | 3.0 | 2.1 | 0.6 | 0.3 | 0.2 | 0.2 | 2.0 |
+| the GPU's work on a frame | 15.1, 15.7 ms | 16.5 | 17.1 | 20.9 | 22.8 | 23.4 | 21.3 | 20.3 |
+
+- **Throttled, the processor is what is slow, not the GPU.** The game's own time a frame goes from 7 to 8 ms to 25 to 34 ms (single lines up to 58 ms), DXMT's encoding from 5.5 to 10 ms, the GPU's work only from 15.5 to 23 ms, and a frame no longer waits for the GPU at all (0.3 ms). One frame in flight throughout. The 15 ms that the heat-following limit took off came from there: with fewer frames to make, the processor was slowed less.
+- **So pacing by the GPU cannot help, and does not.** With `finish`: 30.4 and 30.9 frames a second and 61.5 and 62.2 ms in the two worst half-minutes, against 33.2 and 49.0 unset. With `start`: 31.1 and 33.2 frames a second, 65.8 and 43.2 ms. Neither ever slept. Level 2 lasted 111 to 116 s in all three starts and the frame rate came back to 44 to 48 at level 1.
+- The sound driver reported no frame missing in any of the 27 half-minutes; the game's `Audio device starved` lines were at 6.1 s only.
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.
 - 0005: a game's DLSS reaches MetalFX. Shown on the M3 with Deadlock.
 - **Open: a game the GPU holds back that does not ask for a limit itself** keeps three frames queued (79 ms at 51 frames a second in the test program). Neither reading of the GPU is safe to turn on. What a fix needs is a way to tell when an Apple GPU can take another frame without waiting, which Metal's command buffer times did not give for a simple program. Deadlock asks for a limit of one, and in its practice map neither reading did anything, good or bad (above).
-- **Open: frames on a throttled Mac.** At thermal level 2 Deadlock's frames were 15 ms older than the same frame rate needs (48 ms at 33 frames a second, 31 ms when held to that rate before the frame starts). A limit that only follows what macOS allows, instead of going under it, might keep that gain without the frames the first one lost; it is not built.
+- **Frames on a throttled Mac**: at thermal level 2 Deadlock's frames take 48 ms at 33 frames a second where a cool Mac's take 24 at 75, and the time is the game's own processor work, slowed four times ("Where a frame's time goes once the Mac is throttled"). A frame limit takes load off the processor and so some of that time, at the price of frames; pacing by the GPU does nothing. Whether a thread with another scheduling policy is slowed less is what `tools/perf/qosrate.c` asks.
 - **Open: vsync on a real display**, and whether the sleep ever makes a frame miss its refresh there.
