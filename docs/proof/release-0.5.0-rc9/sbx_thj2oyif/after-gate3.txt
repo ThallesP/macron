@@ -1,0 +1,20 @@
+== Install the package again
+installer: The install was successful.
+~/Library/Application Support/Macron/runtimes/wine-11.21-macron.18-dxmt-0.80-macron.2-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1
+wine-dxmt/lib/wine/x86_64-windows/wined3d.dll 56e069cf28c316e1ce1c4f83267e814b10eba265be83d37149d23dd2307c7f9f
+wine/lib/wine/x86_64-windows/wined3d.dll 56e069cf28c316e1ce1c4f83267e814b10eba265be83d37149d23dd2307c7f9f
+wine-dxmt/lib/wine/x86_64-unix/winemac.so 0d0827e0bbc62eb4a7a289232e4d13685518f34ce6ceb1114233b6165b9b2631
+wine-dxmt/lib/wine/x86_64-unix/winecoreaudio.so 5d181a3940666354418df6680034df636a5efc1abd1ada0c115095787a41e41f
+== d3d9 without-the-switch, exit 0
+RESULT d3d9: "NVIDIA GeForce 6800", driver nvd3dum.dll, vendor 10de, device 0041, version 32.0.13.783
+== d3d9 with-the-switch, exit 0
+RESULT d3d9: "NVIDIA GeForce RTX 4090", driver nvd3dum.dll, vendor 10de, device 2684, version 32.0.15.9144
+macron: 20:30:36.747Z +0.00s DXMT answers as an NVIDIA GPU, so DLSS runs on MetalFX (~/Library/Application Support/Macron/dlss exists)
+== started as Deadlock (app 1422450), exit 0
+RESULT screen 1024x768, current mode 1024x768 at 60 Hz, 33 modes listed, client 1024x768
+lines about pixels in macron's output: 0
+== uninstall
+The program itself is still at /usr/local/bin/macron: sudo /usr/local/bin/macron-uninstall removes it.
+removed /usr/local/bin/macron, /usr/local/bin/macron-uninstall, /usr/local/lib/macron and /Library/Logs/Macron-install.log
+Macron's folder is gone
+AFTER-DONE
