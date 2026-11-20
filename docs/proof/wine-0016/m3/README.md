@@ -58,3 +58,9 @@ Session 2, 210 s a start, one report each 30 s (frames missing, gaps):
 Session 1, 150 s a start: old 5,632 frames in 7 gaps and 20,480 in 19; the second build 1,536 in 1 gap (120 s printed) and 5,120 in 3, the last two with its reserve at its 100 ms limit and the timer thread up to 135 ms late.
 
 **What the driver does not change:** the game's own console line `[SoundSystemLowLevel] Audio device starved 512 samples`. In session 2 it appeared 1 to 4 times in the first seconds of every start and 1 to 10 times between 103 and 181 s, when the Mac was at level 2 and the game at 11 to 40 frames a second, with every driver (old: 1 and 2 at the start, 2 and 2 later; third build: 4 and 3, then 3 and 1; timer in the application band: 3 and 4, then 10 and 2). That is the game's mixer not having sound ready when its own sound thread asks, upstream of anything the driver sees.
+
+## The released runtime (v0.5.0-rc7), session 3
+
+`Macron-0.5.0-rc7.dmg` as published (SHA-256 `7281e0db...`), unpacked without installing, its `macron` run with a `MACRON_HOME` of its own: `macron runtime install` took 81 s and made `wine-11.21-macron.16-...`, with `winecoreaudio.so` SHA-256 `3be2a877...` and `wineserver` `5c2f6788...` in both Wine trees: the files measured above.
+
+Four starts of Deadlock with it (the game's own settings for 210 s; 1280x829 for 150 s; 1440x932 for 150 s; 1280x829 capped at 100 for 240 s), each through thermal level 2: **0 frames missing in all 23 half-minute reports**, eleven and a half minutes of the game. The reserve went from 2,560 frames (58 ms) to 1,536 after 90 s, 1,024 after 150 s and 768 (17 ms) after 210 s. From CoreAudio's request to the event: at most 0.07 ms in every report after each start's first, where the game's loading held `NtSetEvent` for 33 to 38 ms once. The game's own `Audio device starved` line: 1, 1, 4 and 0 times in the four starts.

@@ -104,21 +104,23 @@ So on the sandboxes the mouse's path is not where a player's lag is. On the M3 t
 
 ## Deadlock on the M3: the size of the picture, and heat
 
-2026-11-19 and 20, thirteen starts in two sessions (threads "Deadlock on the M3: what limits the frame rate" and "Deadlock on the M3: sound with the new driver against the old, and a lighter load against the heat"; the files are in `~/macron-perf/fps/` and `~/macron-perf/audio/` on that Mac). All on the game's first screen: every screenshot is the "Early Development Build" dialog over black, `+map hero_testing` crashed the game (an access violation 17 s after its window) and `+map dl_hideout` showed the same dialog. **So these are that screen's numbers, not a match's.** Runtime `macron.14` with `macron.15`'s server, no Wine traces, DXMT's `Latency:` lines; the Mac had 15 of its 16 GB in use and 9 to 10 GB of swap throughout. "Start to GPU done" is the time from a frame's start, when its input is read, to the end of its GPU work.
+2026-11-19 and 20, seventeen starts in three sessions (threads "Deadlock on the M3: what limits the frame rate", "Deadlock on the M3: sound with the new driver against the old, and a lighter load against the heat" and "Deadlock on the M3: the released rc7 runtime, and the smaller picture a second time"; the files are in `~/macron-perf/fps/`, `~/macron-perf/audio/` and `~/macron-perf/rc7/` on that Mac). All on the game's first screen: every screenshot is the "Early Development Build" dialog over black, `+map hero_testing` crashed the game (an access violation 17 s after its window) and `+map dl_hideout` showed the same dialog. **So these are that screen's numbers, not a match's.** Runtime `macron.14` with `macron.15`'s server, and in the third session the released v0.5.0-rc7's (`macron.16`); no Wine traces, DXMT's `Latency:` lines; the Mac had 15 of its 16 GB in use and 9 to 10 GB of swap throughout. "Start to GPU done" is the time from a frame's start, when its input is read, to the end of its GPU work.
 
 | start | frames a second, cool (10 to 40 s) | start to GPU done | later |
 |---|---|---|---|
 | the game's own settings: 1920x1243, FSR2 from a 0.58 scale (5 starts) | 66.7 to 67.8 | 25.5 to 26.4 ms | 40, 24, 21 and 19 at 120 to 150 s, with 43 to 86 ms |
 | half the rendered pixels (`mat_viewportscale` 0.41) | 83.3 | 20.6 ms | 64 at 70 to 100 s |
 | that and every quality setting at its lowest | 84.0 | 20.4 ms | 47 at 70 to 100 s |
-| **a 1280x829 picture**, the same 0.58 scale | **118.0** (0 to 30 s), 112 (30 to 60 s) | **14.8 ms** | 102.5 at 60 to 90 s, 71 after |
+| **a 1280x829 picture**, the same 0.58 scale (2 starts) | **118.0 and 117.6** (0 to 30 s), 112 and 116 (30 to 60 s) | **14.8 and 14.5 ms** | 102.5 and 106 at 60 to 90 s; then 71, and 81 and 50 |
+| a 1440x932 picture | 103.8 (0 to 30 s), 102.2 (30 to 60 s) | 16.2 ms | 97.8 at 60 to 90 s, then 54 and 34 |
+| 1280x829, capped at 100 | 99.6 and 99.8 | 19.2 and 18.8 ms | 98.1 at 60 to 90 s, then 82, 40, 46, 66, 82 (level 2 from 75 to 181 s) |
 | 1920x1243, capped at 60 | 59.5 | 33.3 ms | 21, 12 and 21 from 90 s on (thermal level 2 from 60 s) |
 | 1920x1243, half the rendered pixels, capped at 60 | 60.0 | 31 to 33 ms | 58 until 150 s, then 40, 40, 47 |
 | **1280x829, capped at 60** | **60.0** | 31 to 32 ms | **60.0 for all 240 s**, level 2 from 162 s on |
 
 - **The picture's size is what costs, not the scale it is rendered at.** Half the rendered pixels at the same picture took the GPU's time a frame from 15.5 ms to 11.7 ms; lowest quality on top, to 11.0 ms. A picture of 44% the size took it to 8.6 ms and the frame rate from 67 to 118. What the game does at the picture's size (its FSR2 pass, what follows it, the interface) is the larger part of a frame here.
-- **100 frames a second is there at 1280x829**, for about a minute and a half from a cool start.
-- **The fanless Mac decides the rest.** Every uncapped start reached thermal level 2 between 61 and 97 s after its window and then fell to a third of its frame rate; `pmset -g therm` named no CPU limit in any sample. Capped at 60, the full-size picture still reached level 2 at 60 s and fell to 12 to 21. The small picture capped at 60 is the one start that held: 60.0 in every 30 s of four minutes.
+- **100 frames a second is there at 1280x829 and at 1440x932**, for about a minute and a half from a cool start. Capped at 100 it is a steady 100 for those 90 s, and it costs 4 ms of lag against the uncapped 118.
+- **The fanless Mac decides the rest.** Every uncapped start reached thermal level 2 between 45 and 115 s after its window and then fell to a third of its frame rate; `pmset -g therm` named no CPU limit in any sample. Capped at 60, the full-size picture still reached level 2 at 60 s and fell to 12 to 21. The small picture capped at 60 is the one start that held: 60.0 in every 30 s of four minutes.
 - **The lag follows the frame rate**: 14.8 ms at 118, 26 ms at 67, 78 to 86 ms at 19 to 24. A cap adds to it (31 to 33 ms at 60, where the uncapped 67 has 26): the game waits between frames after it has read its input.
 - The game's CPU side is not the limit: its busiest thread took 38 to 71% of a core, `wineserver` 5 to 8%.
 - 1280x829 was a window in the middle of a 1920x1243 desktop. Whether the game's own full-screen mode at such a size runs the same was not tried: it changes the display's mode, which a test on somebody's desktop may not do.
