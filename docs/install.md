@@ -27,13 +27,14 @@ A night (about 1.7 times the menu's work) has not been measured on a real Mac ye
 
 If a game draws garbage, flickers or stutters with this build, these go in its Steam launch options, one at a time, to find which change it is: `WINE_D3D_CONFIG=csmt=0 %command%` (Direct3D work back on the game's thread), `WINE_OPENGL_UNSYNCHRONIZED=0 %command%` (the old uploads), `WINE_OPENGL_BATCH=0 %command%` (no batching of OpenGL calls). Direct3D 10 and 11 games go through DXMT and are not affected by any of them.
 
-## Deadlock on a MacBook with the base chip
+## Deadlock on a MacBook Air
 
-Deadlock ran at 67 to 75 frames a second on Thalles's M3 (a MacBook Air) before its first frame of play, and most of a frame went into what the game does at the size of the screen. From this build Macron shows Deadlock a smaller screen on the M1, M2, M3 and M4 (not the Pro and Max chips) and scales the picture up to fill the display. Nothing is set by hand, the display's own resolution is not changed, and other windows stay where they are (Wine patch 0017). On the M3: 92 to 100 frames a second on the title screen where it was 75, with 17 to 19 ms from a frame's start to the finished picture where it was 23; in the practice map 74 to 77 where it was 54, with 23 to 24 ms where it was 32, while the Mac is cool.
+What a day of measuring on Thalles's M3 (a MacBook Air, 1920x1243) came to, with nothing set by hand:
 
-- The picture is softer than at the display's size: it is 1098x711 on a 1920x1243 desktop. `MACRON_RENDER_PIXELS=0 %command%` as the game's launch option gives the full size back.
-- If you played Deadlock before, it keeps the Render Quality you had, which now applies to the smaller screen and may look blurry: raise it in the game's video settings (100% is what a new install picks).
-- **A MacBook Air has no fan, and that still decides a long session.** About two minutes after a start macOS slows the Mac down and the game runs at 30 to 50 frames a second, in rounds of a few minutes. A limit that follows the heat was built and measured, and it made this worse, so there is none. The game's own frame limit at 45 held 45 for the four minutes it was watched.
+- **The picture is the display's own size.** v0.5.0-rc8 showed the game a smaller screen (1098x711) and scaled it up; that made the picture soft for about 5 frames a second, and this build no longer does it. Whoever wants it: `MACRON_RENDER_PIXELS=780000 %command%` as the game's launch option.
+- **About 70 frames a second in the practice map and 75 on the title screen while the Mac is cool**, with 24 ms from a frame's start to the finished picture. Those are of the game running behind other windows, which is the only way a test can run it; nobody has measured it in front yet. The display shows 60 frames a second at most.
+- **A MacBook Air has no fan.** About two minutes after a start macOS slows the whole Mac down for the heat, and the game then runs at 30 to 50 frames a second in rounds of a few minutes. Nothing Macron can give a game's threads escapes that: every thread is slowed alike, 2.7 times. The game's own frame limit at 45 held 45 for the four minutes it was watched.
+- **Apple's upscaler in place of the game's, if you want to try it.** Most of what the GPU does in a frame of Deadlock is the game's FSR2 upscaling. With the `dlss` switch (`touch ~/Library/Application\ Support/Macron/dlss`; delete the file to turn it off) the game uses its DLSS option instead, which Macron runs on Apple's MetalFX: the GPU's work on a frame went from 20 to 24 ms down to 16 ms in the two pairs of starts that compared them, on a hot Mac. With rc8 the switch made the game open on a "Graphics Driver Out-of-Date" box at every start; this build fixes that. **Nobody has seen its picture yet**: if it smears or ghosts, delete the file.
 
 ## Starting games
 
