@@ -1,0 +1,60 @@
+final-1 mmdevapi render: exit 0; render: 5220 tests executed (48 marked as todo, 1 as flaky, 0 failures), 2 skipped.; failed: 
+final-2 mmdevapi render: exit 2; render: 5220 tests executed (48 marked as todo, 3 as flaky, 2 failures), 2 skipped.; failed:  1 render.c:1288, 1 render.c:1297,
+final-3 mmdevapi render: exit 0; render: 5220 tests executed (48 marked as todo, 1 as flaky, 0 failures), 2 skipped.; failed: 
+final winmm wave: exit 2; wave: 7268 tests executed (64 marked as todo, 0 as flaky, 2 failures), 0 skipped.; failed:  1 wave.c:1281, 1 wave.c:1310,
+final dsound dsound: exit 0; dsound: 7108 tests executed (38 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+final dsound dsound8: exit 1; dsound8: 8186 tests executed (5 marked as todo, 0 as flaky, 1 failure), 0 skipped.; failed:  1 dsound8.c:1800,
+TESTS-DONE
+== f-up-sdl-44100 (MACRON_AUDIO=upstream MACRON_AUDIO_RESERVE=) exit 0
+RESULT stream: 44100 Hz on a 48000 Hz device, 2 channels, buffer 1411 frames (32.00 ms), period 441 frames (10.00 ms), latency 10.66 ms, policy sdl
+RESULT wake intervals 1042 ms p50 22.94 p95 48.88 p99 52.00 max 120.99 later_than_two_periods 616 later_than_buffer 397 found_empty 783 timeouts 0
+RESULT written 453348 frames in 1028 writes over 27.99 s, which plays 1234555 frames
+ stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, upstream: 30.0 s, 1313142 frames pulled, 828924 missing in 837 gaps (longest 5172), 1098 writes, reserve 0 (0 to 0), least left -1, 1112 events, 0 more after a write, 0 without a pull, 
+ stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, upstream: 0.2 s, 431 frames pulled, 0 missing in 0 gaps (longest 0), 1 writes, reserve 0 (0 to 0), least left -1, 0 events, 0 more after a write, 0 without a pull, 
+== f-en-sdl-44100 (MACRON_AUDIO= MACRON_AUDIO_RESERVE=) exit 0
+RESULT stream: 44100 Hz on a 48000 Hz device, 2 channels, buffer 1411 frames (32.00 ms), period 441 frames (10.00 ms), latency 21.32 ms, policy sdl
+RESULT wake intervals 2958 ms p50 9.63 p95 19.23 p99 21.33 max 94.13 later_than_two_periods 70 later_than_buffer 2 found_empty 248 timeouts 0
+RESULT written 1234800 frames in 2800 writes over 28.00 s, which plays 1234662 frames
+ stream 1, 44100 Hz (period 470, buffer 1411) on a 48000 Hz device, engine: 30.0 s, 1322642 frames pulled, 3399 missing in 2 gaps (longest 2177), 3001 writes, reserve 3869 (470 to 4410), least left 0, 2802 events, 380 more after a write, 4 without a pull, 
+== f-up-fill-44100 (MACRON_AUDIO=upstream MACRON_AUDIO_RESERVE=) exit 0
+RESULT stream: 44100 Hz on a 48000 Hz device, 2 channels, buffer 1536 frames (34.83 ms), period 512 frames (11.61 ms), latency 11.61 ms, policy fill
+RESULT wake intervals 983 ms p50 23.74 p95 52.80 p99 56.24 max 121.05 later_than_two_periods 502 later_than_buffer 359 found_empty 327 timeouts 0
+RESULT written 1054518 frames in 967 writes over 28.03 s, which plays 1235940 frames
+ stream 1, 44100 Hz (period 512, buffer 1536) on a 48000 Hz device, upstream: 30.0 s, 1324176 frames pulled, 195039 missing in 353 gaps (longest 4109), 1027 writes, reserve 0 (0 to 0), least left -1, 1045 events, 0 more after a write, 0 without a pull, 
+== f-en-fill-44100 (MACRON_AUDIO= MACRON_AUDIO_RESERVE=) exit 0
+RESULT stream: 44100 Hz on a 48000 Hz device, 2 channels, buffer 1536 frames (34.83 ms), period 512 frames (11.61 ms), latency 23.22 ms, policy fill
+RESULT wake intervals 2389 ms p50 10.74 p95 21.55 p99 24.38 max 104.20 later_than_two_periods 53 later_than_buffer 4 found_empty 8 timeouts 0
+RESULT written 1234800 frames in 2387 writes over 27.99 s, which plays 1234457 frames
+ stream 1, 44100 Hz (period 512, buffer 1536) on a 48000 Hz device, engine: 30.0 s, 1323235 frames pulled, 2656 missing in 2 gaps (longest 1881), 2560 writes, reserve 3168 (512 to 4410), least left 0, 2561 events, 5 more after a write, 6 without a pull, 
+== f-up-sdl-48000 (MACRON_AUDIO=upstream MACRON_AUDIO_RESERVE=) exit 0
+RESULT stream: 48000 Hz on a 48000 Hz device, 2 channels, buffer 1536 frames (32.00 ms), period 513 frames (10.69 ms), latency 10.67 ms, policy sdl
+RESULT wake intervals 1040 ms p50 23.68 p95 47.51 p99 50.82 max 150.96 later_than_two_periods 587 later_than_buffer 409 found_empty 744 timeouts 0
+RESULT written 527877 frames in 1029 writes over 28.03 s, which plays 1345273 frames
+ stream 1, 48000 Hz (period 512, buffer 1536) on a 48000 Hz device, upstream: 30.0 s, 1442304 frames pulled, 880056 missing in 799 gaps (longest 6655), 1096 writes, reserve 0 (0 to 0), least left -1, 1107 events, 0 more after a write, 0 without a pull, 
+== f-en-sdl-48000 (MACRON_AUDIO= MACRON_AUDIO_RESERVE=) exit 0
+RESULT stream: 48000 Hz on a 48000 Hz device, 2 channels, buffer 1536 frames (32.00 ms), period 513 frames (10.69 ms), latency 21.33 ms, policy sdl
+RESULT wake intervals 2619 ms p50 10.61 p95 14.13 p99 15.31 max 98.57 later_than_two_periods 2 later_than_buffer 2 found_empty 11 timeouts 0
+RESULT written 1340982 frames in 2614 writes over 27.99 s, which plays 1343624 frames
+ stream 1, 48000 Hz (period 512, buffer 1536) on a 48000 Hz device, engine: 30.1 s, 1437184 frames pulled, 3284 missing in 2 gaps (longest 3069), 2804 writes, reserve 3796 (512 to 4800), least left 0, 2793 events, 22 more after a write, 1 without a pull, 
+== f-up-fill-48000 (MACRON_AUDIO=upstream MACRON_AUDIO_RESERVE=) exit 0
+RESULT stream: 48000 Hz on a 48000 Hz device, 2 channels, buffer 1536 frames (32.00 ms), period 512 frames (10.67 ms), latency 10.67 ms, policy fill
+RESULT wake intervals 1044 ms p50 23.81 p95 47.82 p99 49.89 max 80.31 later_than_two_periods 587 later_than_buffer 399 found_empty 475 timeouts 0
+RESULT written 1163776 frames in 1023 writes over 28.02 s, which plays 1345141 frames
+ stream 1, 48000 Hz (period 512, buffer 1536) on a 48000 Hz device, upstream: 30.0 s, 1441280 frames pulled, 198144 missing in 330 gaps (longest 2048), 1092 writes, reserve 0 (0 to 0), least left -1, 1115 events, 0 more after a write, 0 without a pull, 
+== f-en-fill-48000 (MACRON_AUDIO= MACRON_AUDIO_RESERVE=) exit 0
+RESULT stream: 48000 Hz on a 48000 Hz device, 2 channels, buffer 1536 frames (32.00 ms), period 512 frames (10.67 ms), latency 21.33 ms, policy fill
+RESULT wake intervals 2619 ms p50 10.61 p95 14.02 p99 14.82 max 107.97 later_than_two_periods 1 later_than_buffer 1 found_empty 3 timeouts 0
+RESULT written 1344512 frames in 2619 writes over 28.00 s, which plays 1344165 frames
+ stream 1, 48000 Hz (period 512, buffer 1536) on a 48000 Hz device, engine: 30.0 s, 1440256 frames pulled, 3072 missing in 1 gaps (longest 3072), 2805 writes, reserve 3584 (512 to 4800), least left 0, 2804 events, 2 more after a write, 1 without a pull, 
+== f-up-load (MACRON_AUDIO=upstream MACRON_AUDIO_RESERVE=) exit 0
+RESULT stream: 48000 Hz on a 48000 Hz device, 2 channels, buffer 1536 frames (32.00 ms), period 513 frames (10.69 ms), latency 10.67 ms, policy sdl
+RESULT wake intervals 2592 ms p50 10.12 p95 12.75 p99 33.17 max 85.55 later_than_two_periods 69 later_than_buffer 28 found_empty 117 timeouts 0
+RESULT written 1253772 frames in 2444 writes over 28.00 s, which plays 1344185 frames
+ stream 1, 48000 Hz (period 512, buffer 1536) on a 48000 Hz device, upstream: 30.0 s, 1440768 frames pulled, 96714 missing in 127 gaps (longest 3579), 2618 writes, reserve 0 (0 to 0), least left -1, 2775 events, 0 more after a write, 0 without a pull, 
+ stream 1, 48000 Hz (period 512, buffer 1536) on a 48000 Hz device, upstream: 0.2 s, 512 frames pulled, 0 missing in 0 gaps (longest 0), 2 writes, reserve 0 (0 to 0), least left -1, 1 events, 0 more after a write, 0 without a pull, 
+== f-en-load (MACRON_AUDIO= MACRON_AUDIO_RESERVE=) exit 0
+RESULT stream: 48000 Hz on a 48000 Hz device, 2 channels, buffer 1536 frames (32.00 ms), period 513 frames (10.69 ms), latency 21.33 ms, policy sdl
+RESULT wake intervals 2625 ms p50 10.67 p95 10.76 p99 10.90 max 74.00 later_than_two_periods 1 later_than_buffer 1 found_empty 7 timeouts 0
+RESULT written 1344060 frames in 2620 writes over 27.99 s, which plays 1343593 frames
+ stream 1, 48000 Hz (period 512, buffer 1536) on a 48000 Hz device, engine: 30.0 s, 1441280 frames pulled, 2155 missing in 2 gaps (longest 1645), 2809 writes, reserve 2667 (512 to 4800), least left 0, 2810 events, 12 more after a write, 1 without a pull, 
+VALIDATE-DONE

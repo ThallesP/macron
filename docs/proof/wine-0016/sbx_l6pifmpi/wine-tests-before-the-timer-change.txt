@@ -1,0 +1,16 @@
+gcenx-1 mmdevapi render: exit 2; render: 5220 tests executed (48 marked as todo, 2 as flaky, 2 failures), 2 skipped.; failed:  1 render.c:1282, 1 render.c:1297,
+patched-1 mmdevapi render: exit 2; render: 5220 tests executed (48 marked as todo, 0 as flaky, 2 failures), 2 skipped.; failed:  1 render.c:1297, 1 render.c:1706,
+patched-upstream-1 mmdevapi render: exit 2; render: 5220 tests executed (48 marked as todo, 2 as flaky, 2 failures), 2 skipped.; failed:  1 render.c:1288, 1 render.c:1297,
+gcenx-2 mmdevapi render: exit 3; render: 5214 tests executed (48 marked as todo, 3 as flaky, 3 failures), 2 skipped.; failed:  1 render.c:1282, 1 render.c:1288, 1 render.c:1297,
+patched-2 mmdevapi render: exit 3; render: 5220 tests executed (48 marked as todo, 1 as flaky, 3 failures), 2 skipped.; failed:  1 render.c:1282, 1 render.c:1297, 1 render.c:1305,
+patched-upstream-2 mmdevapi render: exit 0; render: 5220 tests executed (48 marked as todo, 3 as flaky, 0 failures), 2 skipped.; failed: 
+gcenx-3 mmdevapi render: exit 2; render: 5220 tests executed (48 marked as todo, 2 as flaky, 2 failures), 2 skipped.; failed:  1 render.c:1282, 1 render.c:1288,
+patched-3 mmdevapi render: exit 1; render: 5220 tests executed (48 marked as todo, 2 as flaky, 1 failure), 2 skipped.; failed:  1 render.c:1297,
+patched-upstream-3 mmdevapi render: exit 2; render: 5218 tests executed (48 marked as todo, 2 as flaky, 2 failures), 2 skipped.; failed:  1 render.c:1288, 1 render.c:1297,
+gcenx winmm wave: exit 7; wave: 7266 tests executed (64 marked as todo, 0 as flaky, 7 failures), 0 skipped.; failed:  1 wave.c:1281, 1 wave.c:1310, 1 wave.c:1674, 1 wave.c:1677, 1 wave.c:1686, 1 wave.c:1780, 1 wave.c:1786,
+gcenx dsound dsound: exit 0; dsound: 7108 tests executed (38 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+gcenx dsound dsound8: exit 0; dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+patched winmm wave: exit 2; wave: 7268 tests executed (64 marked as todo, 0 as flaky, 2 failures), 0 skipped.; failed:  1 wave.c:1281, 1 wave.c:1310,
+patched dsound dsound: exit 0; dsound: 7108 tests executed (38 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+patched dsound dsound8: exit 0; dsound8: 8188 tests executed (5 marked as todo, 0 as flaky, 0 failures), 0 skipped.; failed: 
+WT-RENDER-DONE
