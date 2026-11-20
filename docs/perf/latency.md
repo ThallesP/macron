@@ -224,10 +224,22 @@ The published rc8, the practice map, 300 s a start from a cool Mac, `dxmt.latenc
 - **So pacing by the GPU cannot help, and does not.** With `finish`: 30.4 and 30.9 frames a second and 61.5 and 62.2 ms in the two worst half-minutes, against 33.2 and 49.0 unset. With `start`: 31.1 and 33.2 frames a second, 65.8 and 43.2 ms. Neither ever slept. Level 2 lasted 111 to 116 s in all three starts and the frame rate came back to 44 to 48 at level 1.
 - The sound driver reported no frame missing in any of the 27 half-minutes; the game's `Audio device starved` lines were at 6.1 s only.
 
+### What the throttle does to a thread, by its scheduling policy
+
+`tools/perf/qosrate.c` under Rosetta beside the game in its practice map (thread "The M3 throttled by the game, second try"): six threads, one for each policy, each doing the same piece of work every 10 ms. Thermal level 1 from 101 s after the game's window, 2 from 122 s, 1 again from 248 s. Median time for the piece of work:
+
+| | an ordinary thread | user-interactive | user-initiated | utility | fixed priority 63 | time constraint |
+|---|---|---|---|---|---|---|
+| level 0, the first seconds | 3.8 ms | 3.8 ms | 4.0 ms | 5.9 ms | 2.9 ms | 2.9 ms |
+| level 2 | 6.8 to 7.7 ms | 6.6 to 7.6 ms | 6.7 to 7.7 ms | 10.6 to 15.3 ms | 6.6 to 7.8 ms | 6.6 to 7.8 ms |
+
+- **macOS slows every thread alike once it throttles: 2.7 times for the ones that had a performance core to themselves** (2.91 ms to 7.80 ms, and 7.80 again and again: a clock held down, not a queue). No policy Wine could give a game's threads escapes it. The same program alone, with every core busy for seven minutes, never took the Mac past level 0: it is the GPU's heat that brings the throttle, and the processor that pays.
+- While cool, a thread at Wine's time-critical priority or with a time constraint did the work in 2.9 ms where an ordinary one took 3.8: with the performance cores 93% busy (the game and this program together), ordinary threads spend part of their time on the efficiency cores. The game alone leaves the performance cores less full than that.
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.
 - 0005: a game's DLSS reaches MetalFX. Shown on the M3 with Deadlock.
 - **Open: a game the GPU holds back that does not ask for a limit itself** keeps three frames queued (79 ms at 51 frames a second in the test program). Neither reading of the GPU is safe to turn on. What a fix needs is a way to tell when an Apple GPU can take another frame without waiting, which Metal's command buffer times did not give for a simple program. Deadlock asks for a limit of one, and in its practice map neither reading did anything, good or bad (above).
-- **Frames on a throttled Mac**: at thermal level 2 Deadlock's frames take 48 ms at 33 frames a second where a cool Mac's take 24 at 75, and the time is the game's own processor work, slowed four times ("Where a frame's time goes once the Mac is throttled"). A frame limit takes load off the processor and so some of that time, at the price of frames; pacing by the GPU does nothing. Whether a thread with another scheduling policy is slowed less is what `tools/perf/qosrate.c` asks.
+- **Frames on a throttled Mac**: at thermal level 2 Deadlock's frames take 48 ms at 33 frames a second where a cool Mac's take 24 at 75, and the time is the game's own processor work, slowed four times ("Where a frame's time goes once the Mac is throttled"). A frame limit takes load off the processor and so some of that time, at the price of frames; pacing by the GPU does nothing. A thread's scheduling policy makes no difference to it (`tools/perf/qosrate.c`, above): what is left is less work a frame.
 - **Open: vsync on a real display**, and whether the sleep ever makes a frame miss its refresh there.
