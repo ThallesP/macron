@@ -27,6 +27,14 @@ A night (about 1.7 times the menu's work) has not been measured on a real Mac ye
 
 If a game draws garbage, flickers or stutters with this build, these go in its Steam launch options, one at a time, to find which change it is: `WINE_D3D_CONFIG=csmt=0 %command%` (Direct3D work back on the game's thread), `WINE_OPENGL_UNSYNCHRONIZED=0 %command%` (the old uploads), `WINE_OPENGL_BATCH=0 %command%` (no batching of OpenGL calls). Direct3D 10 and 11 games go through DXMT and are not affected by any of them.
 
+## Deadlock on a MacBook with the base chip
+
+Deadlock ran at 67 to 75 frames a second on Thalles's M3 (a MacBook Air) before its first frame of play, and most of a frame went into what the game does at the size of the screen. From this build Macron shows Deadlock a smaller screen on the M1, M2, M3 and M4 (not the Pro and Max chips) and scales the picture up to fill the display. Nothing is set by hand, the display's own resolution is not changed, and other windows stay where they are (Wine patch 0017). On the M3: 97 to 100 frames a second on the title screen where it was 75, with 17 ms from a frame's start to the finished picture where it was 23; in the practice map 70 to 75 while the Mac is cool.
+
+- The picture is softer than at the display's size: it is 1098x711 on a 1920x1243 desktop. `MACRON_RENDER_PIXELS=0 %command%` as the game's launch option gives the full size back.
+- If you played Deadlock before, it keeps the Render Quality you had, which now applies to the smaller screen and may look blurry: raise it in the game's video settings (100% is what a new install picks).
+- **A MacBook Air has no fan, and that still decides a long session.** About two minutes after a start macOS slows the Mac down and the game runs at 30 to 50 frames a second, in rounds of a few minutes. A limit that follows the heat was built and measured, and it made this worse, so there is none. The game's own frame limit at 45 held 45 for the four minutes it was watched.
+
 ## Starting games
 
 A game's first Play after a Macron update no longer waits for a Windows setup step: it starts as quickly as any other start (on the test machines the first start after an update took 7.7 times an ordinary start before this build, and the same as an ordinary start now). A new game starts from a prepared copy instead of building its own Windows environment: about 1.2 to 1.5 times an ordinary start, where it took about 11 times before. The "Wine configuration is being updated" window no longer appears. While a game runs, the Dock, the menu bar and Force Quit still call it `wine`. `docs/startup/README.md` in the source has the measurements.
@@ -35,7 +43,7 @@ A game's first Play after a Macron update no longer waits for a Windows setup st
 
 A game's sound crackled when the Mac was busy, because Wine asked the game for sound from a timer of its own while macOS took it whenever the sound device wanted some, and a game that keeps little queued (anything that plays through SDL, Deadlock among them) then ran dry whenever its sound thread woke a few milliseconds late. This build asks the game when macOS has taken some, and keeps a small reserve the game is not told about (Wine patch 0016). On Thalles's M3, in two starts of Deadlock that ran three and a half minutes each through the Mac's thermal throttling, the old driver left 1.4 and 1.6 seconds of sound missing in 56 and 62 gaps and this one none; with every core busy, a quarter of the sound against none.
 
-The reserve is sound heard a little later: about 60 ms when a game starts, about 10 ms once a few minutes have passed without a late wake-up. What it cannot fix is a game whose own mixer falls behind on a throttled Mac: Deadlock then logs `Audio device starved` itself, and that may still be heard as a short hole.
+The reserve is sound heard a little later: about 60 ms when a game starts, about 10 ms once a few minutes have passed without a late wake-up. What it cannot fix is a game whose own mixer falls behind on a throttled Mac: Deadlock then logs `Audio device starved` itself, and that may still be heard as a short hole. From this build a game's own sound thread is also woken ahead of everything else the game runs, as Windows does for a thread that registers for audio (Wine patch 0018).
 
 Every game's log (`~/Library/Application Support/Macron/logs/steam-<app id>/`, the newest file) now has a line a minute starting `macron-audio:` that says how much sound macOS asked for and did not get. If a game still crackles, those lines say when. `MACRON_AUDIO=upstream %command%` as a game's launch option gives the old behaviour back, to compare.
 
