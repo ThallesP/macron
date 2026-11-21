@@ -308,6 +308,20 @@ With the save written by a child process (Wine patch 0021; `runtime/wine/patches
 
 The game's own `Audio device starved` lines are still there (3, 1 and 2 in those three starts): all but one in the first 11 s, while the map loads, and of 28 to 470 samples where they had been 512. They are not this.
 
+### Five minutes with the published rc10: nothing else holds the server
+
+The published `Macron-0.5.0-rc10.dmg`, unpacked and not installed, its own runtime (`wineserver` `5f3a995d...`, the file tested above), `MACRON_SERVER_STATS` on, the practice map at the display's own size, 300 s a start from a cool Mac (thread "Deadlock on the M3 with the published rc10: five minutes of the server's log, for any other stall").
+
+| | frames a second, by half minute | start to GPU done | thermal level | turns of the server of 5 ms or more | sound missing |
+|---|---|---|---|---|---|
+| as it is | 72.6, 71.4, 69.4, 64.8, 64.6, 64.5, 60.7, 53.6, 51.1, 51.5 | 23 ms, then 26 to 28, then 31 to 38 | 1 from 120 s, 2 from 165 s | one: 19.4 ms at the registry save | none in nine reports |
+| the game's `+fps_max 45` | 45.0 in all ten | 42 to 44 ms | 0 throughout | one: 12.0 ms at the registry save | none in nine reports |
+
+- **The registry save's `fork()` is the only turn of 5 ms or more in ten minutes of the game**, and the files are written (new modification times at the save, `WINE REGISTRY Version 2`, no temp file, no zombie). Wine's audio timer was never held longer than 11 ms, and after the first half minute never longer than 3.4 ms.
+- The server is asked 13,000 to 15,000 things a second throughout, half of them the networking thread's socket question; none of it takes a turn to 5 ms.
+- **Held to 45 by the game's own limit the Mac stayed at thermal level 0 for the whole five minutes**, a steady 45.0. Unheld it went from 72 to 51 over the five minutes, at level 2 from 165 s.
+- The game's `Audio device starved` lines: at 6.9 and 11.8 s in the first start and 5.8 s in the second, while the map loads, and none in the 288 s after.
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.
