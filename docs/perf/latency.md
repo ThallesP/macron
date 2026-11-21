@@ -322,6 +322,24 @@ The published `Macron-0.5.0-rc10.dmg`, unpacked and not installed, its own runti
 - **Held to 45 by the game's own limit the Mac stayed at thermal level 0 for the whole five minutes**, a steady 45.0. Unheld it went from 72 to 51 over the five minutes, at level 2 from 165 s.
 - The game's `Audio device starved` lines: at 6.9 and 11.8 s in the first start and 5.8 s in the second, while the map loads, and none in the 288 s after.
 
+### A frame on a cool Mac, traced with FSR2 and with MetalFX: where 100 would have to come from
+
+Two Metal System Traces of the published rc10, 2 s each, the practice map at the display's own size, thermal level 0 throughout (thread "Metal System Traces of a frame with FSR2 and with MetalFX, on a cool Mac"; traces, exported tables and scripts in `~/macron-perf/rc16/` on that Mac). The recorder slows the game (to about 60 frames a second while it records), so the frame rates are from DXMT's lines just before it.
+
+| | FSR2 | MetalFX |
+|---|---|---|
+| frames a second before the recorder | 72.6, 72.2, 73.0 | 77.5, 78.9, 75.9 |
+| the GPU's time a frame, summed over its channels | 17.7 ms (compute 6.2, fragment 7.8, vertex 3.7) | 16.1 ms (compute 5.1, fragment 7.3, vertex 3.6) |
+| from a frame's first GPU work to its last | 19.9 ms | 17.0 ms |
+| the upscaler's own passes | 3.1 ms in one compute pass, and 1.2 ms in another | 0.5, 1.1 and 0.6 ms in three |
+| the main command buffer's first pass waits for the GPU | 0.5 ms | 0.5 ms |
+| two frames on the GPU at once | 1.8% of the time | 0.6% |
+
+- **A frame is one chain on the GPU.** Its 95 passes are in one command buffer and run one after another, each starting when the one before is done (their waits grow from 0.7 ms for the first to 14 ms for the last), with a pass's vertex work overlapping the fragment work of the pass before and little else. The next frame's chain starts when this one's has ended. So the frame rate on a cool Mac is the length of that chain plus about a millisecond: 72 frames a second is a chain of about 12 ms, and 100 would take one under 10.
+- **There is nothing in the chain for Macron to take out.** The largest pass is the game's FSR2 (3.1 ms); the next are geometry passes of 1 to 2 ms each and a compute pass of 1.2 ms; 136 passes of under 0.15 ms make up 2.8 ms together. MetalFX in FSR2's place takes about 2 ms off the chain (5 frames a second in this session, none in the one before). The compute pass "in the middle of the frame" that looked like an eighth of the GPU's time on a throttled Mac is 1.2 ms on a cool one.
+- **The 7 ms that a MetalFX frame seemed to wait is not a wait of the frame.** MetalFX finishes each frame with a pass of its own in a command buffer of its own, which Metal counts as the first of the next frame; it waits for that frame's turn (7.8 ms) and takes 0.6 ms. DXMT's log line reads it as the frame's start. The frame's own first pass waits 0.5 ms with either upscaler.
+- **So 100 frames a second at the display's size is not in Wine's or DXMT's hands on this Mac**: the game asks the GPU for 12 ms of work a frame, in an order that leaves the GPU nothing to do in parallel, and it allows itself one frame in flight. What is left is less work a frame (the game's own settings, MetalFX, a smaller picture), or a faster GPU.
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.
