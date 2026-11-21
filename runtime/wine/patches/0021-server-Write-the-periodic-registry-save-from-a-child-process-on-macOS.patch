@@ -11,7 +11,7 @@ On a MacBook Air M3 the save took 63, 83 and 152 ms in three starts of
 Deadlock (one turn of the main loop each, no request in it: Macron's
 patch 0020 logs such turns), 20 s after the game's window. Wine's audio
 timer sets its event through the server, so the game's sound thread was
-woken that late: 887 to 3,270 frames of sound missing in one gap in each
+woken that late: 162 to 3,270 frames of sound missing in one gap in each
 of the three starts, and the game's own "Audio device starved" beside
 it. It is the stall that every start of the day had in its first half
 minute and that Macron's sound reserve (0016) covered when it was
@@ -92,7 +92,7 @@ index e71d023..2fd0129 100644
 + * anything waits. A prefix's system.reg is several megabytes; on a MacBook
 + * Air M3 the save took 63 to 152 ms, thirty seconds after a game's start,
 + * and Wine's audio timer, which sets its event through the server, was
-+ * that late: 20 to 74 ms of sound missing, with any driver.
++ * that late: 4 to 74 ms of sound missing, with any driver.
 + *
 + * So a child process writes the files, from the copy of the registry that
 + * fork() gives it, and the server goes on. The branches are marked clean
