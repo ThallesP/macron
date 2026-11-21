@@ -1,0 +1,193 @@
+From: Macron <macron@users.noreply.github.com>
+Date: Sat, 21 Nov 2026 03:00:00 +0000
+Subject: [PATCH] server: Write the periodic registry save from a child process
+ on macOS.
+
+Thirty seconds after it starts, and every thirty seconds in which a
+registry branch was modified, the server writes that branch to disk,
+whole. It has one thread: while it writes, every thread of every process
+that asks it anything waits. A prefix's system.reg is several megabytes.
+On a MacBook Air M3 the save took 63, 83 and 152 ms in three starts of
+Deadlock (one turn of the main loop each, no request in it: Macron's
+patch 0020 logs such turns), 20 s after the game's window. Wine's audio
+timer sets its event through the server, so the game's sound thread was
+woken that late: 887 to 3,270 frames of sound missing in one gap in each
+of the three starts, and the game's own "Audio device starved" beside
+it. It is the stall that every start of the day had in its first half
+minute and that Macron's sound reserve (0016) covered when it was
+shorter than 58 ms.
+
+Now a child process writes the files, from the copy of the registry that
+fork() gives it, and the server goes on. The branches are marked clean
+when the child starts. If the child fails, they are marked modified
+again when it is reaped, so the next save or the one at exit writes
+them. One child at a time: a save that comes due while one is writing
+waits for the next round. The save at exit waits for the child first, so
+that an older copy cannot land on top of a newer one.
+
+On macOS the server had no children and its SIGCHLD callback asserted;
+it reaps now.
+---
+diff --git a/server/mach.c b/server/mach.c
+index ec73dc6..fe977d6 100644
+--- a/server/mach.c
++++ b/server/mach.c
+@@ -27,6 +27,7 @@
+ #include <signal.h>
+ #include <stdarg.h>
+ #include <sys/types.h>
++#include <sys/wait.h>
+ #include <unistd.h>
+ #ifdef HAVE_SYS_SYSCTL_H
+ #include <sys/sysctl.h>
+@@ -50,9 +51,13 @@
+ 
+ static mach_port_t server_mach_port;
+ 
++/* The server's only children on macOS are the ones that write the registry. */
+ void sigchld_callback(void)
+ {
+-    assert(0);  /* should never be called on MacOS */
++    int status;
++    pid_t pid;
++
++    while ((pid = waitpid( -1, &status, WNOHANG )) > 0) registry_child_exited( pid, status );
+ }
+ 
+ static void mach_set_error(kern_return_t mach_error)
+diff --git a/server/object.h b/server/object.h
+index 3c19d15..6ebf464 100644
+--- a/server/object.h
++++ b/server/object.h
+@@ -292,6 +292,7 @@ extern unsigned short supported_machines[8];
+ extern unsigned short native_machine;
+ extern void init_registry(void);
+ extern void flush_registry(void);
++extern void registry_child_exited( pid_t pid, int status );
+ 
+ static inline int is_machine_32bit( unsigned short machine )
+ {
+diff --git a/server/registry.c b/server/registry.c
+index e71d023..2fd0129 100644
+--- a/server/registry.c
++++ b/server/registry.c
+@@ -37,6 +37,9 @@
+ #include <sys/stat.h>
+ #include <sys/types.h>
+ #include <unistd.h>
++#ifdef __APPLE__
++#include <sys/wait.h>
++#endif
+ #ifdef HAVE_SYS_PERSONALITY_H
+ #include <sys/personality.h>
+ #endif
+@@ -2082,16 +2085,97 @@ done:
+     return ret;
+ }
+ 
++#ifdef __APPLE__
++
++/* The periodic save writes every modified branch whole, and the server has
++ * one thread: while it writes, every thread of every process that asks it
++ * anything waits. A prefix's system.reg is several megabytes; on a MacBook
++ * Air M3 the save took 63 to 152 ms, thirty seconds after a game's start,
++ * and Wine's audio timer, which sets its event through the server, was
++ * that late: 20 to 74 ms of sound missing, with any driver.
++ *
++ * So a child process writes the files, from the copy of the registry that
++ * fork() gives it, and the server goes on. The branches are marked clean
++ * when the child starts; if it fails they are marked modified again when it
++ * is reaped, and the next save or the one at exit writes them. Only one
++ * child at a time, and the save at exit waits for it, so that an older copy
++ * cannot land on top of a newer one. */
++
++static pid_t save_child;                           /* the child writing the registry, or 0 */
++static char save_child_branch[MAX_SAVE_BRANCH_INFO];  /* the branches it writes */
++
++static void save_child_done( int status )
++{
++    int i;
++
++    save_child = 0;
++    if (WIFEXITED( status ) && !WEXITSTATUS( status )) return;
++    for (i = 0; i < save_branch_count; i++)
++        if (save_child_branch[i]) save_branch_info[i].key->flags |= KEY_DIRTY;
++}
++
++/* called when a child of the server has exited */
++void registry_child_exited( pid_t pid, int status )
++{
++    if (pid == save_child) save_child_done( status );
++}
++
++static void wait_for_save_child(void)
++{
++    int status;
++
++    if (!save_child) return;
++    if (waitpid( save_child, &status, 0 ) == save_child) save_child_done( status );
++    else save_child = 0;
++}
++
++/* returns 0 if the save has to be done by the server itself */
++static int save_in_child(void)
++{
++    int i, dirty = 0, failed = 0;
++    pid_t pid;
++
++    if (save_child) return 1;  /* still writing: the next round takes what has changed since */
++    for (i = 0; i < save_branch_count; i++)
++    {
++        save_child_branch[i] = !!(save_branch_info[i].key->flags & KEY_DIRTY);
++        dirty |= save_child_branch[i];
++    }
++    if (!dirty) return 1;
++
++    if ((pid = fork()) == -1) return 0;
++    if (!pid)
++    {
++        if (fchdir( config_dir_fd ) == -1) _exit( 1 );
++        for (i = 0; i < save_branch_count; i++)
++            if (!save_branch( save_branch_info[i].key, save_branch_info[i].filename )) failed = 1;
++        _exit( failed );
++    }
++    save_child = pid;
++    for (i = 0; i < save_branch_count; i++) make_clean( save_branch_info[i].key );
++    return 1;
++}
++
++#else
++
++static void wait_for_save_child(void) { }
++static int save_in_child(void) { return 0; }
++
++#endif  /* __APPLE__ */
++
+ /* periodic saving of the registry */
+ static void periodic_save( void *arg )
+ {
+     int i;
+ 
+-    if (fchdir( config_dir_fd ) == -1) return;
+     save_timeout_user = NULL;
+-    for (i = 0; i < save_branch_count; i++)
+-        save_branch( save_branch_info[i].key, save_branch_info[i].filename );
+-    if (fchdir( server_dir_fd ) == -1) fatal_error( "chdir to server dir: %s\n", strerror( errno ));
++    if (!save_in_child())
++    {
++        if (fchdir( config_dir_fd ) == -1) return;
++        for (i = 0; i < save_branch_count; i++)
++            save_branch( save_branch_info[i].key, save_branch_info[i].filename );
++        if (fchdir( server_dir_fd ) == -1) fatal_error( "chdir to server dir: %s\n", strerror( errno ));
++    }
+     set_periodic_save_timer();
+ }
+ 
+@@ -2107,6 +2191,7 @@ void flush_registry(void)
+ {
+     int i;
+ 
++    wait_for_save_child();
+     if (fchdir( config_dir_fd ) == -1) return;
+     for (i = 0; i < save_branch_count; i++)
+     {
