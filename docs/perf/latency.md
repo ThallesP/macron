@@ -282,6 +282,24 @@ Of the practice map's 945,363 requests in a minute: `socket_get_events` 47.6%, `
 - **The server itself is idle 96% of the time** (147 of 3,825 samples of its thread not waiting), at 9 to 11% of a core by `ps`. Nothing queues behind it.
 - **So Wine's server is not where a frame's time goes.** An in-process path for waits would give the main thread back at most 7.5% of its time, a millisecond a frame; answering the socket question without the server would free a twelfth of a core that no frame waits for. Neither is built: the first is weeks of work on every wait in Wine for a millisecond, and the second changes what an online game's networking is told, which no offline test can vouch for.
 
+### MetalFX's picture against FSR2's, seen
+
+The published rc9, unpacked and not installed, four starts in the practice map alternating the `dlss` switch, the screen unlocked this time (thread "Deadlock on the M3 with the published rc9, second wait"; captures and crops in `~/macron-perf/rc9pub/shots/` on that Mac). No warning box in any of the eight captures; the console says driver `32.0.15.9144` with the switch.
+
+| | frames a second | start to GPU done | before the GPU starts a frame | the GPU's work on a frame | thermal level |
+|---|---|---|---|---|---|
+| FSR2 | 71.5 | 23.6 ms | 2.3 ms | 17.9 ms | 0 |
+| MetalFX, 1112x720 to 1920x1243 | 70.9 | 24.8 ms | 7.1 ms | 13.5 ms | 0, then 1 at 64 s |
+| FSR2 | 54.4 | 33.0 ms | 3.6 ms | 22.5 ms | 2 from 60 s |
+| MetalFX | 66.1 | 29.4 ms | 6.4 ms | 16.5 ms | 2 from 60 s |
+
+- **On a cool Mac MetalFX is no faster and no sooner**: the same frame rate, and a frame a millisecond older. The GPU works a quarter less on a frame (13.5 ms against 17.9 ms), but the frame waits 7 ms before the GPU starts it where FSR2's waits 2 to 4 ms, in every start that has had the switch (6.0 to 7.4 ms in nine of them). With FSR2 the GPU works on two frames at once (17.9 ms of work, frames 13.5 ms apart); with MetalFX it takes them one after another (13.5 ms of work, 13.4 ms apart). What makes them wait is not known: MetalFX's temporal scaler keeps a history, and a frame may not be able to start before the one before it has left the scaler.
+- **On a throttled Mac it is ahead**: 66 against 54 frames a second and 29 against 33 ms in this session's hot pair, as in the earlier two pairs. Less GPU work is less heat.
+- **The picture: smoother and softer.** FSR2's is sharper, with a fine dot pattern over lit surfaces, a glow that breaks into squares of about 8 pixels, and stair-steps on slanted edges. MetalFX's has none of those, and loses fine distant detail: cornice teeth run together, window bars smear, far lettering is harder to read (a blur measure of 7.6 to 7.8 against 5.6 on the same facade). The interface is drawn after the upscale and is the same in both. Stills of a still camera cannot show ghosting on moving things.
+- **So the switch stays a switch.** It trades distant detail for cleaner edges and a cooler GPU, and Thalles asked that nothing be gained by a worse picture: that trade is his to make, not a profile's.
+- **The game could not be put in front.** With keyboard and mouse idle for five minutes, `NSRunningApplication.activate` on the game returned true and the browser's window stayed in front: macOS does not let a background program take the front from the one in use. A test cannot do it; only he can.
+- **One gap in the sound**: 905 frames (20 ms) missing in one gap in the first half minute of one start, while the game loaded: the first frames missing with Macron's driver since its third build, in some eighty starts. The reserve starts at 58 ms and the stall while the game loads has been 28 to 58 ms in every start; this one was longer. What holds the driver's `NtSetEvent` that long is the next thing to find (a test build of the server logs its slow turns).
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.
