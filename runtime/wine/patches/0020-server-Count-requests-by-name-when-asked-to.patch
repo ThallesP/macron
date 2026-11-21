@@ -13,14 +13,40 @@ the server to a crawl and changes what it measures.
 
 With MACRON_SERVER_STATS=<file> in the server's environment it appends a
 line to that file every five seconds in which there were requests: their
-number, and the twelve commonest by name. Without the variable nothing is
-counted.
+number, and the twelve commonest by name; and a line for every turn of
+its main loop that took 5 ms or more, with the request that took longest:
+while the server is in such a turn, every thread that asks it something
+waits. Without the variable nothing is counted.
 ---
+diff --git a/server/fd.c b/server/fd.c
+index 7cb48a2..b77df90 100644
+--- a/server/fd.c
++++ b/server/fd.c
+@@ -641,6 +641,7 @@ static inline void main_loop_epoll(void)
+     int i, ret, timeout;
+     struct timespec ts;
+     struct kevent events[128];
++    timeout_t turn_start = 0;
+ 
+     if (kqueue_fd == -1) return;
+ 
+@@ -651,9 +652,11 @@ static inline void main_loop_epoll(void)
+         if (!active_users) break;  /* last user removed by a timeout */
+         if (kqueue_fd == -1) break;  /* an error occurred with kqueue */
+ 
++        if (turn_start) stats_turn_end( monotonic_counter() - turn_start );
+         ret = kevent( kqueue_fd, NULL, 0, events, ARRAY_SIZE( events ), timeout == -1 ? NULL : &ts );
+ 
+         set_current_time();
++        turn_start = monotonic_time;
+ 
+         /* put the events into the pollfd array first, like poll does */
+         for (i = 0; i < ret; i++)
 diff --git a/server/request.c b/server/request.c
-index 5135ed5..7ed9472 100644
+index 5135ed5..4c18cbc 100644
 --- a/server/request.c
 +++ b/server/request.c
-@@ -268,11 +268,71 @@ static void send_reply( union generic_reply *reply )
+@@ -268,10 +268,107 @@ static void send_reply( union generic_reply *reply )
  }
  
  /* call a request handler */
@@ -32,15 +58,26 @@ index 5135ed5..7ed9472 100644
 + * single-threaded server, so their number a frame is what a game pays for
 + * everything Wine does here and not in the process itself: waits, events,
 + * semaphores, mutexes, handles, files, windows, messages. Nothing is counted
-+ * without the variable. */
++ * without the variable.
++ *
++ * And a line for every turn of the main loop (from one return of kevent() to
++ * the next call) that took 5 ms or more, up to 400 of them: how long, how
++ * many requests it handled, and the one that took longest. While the server
++ * is in such a turn every other thread that asks it something waits, a
++ * game's sound thread and Wine's own audio timer among them. */
 +#define STATS_INTERVAL (5 * TICKS_PER_SEC)
 +#define STATS_NAMED 12
++#define STATS_SLOW_TURN (TICKS_PER_SEC / 200)
++#define STATS_SLOW_LINES 400
 +
 +static const char *stats_path;
 +static int stats_checked;
 +static unsigned int stats_counts[REQ_NB_REQUESTS];
 +static unsigned int stats_total;
 +static timeout_t stats_since;
++static unsigned int turn_requests, slow_lines;
++static int turn_slowest = -1;
++static timeout_t turn_slowest_time;
 +
 +static void stats_report(void)
 +{
@@ -82,25 +119,68 @@ index 5135ed5..7ed9472 100644
 +    stats_total++;
 +}
 +
++/* called from the main loop when a turn is over; `duration` in 100 ns */
++void stats_turn_end( timeout_t duration )
++{
++    if (stats_path && duration >= STATS_SLOW_TURN && slow_lines < STATS_SLOW_LINES)
++    {
++        FILE *file = fopen( stats_path, "a" );
++        if (file)
++        {
++            fprintf( file, "macron-server: slow turn %.1f ms, %u requests, the longest %s %.1f ms\n",
++                     duration / 10000.0, turn_requests,
++                     turn_slowest < 0 ? "none" : get_request_name( turn_slowest ), turn_slowest_time / 10000.0 );
++            fclose( file );
++            slow_lines++;
++        }
++    }
++    turn_requests = 0;
++    turn_slowest = -1;
++    turn_slowest_time = 0;
++}
++
  static void call_req_handler( struct thread *thread )
  {
      union generic_reply reply;
      enum request req = thread->req.request_header.req;
- 
-+    stats_count( req );
++    timeout_t before = 0;
 +
++    stats_count( req );
++    if (stats_path)
++    {
++        set_current_time();
++        before = monotonic_time;
++    }
+ 
      current = thread;
      current->reply_size = 0;
-     clear_error();
+@@ -301,6 +398,16 @@ static void call_req_handler( struct thread *thread )
+         }
+     }
+     current = NULL;
++    if (stats_path)
++    {
++        set_current_time();
++        turn_requests++;
++        if (turn_slowest < 0 || monotonic_time - before > turn_slowest_time)
++        {
++            turn_slowest = req;
++            turn_slowest_time = monotonic_time - before;
++        }
++    }
+ }
+ 
+ /* read a request from a thread */
 diff --git a/server/request.h b/server/request.h
-index 68229d1..b92b30b 100644
+index 68229d1..30d0dbf 100644
 --- a/server/request.h
 +++ b/server/request.h
-@@ -62,6 +62,7 @@ extern char *server_dir;
+@@ -62,6 +62,8 @@ extern char *server_dir;
  extern int server_dir_fd, config_dir_fd;
  
  extern void trace_request(void);
 +extern const char *get_request_name( enum request req );
++extern void stats_turn_end( timeout_t duration );
  extern void trace_reply( enum request req, const union generic_reply *reply );
  
  /* get current tick count to return to client */
