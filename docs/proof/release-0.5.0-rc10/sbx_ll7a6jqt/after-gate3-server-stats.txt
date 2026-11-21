@@ -1,0 +1,32 @@
+macron-server: slow turn 8.4 ms, 1 requests, the longest init_process_done 8.4 ms
+macron-server: slow turn 44.6 ms, 1 requests, the longest create_mapping 44.6 ms
+macron-server: slow turn 9.0 ms, 1 requests, the longest create_file 9.0 ms
+macron-server: slow turn 13.3 ms, 1 requests, the longest create_file 13.2 ms
+macron-server: slow turn 12.9 ms, 1 requests, the longest create_file 12.8 ms
+macron-server: slow turn 6.2 ms, 1 requests, the longest create_file 6.1 ms
+macron-server: 5.0 s, 12580 requests (2516 a second): enum_key_value 3137 get_key_value 2212 close_handle 1924 open_key 992 get_mapping_info 574 get_handle_fd 437 create_file 421 enum_key 416 create_mapping 372 create_key 291 map_image_view 178 set_key_value 160
+macron-server: 5.0 s, 7677 requests (1534 a second): select 2846 get_next_console_request 1248 event_op 1039 ioctl 624 get_async_result 312 enum_key_value 246 close_handle 181 get_key_value 165 set_queue_mask 149 open_key 119 get_message 92 set_key_value 74
+macron-server: 5.0 s, 1741 requests (348 a second): event_op 758 select 639 set_queue_mask 220 get_message 114 set_caret_info 10
+macron-server: 5.0 s, 1746 requests (349 a second): event_op 758 select 640 set_queue_mask 222 get_message 116 set_caret_info 10
+macron-server: slow turn 32.5 ms, 1 requests, the longest event_op 32.5 ms
+macron-server: slow turn 17.8 ms, 1 requests, the longest select 17.8 ms
+macron-server: slow turn 7.3 ms, 1 requests, the longest select 7.2 ms
+macron-server: 5.0 s, 1740 requests (348 a second): event_op 764 select 638 set_queue_mask 216 get_message 112 set_caret_info 10
+macron-server: slow turn 8.8 ms, 1 requests, the longest event_op 8.8 ms
+macron-server: slow turn 8.5 ms, 1 requests, the longest select 8.5 ms
+macron-server: slow turn 71.8 ms, 0 requests, the longest none 0.0 ms
+macron-server: 5.0 s, 1745 requests (349 a second): event_op 762 select 638 set_queue_mask 220 get_message 115 set_caret_info 10
+macron-server: slow turn 5.2 ms, 1 requests, the longest event_op 5.2 ms
+macron-server: slow turn 8.3 ms, 1 requests, the longest select 0.1 ms
+macron-server: slow turn 6.3 ms, 2 requests, the longest event_op 6.2 ms
+macron-server: 5.0 s, 1754 requests (351 a second): event_op 763 select 643 set_queue_mask 224 get_message 114 set_caret_info 10
+macron-server: 5.0 s, 1751 requests (350 a second): event_op 758 select 643 set_queue_mask 224 get_message 116 set_caret_info 10
+macron-server: slow turn 11.6 ms, 2 requests, the longest event_op 1.9 ms
+macron-server: slow turn 9.5 ms, 1 requests, the longest select 9.4 ms
+macron-server: 5.0 s, 1747 requests (349 a second): event_op 762 select 641 set_queue_mask 220 get_message 114 set_caret_info 10
+macron-server: slow turn 11.9 ms, 1 requests, the longest event_op 0.1 ms
+macron-server: slow turn 10.3 ms, 1 requests, the longest event_op 10.1 ms
+macron-server: slow turn 5.3 ms, 1 requests, the longest event_op 5.3 ms
+macron-server: 5.0 s, 1752 requests (350 a second): event_op 765 select 639 set_queue_mask 222 get_message 116 set_caret_info 10
+macron-server: 5.0 s, 1740 requests (347 a second): event_op 753 select 641 set_queue_mask 222 get_message 114 set_caret_info 10
+macron-server: 5.0 s, 5914 requests (1183 a second): select 2566 event_op 1197 get_next_console_request 988 ioctl 494 get_async_result 247 set_queue_mask 222 get_message 115 set_caret_info 30 set_win_timer 16 get_update_region 15 get_visible_region 10 kill_win_timer 5

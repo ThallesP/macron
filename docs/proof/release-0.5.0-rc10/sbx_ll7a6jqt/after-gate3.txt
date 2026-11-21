@@ -1,0 +1,34 @@
+== Install the package again
+installer: The install was successful.
+~/Library/Application Support/Macron/runtimes/wine-11.21-macron.19-dxmt-0.80-macron.2-dxvk-1.10.3-20230507-bridge-proton-11.0-2e-macron.1
+wine-dxmt/bin/wineserver 5f3a995d0d32f1150ea00d2f5dda26a4e97b50289d4e45b3e95b24da013d8ffc 1 adhoc-signed
+wine/bin/wineserver 5f3a995d0d32f1150ea00d2f5dda26a4e97b50289d4e45b3e95b24da013d8ffc 1 adhoc-signed
+at 10 s: system.reg 3301821 bytes, written 04:12:57, user.reg 67397 bytes, written 04:12:57, reg*.tmp files: 0
+at 25 s: system.reg 3301821 bytes, written 04:12:57, user.reg 67397 bytes, written 04:12:57, reg*.tmp files: 0
+at 40 s: system.reg 3306201 bytes, written 04:13:27, user.reg 69097 bytes, written 04:13:27, reg*.tmp files: 0
+at 48 s: system.reg 3306201 bytes, written 04:13:27, user.reg 69097 bytes, written 04:13:27, reg*.tmp files: 0
+== a stream fed as SDL does, 50 s, started 04:12:51, exit 0
+turns of the server of 5 ms or more with no request that long in them:
+  macron-server: slow turn 71.8 ms, 0 requests, the longest none 0.0 ms
+  macron-server: slow turn 8.3 ms, 1 requests, the longest select 0.1 ms
+  macron-server: slow turn 11.6 ms, 2 requests, the longest event_op 1.9 ms
+  macron-server: slow turn 11.9 ms, 1 requests, the longest event_op 0.1 ms
+five-second lines: 12
+5.0 s, 220656 frames pulled, 0 missing in 0 gaps (longest 0); pull to event max 1944.61 ms (2 over 2 ms), event set max 50.63 ms, event to client max 52.68 ms (1 over a period)
+5.0 s, 220657 frames pulled, 0 missing in 0 gaps (longest 0); pull to event max 30.05 ms (5 over 2 ms), event set max 39.81 ms, event to client max 41.04 ms (5 over a period)
+5.0 s, 220656 frames pulled, 3712 missing in 2 gaps (longest 2857); pull to event max 107.92 ms (5 over 2 ms), event set max 117.69 ms, event to client max 119.73 ms (5 over a period)
+5.0 s, 220656 frames pulled, 0 missing in 0 gaps (longest 0); pull to event max 11.48 ms (1 over 2 ms), event set max 31.02 ms, event to client max 33.06 ms (1 over a period)
+5.0 s, 220656 frames pulled, 0 missing in 0 gaps (longest 0); pull to event max 63.73 ms (10 over 2 ms), event set max 73.49 ms, event to client max 74.68 ms (7 over a period)
+5.0 s, 220656 frames pulled, 0 missing in 0 gaps (longest 0); pull to event max 11.77 ms (1 over 2 ms), event set max 12.50 ms, event to client max 10.69 ms (1 over a period)
+5.0 s, 220656 frames pulled, 0 missing in 0 gaps (longest 0); pull to event max 19.55 ms (1 over 2 ms), event set max 29.29 ms, event to client max 31.33 ms (1 over a period)
+5.0 s, 220657 frames pulled, 0 missing in 0 gaps (longest 0); pull to event max 17.36 ms (5 over 2 ms), event set max 27.11 ms, event to client max 26.96 ms (5 over a period)
+5.0 s, 219792 frames pulled, 0 missing in 0 gaps (longest 0); pull to event max 38.56 ms (3 over 2 ms), event set max 48.13 ms, event to client max 46.96 ms (3 over a period)
+5.0 s, 220656 frames pulled, 0 missing in 0 gaps (longest 0); pull to event max 10.86 ms (2 over 2 ms), event set max 2.87 ms, event to client max 3.52 ms (0 over a period)
+2.1 s, 87227 frames pulled, 0 missing in 0 gaps (longest 0); pull to event max 0.11 ms (0 over 2 ms), event set max 3.71 ms, event to client max 3.13 ms (0 over a period)
+after exit: system.reg 3306201 bytes, written 04:13:27, 83111 lines, first line: WINE REGISTRY Version 2; reg*.tmp left: 0; zombies: 0
+a second start of the same prefix: exit 0, 1 result line
+== uninstall
+The program itself is still at /usr/local/bin/macron: sudo /usr/local/bin/macron-uninstall removes it.
+removed /usr/local/bin/macron, /usr/local/bin/macron-uninstall, /usr/local/lib/macron and /Library/Logs/Macron-install.log
+Macron's folder is gone
+AFTER-DONE
