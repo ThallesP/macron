@@ -278,6 +278,38 @@ It is here for Macron's `dlss` switch. Deadlock reads the driver's version throu
 
 It changes `wined3d.dll` (both architectures), which Macron's overlay already carries.
 
+## 0020: the server counts its requests and logs its slow turns, when asked
+
+On macOS every wait on an event or semaphore, every handle and every socket call of a Windows program is a request to Wine's server: a round trip for the calling thread and a turn of the one thread the server has. Nothing measured them without `WINEDEBUG=+server`, which slows the server to a crawl. With `MACRON_SERVER_STATS=<file>` in the server's environment (it has the environment of the process that started it, so a game's) it appends to that file:
+
+- every five seconds in which there were requests, their number and the twelve commonest by name;
+- a line for every turn of its main loop, from one return of `kevent()` to the next call, that took 5 ms or more: how long, how many requests, and the one that took longest. While the server is in such a turn, every thread that asks it something waits.
+
+Without the variable nothing is counted. The file is opened and closed for each line, so the server imports nothing it did not.
+
+What it found on Thalles's M3 with Deadlock is in `docs/perf/latency.md` ("What a frame asks of Wine's server"): 160 to 211 requests a frame, half of them one socket question from the game's networking thread, the server idle 96% of the time; and the stall that 0021 is for.
+
+## 0021: the periodic registry save is written by a child process
+
+Thirty seconds after it starts, and every thirty seconds in which a registry branch was modified, the server writes that branch to disk, whole, and nothing else happens in any Windows process that needs the server until it is done. A prefix's `system.reg` is 3 to 4 MB.
+
+**On Thalles's M3** (the published rc9 with a test server, Deadlock's practice map, three starts each way, thread "the server's registry save in a child process, against the stall of an hour ago"): the save came 20 s after the game's window in every start.
+
+| | the server's turn at the save | Wine's audio timer held for | sound missing |
+|---|---|---|---|
+| as upstream (0020 only) | 152.5, 83.2 and 63.4 ms | 144.9, 82.0 and 58.9 ms | 3,270, 887 and 162 frames, one gap a start |
+| with this patch | 16.4, 14.3 and 13.9 ms | 15.9, 13.9 and 9.8 ms | none |
+
+That stall was in the first half minute of every start of the game measured on 2026-11-20 ("event set max" of 28 to 58 ms), covered by the sound reserve of 0016 whenever it was shorter than the reserve's 58 ms, and a gap when it was not: 20 to 74 ms of sound, with any driver, and every other thread of the game waiting as long.
+
+Now a child process writes the files, from the copy of the registry that `fork()` gives it, and the server goes on. The branches are marked clean when the child starts; if the child fails they are marked modified again when it is reaped, and the next save or the one at exit writes them. One child at a time. The save at the server's exit waits for the child first, so that an older copy cannot land on top of a newer one. The server had no children on macOS and its `SIGCHLD` callback asserted; it reaps now.
+
+- What is left of the turn is `fork()` itself, which under Rosetta is slow: 4 to 5 ms for a small process (`tools/perf/forkcost.c`; 0.3 ms natively), 14 to 16 ms for the server on the M3 and 48 ms on a sandbox, where the save had taken 79 and 96 ms.
+- In all three starts on the M3 `system.reg` and `user.reg` were rewritten at the save (new modification times 20.3 to 20.8 s after the window, the sizes they had), begin `WINE REGISTRY Version 2`, and no `reg*.tmp` file or zombie process was left. On a sandbox with a new prefix: `system.reg` grows from 3,301,821 to 3,306,201 bytes at the save, 30 s after the start, as it does without the patch.
+- Only on macOS (`#ifdef __APPLE__`); `fork`, `waitpid` and `_exit` are calls the server already imported.
+
+Both change `wineserver`, which `../check-unix-lib.sh` checks as before.
+
 ## Building
 
 `.github/workflows/wine-build.yml` runs `../build-overlay.sh` on a macos-26 runner: it builds `winemac.so` (x86_64), `wined3d.dll` (i386 and x86_64), `wow64cpu.dll` (x86_64), `opengl32` (`opengl32.so`, x86_64; `opengl32.dll`, i386 and x86_64) `wineboot.exe` (x86_64), `avrt.dll` (i386 and x86_64) `wineserver` (x86_64) and `winecoreaudio.so` (x86_64) from the source above, unpatched and patched, compares them with Gcenx's, and packs the patched ones as an overlay (`bin/wineserver`, `lib/wine/x86_64-unix/{winemac,opengl32,winecoreaudio}.so`, `lib/wine/{i386,x86_64}-windows/{wined3d,opengl32,avrt}.dll`, `lib/wine/x86_64-windows/{wow64cpu.dll,wineboot.exe}`, plus this folder and Wine's licence under `share/doc/macron-wine/`). Run from `main`, it publishes the overlay as a release; `internal/wineruntime` pins it by URL and SHA-256, copies all of it into the DXMT Wine tree, and copies the Windows modules (`wined3d.dll`, `wow64cpu.dll`, `opengl32.dll`, `wineboot.exe`, `avrt.dll`), `opengl32.so`, `winecoreaudio.so` and `wineserver` into the plain tree too, which keeps Gcenx's `winemac.so`.
