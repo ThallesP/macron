@@ -300,6 +300,14 @@ The published rc9, unpacked and not installed, four starts in the practice map a
 - **The game could not be put in front.** With keyboard and mouse idle for five minutes, `NSRunningApplication.activate` on the game returned true and the browser's window stayed in front: macOS does not let a background program take the front from the one in use. A test cannot do it; only he can.
 - **One gap in the sound**: 905 frames (20 ms) missing in one gap in the first half minute of one start, while the game loaded: the first frames missing in a start of the game with Macron's driver since its third build. The reserve starts at 58 ms and the stall while the game loads has been 28 to 58 ms in every start; this one was longer. What holds the driver's `NtSetEvent` that long is the next thing to find (a test build of the server logs its slow turns).
 
+### The hitch twenty seconds into every start: the server saving the registry
+
+The one gap in the sound above had a cause, and it was not the game loading. Wine's server writes the registry to disk thirty seconds after it starts, whole, on the one thread it has; that is twenty seconds after the game's window. A test server that logs its slow turns (Wine patch 0020) showed one turn of 152.5, 83.2 and 63.4 ms there in three starts of three, with no request in it, and Wine's audio timer held for as long: 3,270, 887 and 162 frames of sound missing. Every start of the day had it ("event set max" of 28 to 58 ms in its first half minute); the sound reserve covered it when it was shorter than 58 ms. Every thread of the game that needed the server waited as long, so it is a hitch in the picture too.
+
+With the save written by a child process (Wine patch 0021; `runtime/wine/patches/README.md` has the table): 16.4, 14.3 and 13.9 ms, which is `fork()` under Rosetta, the audio timer held 10 to 16 ms, and no sound missing in three starts of three. The registry files are written as before.
+
+The game's own `Audio device starved` lines are still there (3, 1 and 2 in those three starts): all but one in the first 11 s, while the map loads, and of 28 to 470 samples where they had been 512. They are not this.
+
 ## What ships, and what is open
 
 - 0003 and 0004 as described: frames wait for the display or the encoder no longer than they must. Shown on a sandbox for vsync and on the M3 for a window at its drawable ceiling.
